@@ -27,6 +27,8 @@ Folge für den Rechenkern:
 
 ## Teile
 
+Alle GO!!!-Strecken- und Zubehörartikel von carrera-toys.com (154 Seiten, Stand 2026-11-23, mit Widersprüchen der Herstellerseiten) stehen in [`carrera-go-katalog.md`](carrera-go-katalog.md).
+
 | Teil | Art.-Nr. | Maße | Sicherheit |
 |---|---|---|---|
 | Gerade lang | 61602 | 342 × 114 | hoch |
