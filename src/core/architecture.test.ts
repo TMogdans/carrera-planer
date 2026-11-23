@@ -77,7 +77,7 @@ afterEach(() => {
 });
 
 describe("Architektur", () => {
-  test.skip("[REQ-ARCH-1] Kern lädt und rechnet ohne Effect-Laufzeit und ohne Node-I/O", async () => {
+  test("[REQ-ARCH-1] Kern lädt und rechnet ohne Effect-Laufzeit und ohne Node-I/O", async () => {
     vi.resetModules();
     for (const m of STUBBED) {
       vi.doMock(m, () => {

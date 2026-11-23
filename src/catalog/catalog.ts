@@ -1,0 +1,170 @@
+/**
+ * Teilekatalog M1 (Spec .specify/specs/m1-rechenkern/spec.md, Tabelle „Katalog M1“, REQ-CAT-1 bis
+ * -5). Reine Daten; jeder Eintrag erfüllt das Katalog-Schema (`CatalogEntrySchema`, geprüft im
+ * Test REQ-CAT-3). Maße in mm auf der Mittellinie. „abgeleitet“ heißt aus Carrera-Außenmaßen
+ * geschlossen, nicht nachgemessen. Teile mit unbekannten Maßen werden nicht geschätzt, sondern als
+ * `masseFehlen` bzw. Baugruppe (ohne Maße) geführt und sind damit nicht platzierbar.
+ */
+import type { CatalogEntry } from "../schema/schema.js";
+
+export const CATALOG: ReadonlyArray<CatalogEntry> = [
+  {
+    id: "gerade-342",
+    name: "Gerade 342",
+    articleNumbers: ["20061602"],
+    source: "CT",
+    certainty: "hoch",
+    geometry: { kind: "gerade", length: 342 },
+  },
+  {
+    id: "gerade-171",
+    name: "Gerade 171",
+    articleNumbers: ["20061656"],
+    source: "CT",
+    certainty: "hoch",
+    geometry: { kind: "gerade", length: 171 },
+  },
+  {
+    id: "gerade-114",
+    name: "Gerade 114",
+    articleNumbers: ["20061658"],
+    source: "CT, Karton Mach 8 (nachgemessen)",
+    certainty: "hoch",
+    geometry: { kind: "gerade", length: 114 },
+  },
+  {
+    id: "kurve-1-90",
+    name: "Kurve 1/90°",
+    articleNumbers: ["20061603"],
+    source: "Messung 2026-11-23: zwei 1/90° als Halbkreis = 342 mm",
+    certainty: "hoch",
+    geometry: { kind: "kurve", radius: 171, angle: 90 },
+  },
+  {
+    id: "kurve-1-45",
+    name: "Kurve 1/45°",
+    articleNumbers: ["20061611"],
+    source: "CT „Länge 161“ = 228·sin 45° (Außenkante R1), abgeleitet",
+    certainty: "hoch",
+    geometry: { kind: "kurve", radius: 171, angle: 45 },
+  },
+  {
+    id: "kurve-2-45",
+    name: "Kurve 2/45°",
+    articleNumbers: ["20061617"],
+    source: "CT 242 × 179, abgeleitet (~2 mm Abweichung)",
+    certainty: "mittel",
+    geometry: { kind: "kurve", radius: 285, angle: 45 },
+  },
+  {
+    id: "kurve-3-45",
+    name: "Kurve 3/45°",
+    articleNumbers: ["20061645"],
+    source: "CT 323 × 211, abgeleitet (~3 mm Abweichung)",
+    certainty: "mittel",
+    geometry: { kind: "kurve", radius: 399, angle: 45 },
+  },
+  {
+    id: "spurwechselkurve",
+    name: "Spurwechselkurve",
+    articleNumbers: ["20061655"],
+    source: "CT, Nutzer (deckungsgleich mit Kurve 1/90°)",
+    certainty: "hoch",
+    geometry: { kind: "kurve", radius: 171, angle: 90 },
+  },
+  {
+    id: "spurwechsel-gerade",
+    name: "Spurwechsel gerade",
+    articleNumbers: ["20061609"],
+    source: "CT (Kopierfehler „161 mm“ nicht übernommen), Nutzer",
+    certainty: "hoch",
+    geometry: { kind: "gerade", length: 228 },
+  },
+  {
+    id: "engstelle",
+    name: "Engstelle",
+    articleNumbers: ["20061610"],
+    source: "CT",
+    certainty: "hoch",
+    geometry: { kind: "gerade", length: 228 },
+  },
+  {
+    id: "kreuzung",
+    name: "Kreuzung",
+    articleNumbers: ["20061616"],
+    source: "CT, Messung 2026-11-23",
+    certainty: "hoch",
+    geometry: { kind: "kreuzung", length: 342, crossLength: 114 },
+  },
+  {
+    id: "anschlussstueck",
+    name: "Anschlussstück",
+    articleNumbers: ["20061530", "20061666"],
+    source: "CT, Messung (20061666 nachgemessen)",
+    certainty: "hoch",
+    geometry: { kind: "gerade", length: 114 },
+  },
+  {
+    id: "rundenzaehler",
+    name: "Rundenzähler",
+    articleNumbers: ["20088107"],
+    source: "CT, Messung",
+    certainty: "hoch",
+    geometry: { kind: "gerade", length: 114 },
+  },
+  {
+    id: "wireless-anschluss",
+    name: "Wireless-Anschluss",
+    articleNumbers: ["20061673"],
+    source:
+      "CT Einzelartikel 20061673 „GO!!! Wireless Anschluss-Schiene“; 1 × im Wireless Upgrade Kit 20061676",
+    certainty: "niedrig",
+    geometry: { kind: "masseFehlen" },
+  },
+  {
+    id: "steilkurve-1-45",
+    name: "Steilkurve 1/45°",
+    articleNumbers: ["20061612"],
+    source: "CT (Außenmaß), Radius unbekannt",
+    certainty: "mittel",
+    geometry: { kind: "masseFehlen" },
+  },
+  {
+    id: "looping-teil",
+    name: "Looping-Teil (L)",
+    articleNumbers: "keineEigene",
+    source: "Karton Mach 8 (nur in Baugruppe)",
+    certainty: "niedrig",
+    geometry: { kind: "masseFehlen" },
+  },
+  {
+    id: "steilkehre-teil",
+    name: "Steilkehre-Teil (K)",
+    articleNumbers: "keineEigene",
+    source: "Karton Mach 8 (nur in Baugruppe)",
+    certainty: "niedrig",
+    geometry: { kind: "masseFehlen" },
+  },
+  {
+    id: "looping",
+    name: "Looping (Baugruppe)",
+    articleNumbers: ["20061613"],
+    source: "Karton Mach 8",
+    certainty: "niedrig",
+    geometry: { kind: "baugruppe", parts: [{ part: "looping-teil", count: 8 }] },
+  },
+  {
+    id: "steilkehre",
+    name: "Steilkehre (Baugruppe)",
+    articleNumbers: "keineEigene",
+    source: "Karton Mach 8",
+    certainty: "niedrig",
+    geometry: {
+      kind: "baugruppe",
+      parts: [
+        { part: "steilkehre-teil", count: 4 },
+        { part: "kurve-1-90", count: 2 },
+      ],
+    },
+  },
+];
