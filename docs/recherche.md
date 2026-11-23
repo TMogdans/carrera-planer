@@ -87,6 +87,12 @@ Mach-8-Layout ist laut Anleitung vereinfacht eine Acht. Querarme mittig oben und
 Schienenbreite nachgemessen genau 114 mm, also Querweg 114 mm. Der Spurwechsel in Ausbauset 1 ist
 vermutlich der gerade 61609 (228 mm, ohne Einbaurichtung).
 
+**Looping (2026-11-23, Angabe Tobias):** 8 Viertelkreis-Teile, jedes eine Spur breit; je 4 bilden
+einen einspurigen Looping, zwei nebeneinander den zweispurigen. Im Mach-8-Aufbau ist der Ausgang
+114 mm seitlich zum Eingang versetzt, damit davor und danach Standardstücke passen. Abstand nach
+vorn noch offen (#1). Einspurige Teile gibt es auch als Set 20061657 (8× einspurige Kurve 45°,
+4× einspurige Gerade 342), nicht im Bestand (#7).
+
 **Noch an der echten Packung prüfen:** Inhalt Ausbauset 1 (Spurwechsel gerade oder Kurve).
 
 ## Vorhandene Planer
