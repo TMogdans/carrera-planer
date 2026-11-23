@@ -1,0 +1,14 @@
+{
+  "T3": [
+    "src/schema/**",
+    "**/migrations/**"
+  ],
+  "T2": [
+    "src/core/**",
+    "src/catalog/**",
+    "src/server/**"
+  ],
+  "T1": [
+    "**"
+  ]
+}

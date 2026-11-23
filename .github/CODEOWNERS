@@ -1,0 +1,27 @@
+# CODEOWNERS — geschützter Satz und T2/T3-Merge-Tor (devloop §9).
+# Zusammen mit Branch Protection "Require review from Code Owners".
+
+# Regeln, Specs, devloop-Konfiguration, CI — Wächter bewachen
+/.specify/                  @TMogdans
+/.devloop/                  @TMogdans
+/.github/                   @TMogdans
+
+# Gate-Konfiguration und Manifest
+/.semgrep/                  @TMogdans
+/.semgrepignore             @TMogdans
+/stryker.config.json        @TMogdans
+/vitest.config.ts           @TMogdans
+/vitest.mutation.config.ts  @TMogdans
+/biome.json                 @TMogdans
+/tsconfig.json              @TMogdans
+/package.json               @TMogdans
+/pnpm-lock.yaml             @TMogdans
+
+# T3: Datenvertrag, Migrationen
+/src/schema/                @TMogdans
+**/migrations/              @TMogdans
+
+# T2: Rechenkern, Katalog, Backend
+/src/core/                  @TMogdans
+/src/catalog/               @TMogdans
+/src/server/                @TMogdans

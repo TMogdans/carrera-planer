@@ -1,0 +1,10 @@
+{
+  "anchor": "b",
+  "twin": {
+    "enabled": false
+  },
+  "smoke": {
+    "tiers": [],
+    "setup": null
+  }
+}

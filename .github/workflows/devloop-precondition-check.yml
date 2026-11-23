@@ -1,0 +1,37 @@
+# devloop binding anchor (b) — AUTHORITATIVE fail-closed required check (design §5.1/§10.1).
+# Placed by `/devloop:init` and registered as a REQUIRED status check on the protected runner.
+#
+# Token-free, dependency-free install: this thin workflow just calls the PUBLIC reusable devloop
+# action. GitHub checks out mayflower/devloop (with its committed dist/) into the runner, so this
+# repo needs NO devloop npm dependency, NO cross-org PAT, and NO vendoring — works in any org.
+# `/devloop:init` pins the version (v0.9.0); bump via `/devloop:init --force` or by hand.
+#
+# This file MUST contain the string "devloop-precondition-check" so checkGuardians() can verify
+# the binding anchor is wired in the target repo (it is itself a guardian).
+#
+# Also enforce, via Branch Protection: Require CODEOWNER review + dismiss stale approvals on push;
+# exclude the agent identity from approve/merge; require this check. CODEOWNERS must cover the
+# T2/T3 tier-map paths (the §9 merge gate) — the drift guard inside the action enforces it.
+
+name: devloop-precondition-check
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_review:
+    types: [submitted, dismissed]
+
+concurrency:
+  group: devloop-precondition-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  devloop-precondition-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }} # the PR HEAD, on both events
+          fetch-depth: 0
+      - uses: mayflower/devloop/.github/actions/precondition-check@v0.9.0
+        with:
+          github-token: ${{ github.token }}
