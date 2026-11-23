@@ -67,24 +67,24 @@ Carrera-Außenmaßen geschlossen, nicht nachgemessen.
 
 | Eintrag | Art.-Nr. | Geometrie (Mittellinie) | platzierbar | Sicherheit | Quelle |
 |---|---|---|---|---|---|
-| Gerade 342 | 61602 | Gerade 342 mm | ja | hoch | CT |
-| Gerade 171 | 61656 | Gerade 171 mm | ja | hoch | CT |
-| Gerade 114 | 61658 | Gerade 114 mm | ja | hoch (nachgemessen, Mach 8) | CT, Karton Mach 8 |
-| Kurve 1/90° | 61603 | Kurve R 171, 90° | ja | hoch (nachgemessen) | Messung 2026-11-23: zwei 1/90° als Halbkreis = 342 mm |
-| Kurve 1/45° | 61611 | Kurve R 171, 45° | ja | hoch (abgeleitet) | CT „Länge 161“ = 228·sin 45° (Außenkante R1) |
-| Kurve 2/45° | 61617 | Kurve R 285, 45° | ja | mittel (abgeleitet, ~2 mm Abweichung) | CT 242 × 179 |
-| Kurve 3/45° | 61645 | Kurve R 399, 45° | ja | mittel (abgeleitet, ~3 mm Abweichung) | CT 323 × 211 |
-| Spurwechselkurve | 61655 | Kurve R 171, 90° | ja | hoch (deckungsgleich mit Kurve 1/90°, Nutzer bestätigt) | CT, Nutzer |
-| Spurwechsel gerade | 61609 | Gerade 228 mm, keine Einbaurichtung | ja | hoch (Nutzer bestätigt) | CT (Kopierfehler „161 mm“ nicht übernommen), Nutzer |
-| Engstelle | 61610 | Gerade 228 mm | ja | hoch | CT |
-| Kreuzung | 61616 | Kreuzung: längs 342 mm, Querweg 114 mm mittig und senkrecht (Acht) | ja | hoch (nachgemessen) | CT, Messung 2026-11-23 |
-| Anschlussstück | 61530, 61666 | Gerade 114 mm | ja | hoch (61666 nachgemessen) | CT, Messung |
-| Rundenzähler | 88107 | Gerade 114 mm | ja | hoch (nachgemessen) | CT, Messung |
-| Wireless-Anschluss | 61673 | Maße fehlen | nein | niedrig | CT Einzelartikel 20061673 „GO!!! Wireless Anschluss-Schiene“; 1 × enthalten im Wireless Upgrade Kit 20061676 (Set-Vorlage erst M3) |
-| Steilkurve 1/45° | 61612 | Maße fehlen (Radius unbekannt) | nein | mittel (Außenmaß), Radius unbekannt | CT |
+| Gerade 342 | 20061602 | Gerade 342 mm | ja | hoch | CT |
+| Gerade 171 | 20061656 | Gerade 171 mm | ja | hoch | CT |
+| Gerade 114 | 20061658 | Gerade 114 mm | ja | hoch (nachgemessen, Mach 8) | CT, Karton Mach 8 |
+| Kurve 1/90° | 20061603 | Kurve R 171, 90° | ja | hoch (nachgemessen) | Messung 2026-11-23: zwei 1/90° als Halbkreis = 342 mm |
+| Kurve 1/45° | 20061611 | Kurve R 171, 45° | ja | hoch (abgeleitet) | CT „Länge 161“ = 228·sin 45° (Außenkante R1) |
+| Kurve 2/45° | 20061617 | Kurve R 285, 45° | ja | mittel (abgeleitet, ~2 mm Abweichung) | CT 242 × 179 |
+| Kurve 3/45° | 20061645 | Kurve R 399, 45° | ja | mittel (abgeleitet, ~3 mm Abweichung) | CT 323 × 211 |
+| Spurwechselkurve | 20061655 | Kurve R 171, 90° | ja | hoch (deckungsgleich mit Kurve 1/90°, Nutzer bestätigt) | CT, Nutzer |
+| Spurwechsel gerade | 20061609 | Gerade 228 mm, keine Einbaurichtung | ja | hoch (Nutzer bestätigt) | CT (Kopierfehler „161 mm“ nicht übernommen), Nutzer |
+| Engstelle | 20061610 | Gerade 228 mm | ja | hoch | CT |
+| Kreuzung | 20061616 | Kreuzung: längs 342 mm, Querweg 114 mm mittig und senkrecht (Acht) | ja | hoch (nachgemessen) | CT, Messung 2026-11-23 |
+| Anschlussstück | 20061530, 20061666 | Gerade 114 mm | ja | hoch (20061666 nachgemessen) | CT, Messung |
+| Rundenzähler | 20088107 | Gerade 114 mm | ja | hoch (nachgemessen) | CT, Messung |
+| Wireless-Anschluss | 20061673 | Maße fehlen | nein | niedrig | CT Einzelartikel 20061673 „GO!!! Wireless Anschluss-Schiene“; 1 × enthalten im Wireless Upgrade Kit 20061676 (Set-Vorlage erst M3) |
+| Steilkurve 1/45° | 20061612 | Maße fehlen (Radius unbekannt) | nein | mittel (Außenmaß), Radius unbekannt | CT |
 | Looping-Teil (L) | keine eigene | Maße fehlen, nur in Baugruppe | nein | niedrig | Karton Mach 8 |
 | Steilkehre-Teil (K) | keine eigene | Maße fehlen, nur in Baugruppe | nein | niedrig | Karton Mach 8 |
-| Looping (Baugruppe) | 61613 | Maße fehlen; Bestandteile 8 × L | nein | niedrig | Karton Mach 8 |
+| Looping (Baugruppe) | 20061613 | Maße fehlen; Bestandteile 8 × L | nein | niedrig | Karton Mach 8 |
 | Steilkehre (Baugruppe) | keine eigene | Maße fehlen; Bestandteile 4 × K + 2 × Kurve 1/90° | nein | niedrig | Karton Mach 8 |
 
 Nicht im M1-Katalog: siehe Nicht-Ziele.
@@ -276,8 +276,9 @@ berühren sich die beiden Schleifen nur an der Kreuzung.
   dort genannten Geometrien, Platzierbarkeiten und Bestandteilen.
 - **REQ-CAT-2** [Contract] Jeder Katalogeintrag hat eine stabile, eindeutige ID, einen Namen,
   Art.-Nr. (eine oder mehrere, oder ausdrücklich „keine eigene“), Quelle und Sicherheit
-  (hoch/mittel/niedrig). Art.-Nr. ist immer die Nummer des Einzelartikels in der Kurzform der
-  Tabelle (z. B. 61673 für 20061673), nie ein Verweis auf ein Set, in dem das Teil steckt.
+  (hoch/mittel/niedrig). Art.-Nr. ist immer die volle Nummer des Einzelartikels, wie sie auf dem
+  Karton und auf carrera-toys.com steht: genau 8 Ziffern, als Zeichenkette (z. B. „20061602“).
+  Nie ein Verweis auf ein Set, in dem das Teil steckt, nie eine Kurzform (nicht „61602“).
 - **REQ-CAT-3** [Contract] Jeder Katalogeintrag besteht die Prüfung gegen das Katalog-Schema
   (REQ-SCHEMA-1).
 - **REQ-CAT-4** [Contract] Bestandteile einer Baugruppe verweisen nur auf vorhandene
@@ -293,7 +294,8 @@ berühren sich die beiden Schleifen nur an der Kreuzung.
   REQ-CAT-2 und die Geometriearten Gerade (Länge), Kurve (Radius, Winkel 45° oder 90°),
   Kreuzung (Längslänge, Querweglänge; Queranschlüsse mittig, senkrecht), „Maße fehlen“ und
   Baugruppe (Bestandteile, Maße fehlen) beschreibt. Ein Eintrag ohne Quelle, ohne
-  Sicherheit oder mit einem anderen Kurvenwinkel wird abgewiesen.
+  Sicherheit, mit einem anderen Kurvenwinkel oder mit einer Art.-Nr., die nicht aus genau
+  8 Ziffern besteht, wird abgewiesen.
 - **REQ-SCHEMA-2** [Contract] Es gibt ein Schema für Layouts: Schema-Version und geordnete Liste
   von Elementen. Jedes Element hat eine Element-ID (nicht leere Zeichenkette) und ist entweder
   ein Teil-Element (Teil-ID, bei Kurven Richtung links/rechts) oder eine Querung (Verweis auf eine
@@ -394,7 +396,7 @@ vorgegeben:
    wörtlich im Konzept.
 
 Außerhalb von M1, aber vermerkt: welcher Spurwechsel in Ausbauset 1 liegt (vermutlich der gerade
-61609, Kartonprüfung #2). Beide stehen im Katalog; es zählt erst für Bestand und Set-Vorlagen in
+20061609, Kartonprüfung #2). Beide stehen im Katalog; es zählt erst für Bestand und Set-Vorlagen in
 M3.
 
 ## Smoke
