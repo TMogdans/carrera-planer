@@ -1,0 +1,8 @@
+# Eigene Datei, damit Semgrep Testdateien (*.test.ts) NICHT per Voreinstellung überspringt.
+# Die Escape-Hatch-Regeln müssen gerade dort greifen.
+node_modules/
+dist/
+coverage/
+reports/
+.stryker-tmp/
+pnpm-lock.yaml

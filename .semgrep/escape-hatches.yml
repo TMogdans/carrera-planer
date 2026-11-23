@@ -1,0 +1,43 @@
+# Fluchttür-Wächter (Semgrep). Basis: devloop-Referenzregel (templates/semgrep-escape-hatches.yml),
+# ergänzt um zwei projekteigene Regeln. Geschützter Satz: Änderungen nur mit Mensch-Approval.
+#
+# Ein `.skip` ist nur auf einem REQ-getaggten Test erlaubt (Titel enthält REQ-<CTX>-<nr>): das ist der
+# Platzhalter der devloop-Spec-PR, den implement wieder aktiviert. Alles andere ist verboten.
+
+rules:
+  - id: devloop-no-unsanctioned-test-skip
+    languages: [generic]
+    severity: ERROR
+    message: >
+      Übersprungener Test, der kein devloop-Platzhalter ist. Ein `.skip` ist NUR auf einem
+      REQ-getaggten Test erlaubt (Titel enthält REQ-<CTX>-<nr>), den implement wieder aktiviert.
+      Skip entfernen oder REQ-taggen, falls es wirklich ein Spec-PR-Platzhalter ist.
+    patterns:
+      - pattern-regex: '\b(it|test|describe)\.skip\b'
+      - pattern-not-regex: '\b(it|test|describe)\.skip\(\s*[`"''][^`"'']*REQ-[A-Z0-9]+-[0-9]+'
+
+  - id: devloop-no-focus-or-todo
+    languages: [generic]
+    severity: ERROR
+    message: >
+      Fokussierte/todo/x-Tests sind Fluchttüren ohne zulässigen Gebrauch. Entfernen.
+    patterns:
+      - pattern-regex: '\b((it|test|describe)\.only|(it|test)\.todo|xit|xdescribe)\b'
+
+  - id: carrera-no-type-checker-bypass
+    languages: [generic]
+    severity: ERROR
+    message: >
+      Typprüfung wird umgangen (@ts-ignore / @ts-nocheck). Den Typfehler beheben statt
+      unterdrücken.
+    patterns:
+      - pattern-regex: '@ts-(ignore|nocheck)\b'
+
+  - id: carrera-no-stryker-disable
+    languages: [generic]
+    severity: ERROR
+    message: >
+      Stryker-Disable-Kommentar blendet Mutanten aus und unterläuft den Mutations-Ratchet
+      (break=100). Den überlebenden Mutanten mit einem Test töten, nicht ausblenden.
+    patterns:
+      - pattern-regex: 'Stryker\s+(disable|restore)'

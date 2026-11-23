@@ -1,0 +1,36 @@
+{
+  "name": "carrera-planer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "test": "vitest run --passWithNoTests",
+    "test:mutation": "for d in src/core src/catalog src/schema; do [ -d \"$d\" ] || { echo \"test:mutation: $d fehlt\" >&2; exit 1; }; done; if [ -n \"$(find src/core src/catalog src/schema -name '*.ts' ! -name '*.test.ts' ! -name 'index.ts')\" ]; then stryker run; else echo 'test:mutation: noch kein mutierbarer Code in src/core|catalog|schema, nichts zu pruefen'; fi"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.8",
+    "@preact/preset-vite": "^2.10.6",
+    "@stryker-mutator/core": "^10.1.1",
+    "@stryker-mutator/vitest-runner": "^10.1.1",
+    "@types/node": "^22.20.5",
+    "fast-check": "^4.11.0",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  },
+  "dependencies": {
+    "@effect/platform": "^0.97.2",
+    "@effect/platform-node": "^0.108.4",
+    "@effect/sql": "^0.52.1",
+    "@effect/sql-sqlite-node": "^0.54.1",
+    "effect": "^3.22.5",
+    "preact": "^11.2.0"
+  }
+}
