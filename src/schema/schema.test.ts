@@ -156,6 +156,41 @@ describe("Katalog-Schema", () => {
     }
   });
 
+  test.skip("[REQ-SCHEMA-1] Bestandteile einer Baugruppe brauchen Teil-ID und Anzahl ≥ 1", () => {
+    const assembly = (parts: unknown) => ({ ...ENTRY, geometry: { kind: "baugruppe", parts } });
+    expect(accepted(decodeEntry(assembly([{ part: "kurve-1-90", count: 1 }])))).toBe(true);
+    const invalid: ReadonlyArray<unknown> = [
+      [{ part: "kurve-1-90" }],
+      [{ part: "kurve-1-90", count: 0 }],
+      [{ part: "kurve-1-90", count: -2 }],
+      [{ part: "kurve-1-90", count: 1.5 }],
+      [{ part: "kurve-1-90", count: "2" }],
+      [{ count: 2 }],
+      [{ part: "", count: 2 }],
+      [{ part: 7, count: 2 }],
+      [5],
+      ["kurve-1-90"],
+      [null],
+      [{}],
+      [{ part: "kurve-1-90", count: 2 }, { part: "steilkehre-teil" }],
+      [],
+    ];
+    for (const parts of invalid) {
+      expect({ parts, accepted: accepted(decodeEntry(assembly(parts))) }).toEqual({
+        parts,
+        accepted: false,
+      });
+    }
+  });
+
+  test.skip("[REQ-SCHEMA-3] Bestandteil einer Baugruppe mit unbekanntem Zusatzfeld wird abgewiesen", () => {
+    const entry = {
+      ...ENTRY,
+      geometry: { kind: "baugruppe", parts: [{ part: "kurve-1-90", count: 2, hoehe: 1 }] },
+    };
+    expect(accepted(decodeEntry(entry))).toBe(false);
+  });
+
   test.skip("[REQ-SCHEMA-1] Kreuzung braucht Längs- und Querweglänge, Baugruppe ihre Bestandteile", () => {
     expect(accepted(decodeEntry({ ...ENTRY, geometry: { kind: "kreuzung", length: 342 } }))).toBe(
       false,

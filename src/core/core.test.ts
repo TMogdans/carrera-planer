@@ -1322,6 +1322,59 @@ describe("Kern: Fehler an Querungen und Unabhängigkeit", () => {
     });
   });
 
+  // Fehlerhaftes Element jeder Fehlerart vor einer Querung mit falscher Ankunft (Nr. 5 =
+  // Gerade 171). Das fehlerhafte Element wird zusätzlich eingefügt (hinter Nr. 2), damit eine
+  // Implementierung, die es nur überspringt und weiterrechnet, an der Querung (dann index 6) einen
+  // Ankunftsfehler meldet und rot wird.
+  const wrongArrivalAcht = (): LayoutElement[] => replaceAt(ACHT, 4, part("e5", "gerade-171"));
+  const withFaultyAt2 = (faulty: LayoutElement): LayoutElement[] => {
+    const base = wrongArrivalAcht();
+    return [...base.slice(0, 2), faulty, ...base.slice(2)];
+  };
+
+  test.skip("[REQ-CORE-28] nicht platzierbares Teil vor der Querung: kein Ankunftsfehler", () => {
+    expect(runTrace(withFaultyAt2(part("f", "looping")), ORIGIN)).toEqual({
+      ok: false,
+      errors: [{ kind: "nichtPlatzierbar", index: 2, partId: "looping" }],
+    });
+  });
+
+  test.skip("[REQ-CORE-28] Kurve ohne Richtung vor der Querung: kein Ankunftsfehler", () => {
+    expect(runTrace(withFaultyAt2(part("f", "kurve-1-45")), ORIGIN)).toEqual({
+      ok: false,
+      errors: [{ kind: "richtungFehlt", index: 2, partId: "kurve-1-45" }],
+    });
+  });
+
+  test.skip("[REQ-CORE-28] Nicht-Kurve mit Richtung vor der Querung: kein Ankunftsfehler", () => {
+    expect(runTrace(withFaultyAt2(part("f", "gerade-114", "links")), ORIGIN)).toEqual({
+      ok: false,
+      errors: [{ kind: "richtungUeberzaehlig", index: 2, partId: "gerade-114" }],
+    });
+  });
+
+  test.skip("[REQ-CORE-28] Querung mit ungültigem Verweis vor der Querung: kein Ankunftsfehler", () => {
+    expect(runTrace(withFaultyAt2(crossing("f", "nirgends")), ORIGIN)).toEqual({
+      ok: false,
+      errors: [{ kind: "ungueltigerVerweis", index: 2, id: "f", ref: "nirgends" }],
+    });
+  });
+
+  test.skip("[REQ-CORE-28] bereits gequerte Kreuzung vor einer weiteren Querung: kein Ankunftsfehler", () => {
+    // Gültige Acht, danach eine zweite Querung von e1 (fehlerhaft), danach eine zweite Acht mit
+    // eigener Kreuzung b1 und falscher Ankunft (Gerade 171): nur bereitsGequert.
+    const second = wrongArrivalAcht().map((el) =>
+      isCrossing(el)
+        ? crossing(`b${el.id}`, `b${el.crosses}`)
+        : part(`b${el.id}`, el.part, el.turn),
+    );
+    const layout = [...ACHT, crossing("q2", "e1"), ...second];
+    expect(runTrace(layout, ORIGIN)).toEqual({
+      ok: false,
+      errors: [{ kind: "bereitsGequert", index: 10, id: "q2", ref: "e1" }],
+    });
+  });
+
   test.skip("[REQ-CORE-28] Fehler hinter der Querung werden zusätzlich zum Ankunftsfehler gemeldet", () => {
     const layout = replaceAt(
       replaceAt(ACHT, 4, part("e5", "gerade-171")),
