@@ -22,6 +22,8 @@ Folge für den Rechenkern:
 - 45°-Kurven bringen √2 hinein und brechen das Raster. Exakt bleibt es mit Koordinaten der Form
   `a + b·√2` (a, b rational) — „geschlossen" ist dann ein exakter Vergleich, keine Toleranz.
 - Toleranz der Steckverbindungen: keine Quelle gefunden.
+- Raster 57 mm = halbe Schienenbreite. Passt auch zu einspurigen Streckenelementen, die es laut
+  Nutzer gibt (nicht im Bestand, Teile noch nicht identifiziert).
 
 ## Teile
 
@@ -37,12 +39,12 @@ Folge für den Rechenkern:
 | Kurve 3/45° | 61645 | 323 × 211 | hoch |
 | Steilkurve 1/45° | 61612 | 155 × 155, Radius unbekannt | mittel |
 | Steilkurve 2/45° | 61646 | 226 × 166, Radius unbekannt | mittel |
-| Spurwechselkurve | 61655 | 228 × 228 | hoch |
-| Spurwechsel gerade | 61609 | 228 × 114 | mittel |
+| Spurwechselkurve | 61655 | 228 × 228, deckungsgleich mit Kurve 1/90° | hoch (Nutzer bestätigt) |
+| Spurwechsel gerade | 61609 | 228 × 114 (⅔ Standardgerade), keine Einbaurichtung | hoch (Nutzer bestätigt) |
 | Mech. Spurwechsel | 61618 | 342 × 215 | mittel |
 | Engstelle | 61610 | 228 × 114 | hoch |
 | Schikane | 61647 | 2 Teile, zusammen 458 × 225 | hoch |
-| Kreuzung | 61616 | 342 × 114 | hoch |
+| Kreuzung | 61616 | 342 × 114, Querweg 114 mittig (Acht) | hoch (nachgemessen) |
 | Anschlussstück | 61530 / 61666 | 114 × 114 | hoch (61666 nachgemessen) |
 | Zeitnahme / Rundenzähler | 88107 | 114 × 114 | hoch (nachgemessen) |
 | Wireless-Anschluss | aus 61676 | unbekannt, vermutlich 114 × 114 | niedrig |
@@ -80,7 +82,18 @@ K sind 4 kürzere gebogene Teile, etwa halb so lang wie ein Looping-Teil. Mit ih
 zwei normale 1/90°-Kurven als hohe, steile 180°-Kehre angesteckt. Die Kehre verbraucht also
 zwei Kurven aus dem Bestand.
 
-**Noch an der echten Packung prüfen:** Inhalt Ausbauset 1.
+**Kreuzung und Spurwechsel (2026-11-23):** Die Kreuzung ist für eine Acht gedacht; das
+Mach-8-Layout ist laut Anleitung vereinfacht eine Acht. Querarme mittig oben und unten,
+Schienenbreite nachgemessen genau 114 mm, also Querweg 114 mm. Der Spurwechsel in Ausbauset 1 ist
+vermutlich der gerade 61609 (228 mm, ohne Einbaurichtung).
+
+**Looping (2026-11-23, Angabe Tobias):** 8 Viertelkreis-Teile, jedes eine Spur breit; je 4 bilden
+einen einspurigen Looping, zwei nebeneinander den zweispurigen. Im Mach-8-Aufbau ist der Ausgang
+114 mm seitlich zum Eingang versetzt, damit davor und danach Standardstücke passen. Abstand nach
+vorn noch offen (#1). Einspurige Teile gibt es auch als Set 20061657 (8× einspurige Kurve 45°,
+4× einspurige Gerade 342), nicht im Bestand (#7).
+
+**Noch an der echten Packung prüfen:** Inhalt Ausbauset 1 (Spurwechsel gerade oder Kurve).
 
 ## Vorhandene Planer
 
