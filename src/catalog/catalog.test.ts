@@ -4,7 +4,8 @@
  * Öffentliche API (von spec-to-tests gewählt, wo die Spec sie offen lässt):
  * - `src/catalog/index.ts` exportiert `CATALOG: ReadonlyArray<CatalogEntry>`.
  * - CatalogEntry = { id, name, articleNumbers, source, certainty, geometry }
- *     articleNumbers: nicht leere Liste von Strings oder "keineEigene" (Spec: „eine oder mehrere,
+ *     articleNumbers: nicht leere Liste achtstelliger Ziffernfolgen als String (z. B. "20061602")
+ *       oder "keineEigene" (Spec: „eine oder mehrere,
  *       oder ausdrücklich ‚keine eigene‘“)
  *     certainty: "hoch" | "mittel" | "niedrig"
  *     geometry: { kind: "gerade", length } | { kind: "kurve", radius, angle: 45 | 90 }
@@ -47,103 +48,103 @@ const schemaApi = schemaModule as unknown as {
 const cat = (): ReadonlyArray<CatalogEntry> => catalogApi.CATALOG;
 
 /**
- * Tabelle „Katalog M1“ der Spec. articleNumbers `undefined` heißt: von der Spec nicht eindeutig
- * vorgegeben und deshalb hier nicht festgelegt (Wireless-Anschluss: „aus 61676“).
+ * Tabelle „Katalog M1“ der Spec. Art.-Nr. immer als volle achtstellige Nummer des Einzelartikels
+ * (REQ-CAT-2), z. B. „20061602“; Wireless-Anschluss 20061673 (Einzelartikel, nicht das Set).
  */
 type Expected = {
   readonly id: string;
-  readonly articleNumbers: ReadonlyArray<string> | "keineEigene" | undefined;
+  readonly articleNumbers: ReadonlyArray<string> | "keineEigene";
   readonly geometry: Geometry;
   readonly certainty: Certainty;
 };
 const EXPECTED: ReadonlyArray<Expected> = [
   {
     id: "gerade-342",
-    articleNumbers: ["61602"],
+    articleNumbers: ["20061602"],
     geometry: { kind: "gerade", length: 342 },
     certainty: "hoch",
   },
   {
     id: "gerade-171",
-    articleNumbers: ["61656"],
+    articleNumbers: ["20061656"],
     geometry: { kind: "gerade", length: 171 },
     certainty: "hoch",
   },
   {
     id: "gerade-114",
-    articleNumbers: ["61658"],
+    articleNumbers: ["20061658"],
     geometry: { kind: "gerade", length: 114 },
     certainty: "hoch",
   },
   {
     id: "kurve-1-90",
-    articleNumbers: ["61603"],
+    articleNumbers: ["20061603"],
     geometry: { kind: "kurve", radius: 171, angle: 90 },
     certainty: "hoch",
   },
   {
     id: "kurve-1-45",
-    articleNumbers: ["61611"],
+    articleNumbers: ["20061611"],
     geometry: { kind: "kurve", radius: 171, angle: 45 },
     certainty: "hoch",
   },
   {
     id: "kurve-2-45",
-    articleNumbers: ["61617"],
+    articleNumbers: ["20061617"],
     geometry: { kind: "kurve", radius: 285, angle: 45 },
     certainty: "mittel",
   },
   {
     id: "kurve-3-45",
-    articleNumbers: ["61645"],
+    articleNumbers: ["20061645"],
     geometry: { kind: "kurve", radius: 399, angle: 45 },
     certainty: "mittel",
   },
   {
     id: "spurwechselkurve",
-    articleNumbers: ["61655"],
+    articleNumbers: ["20061655"],
     geometry: { kind: "kurve", radius: 171, angle: 90 },
     certainty: "hoch",
   },
   {
     id: "spurwechsel-gerade",
-    articleNumbers: ["61609"],
+    articleNumbers: ["20061609"],
     geometry: { kind: "gerade", length: 228 },
     certainty: "hoch",
   },
   {
     id: "engstelle",
-    articleNumbers: ["61610"],
+    articleNumbers: ["20061610"],
     geometry: { kind: "gerade", length: 228 },
     certainty: "hoch",
   },
   {
     id: "kreuzung",
-    articleNumbers: ["61616"],
+    articleNumbers: ["20061616"],
     geometry: { kind: "kreuzung", length: 342, crossLength: 114 },
     certainty: "hoch",
   },
   {
     id: "anschlussstueck",
-    articleNumbers: ["61530", "61666"],
+    articleNumbers: ["20061530", "20061666"],
     geometry: { kind: "gerade", length: 114 },
     certainty: "hoch",
   },
   {
     id: "rundenzaehler",
-    articleNumbers: ["88107"],
+    articleNumbers: ["20088107"],
     geometry: { kind: "gerade", length: 114 },
     certainty: "hoch",
   },
   {
     id: "wireless-anschluss",
-    articleNumbers: undefined,
+    articleNumbers: ["20061673"],
     geometry: { kind: "masseFehlen" },
     certainty: "niedrig",
   },
   {
     id: "steilkurve-1-45",
-    articleNumbers: ["61612"],
+    articleNumbers: ["20061612"],
     geometry: { kind: "masseFehlen" },
     certainty: "mittel",
   },
@@ -161,7 +162,7 @@ const EXPECTED: ReadonlyArray<Expected> = [
   },
   {
     id: "looping",
-    articleNumbers: ["61613"],
+    articleNumbers: ["20061613"],
     geometry: { kind: "baugruppe", parts: [{ part: "looping-teil", count: 8 }] },
     certainty: "niedrig",
   },
@@ -226,18 +227,14 @@ describe("Katalog", () => {
         id: exp.id,
         certainty: exp.certainty,
       });
-      if (exp.articleNumbers !== undefined) {
-        const actual =
-          e.articleNumbers === "keineEigene" ? e.articleNumbers : [...e.articleNumbers].sort();
-        const wanted =
-          exp.articleNumbers === "keineEigene"
-            ? exp.articleNumbers
-            : [...exp.articleNumbers].sort();
-        expect({ id: e.id, articleNumbers: actual }).toEqual({
-          id: exp.id,
-          articleNumbers: wanted,
-        });
-      }
+      const actual =
+        e.articleNumbers === "keineEigene" ? e.articleNumbers : [...e.articleNumbers].sort();
+      const wanted =
+        exp.articleNumbers === "keineEigene" ? exp.articleNumbers : [...exp.articleNumbers].sort();
+      expect({ id: e.id, articleNumbers: actual }).toEqual({
+        id: exp.id,
+        articleNumbers: wanted,
+      });
     }
   });
 
@@ -260,7 +257,11 @@ describe("Katalog", () => {
       expect(["hoch", "mittel", "niedrig"]).toContain(e.certainty);
       if (e.articleNumbers !== "keineEigene") {
         expect(e.articleNumbers.length).toBeGreaterThan(0);
-        for (const nr of e.articleNumbers) expect(nr.trim().length).toBeGreaterThan(0);
+        // volle Nummer des Einzelartikels: genau 8 Ziffern als Zeichenkette, nie Kurzform
+        for (const nr of e.articleNumbers) {
+          expect({ id: e.id, type: typeof nr }).toEqual({ id: e.id, type: "string" });
+          expect(nr).toMatch(/^[0-9]{8}$/);
+        }
       }
     }
     expect(new Set(entries.map((e) => e.name)).size).toBe(entries.length);

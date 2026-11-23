@@ -35,11 +35,16 @@
  *     unbekanntesTeil { index, partId }            REQ-CORE-16
  *     nichtPlatzierbar { index, partId }           REQ-CORE-17
  *     richtungFehlt { index, partId }              REQ-CORE-18 (Kurve ohne turn)
- *     richtungUnerwartet { index, partId }         REQ-CORE-18 (Nicht-Kurve mit turn)
+ *     richtungUeberzaehlig { index, partId }       REQ-CORE-18 (Nicht-Kurve mit turn)
  *     ungueltigerVerweis { index, id, ref }        REQ-CORE-25
  *     bereitsGequert { index, id, ref }            REQ-CORE-26
  *     ankunftNichtAmQueranschluss { index, id, ref, arrival }  REQ-CORE-27
  *     doppelteElementId { id, indices }            REQ-CORE-29 (indices aufsteigend)
+ *   „Richtung fehlt“ und „Richtung überzählig“ sind nach REQ-CORE-18 zwei getrennte Arten.
+ *   Ein Element mit einem dieser Fehler (außer dem Ankunftsfehler selbst) ist „fehlerhaft“
+ *   (REQ-CORE-28); bei doppelter ID alle Elemente mit dieser ID. Ab dem ersten fehlerhaften
+ *   Element wird keine Ankunft mehr beurteilt; eine zweite Querung derselben Kreuzung meldet nur
+ *   bereitsGequert (REQ-CORE-26).
  *   Die Reihenfolge der Fehler in der Liste ist frei; die Tests sortieren.
  * - ClosureResult: { ok: true, closure } | { ok: false, errors } (errors wie bei trace).
  *   closure: { status: "leer" }
@@ -103,7 +108,7 @@ type TraceError =
   | { readonly kind: "unbekanntesTeil"; readonly index: number; readonly partId: string }
   | { readonly kind: "nichtPlatzierbar"; readonly index: number; readonly partId: string }
   | { readonly kind: "richtungFehlt"; readonly index: number; readonly partId: string }
-  | { readonly kind: "richtungUnerwartet"; readonly index: number; readonly partId: string }
+  | { readonly kind: "richtungUeberzaehlig"; readonly index: number; readonly partId: string }
   | {
       readonly kind: "ungueltigerVerweis";
       readonly index: number;
@@ -1025,11 +1030,11 @@ describe("Kern: Fehler", () => {
     });
     expect(runTrace([part("a", "gerade-114", "links")], ORIGIN)).toEqual({
       ok: false,
-      errors: [{ kind: "richtungUnerwartet", index: 0, partId: "gerade-114" }],
+      errors: [{ kind: "richtungUeberzaehlig", index: 0, partId: "gerade-114" }],
     });
     expect(runTrace([part("a", "kreuzung", "rechts")], ORIGIN)).toEqual({
       ok: false,
-      errors: [{ kind: "richtungUnerwartet", index: 0, partId: "kreuzung" }],
+      errors: [{ kind: "richtungUeberzaehlig", index: 0, partId: "kreuzung" }],
     });
     for (const partId of CURVE_IDS) {
       expect(runTrace([part("a", partId)], ORIGIN)).toEqual({
@@ -1058,7 +1063,7 @@ describe("Kern: Fehler", () => {
         { kind: "unbekanntesTeil", index: 1, partId: "gibt-es-nicht" },
         { kind: "richtungFehlt", index: 2, partId: "kurve-1-90" },
         { kind: "nichtPlatzierbar", index: 3, partId: "looping" },
-        { kind: "richtungUnerwartet", index: 4, partId: "gerade-171" },
+        { kind: "richtungUeberzaehlig", index: 4, partId: "gerade-171" },
         { kind: "unbekanntesTeil", index: 5, partId: "auch-nicht" },
       ],
     });
@@ -1204,14 +1209,35 @@ describe("Kern: Kreuzung und Querung", () => {
 
   test.skip("[REQ-CORE-26] mehrere Querungen derselben Kreuzung: erste gültig, jede weitere Fehler", () => {
     const layout = [...ACHT, crossing("q2", "e1"), part("g", "gerade-114"), crossing("q3", "e1")];
-    const r = runTrace(layout, ORIGIN);
-    if (r.ok) throw new Error("Fehler erwartet");
-    const gequert = r.errors.filter((e) => e.kind === "bereitsGequert");
-    expect(gequert).toEqual([
-      { kind: "bereitsGequert", index: 10, id: "q2", ref: "e1" },
-      { kind: "bereitsGequert", index: 12, id: "q3", ref: "e1" },
-    ]);
-    expect(r.errors.some((e) => errKey(e) === 5)).toBe(false);
+    // q2 kommt bei (0, 0, 0) an, q3 bei (114, 0, 0): beide nicht am Anschluss, aber nur
+    // bereitsGequert, kein Ankunftsfehler
+    expect(runTrace(layout, ORIGIN)).toEqual({
+      ok: false,
+      errors: [
+        { kind: "bereitsGequert", index: 10, id: "q2", ref: "e1" },
+        { kind: "bereitsGequert", index: 12, id: "q3", ref: "e1" },
+      ],
+    });
+  });
+
+  test.skip("[REQ-CORE-26] zweite Querung mit Ankunft genau am Queranschluss: trotzdem nur bereits gequert", () => {
+    // Nach der Acht steht die Bahn wieder am Eingang der Kreuzung e1. Derselbe Weg noch einmal
+    // (Gerade 342 statt Kreuzung, 3 Kurven rechts, Gerade 114) kommt exakt am rechten
+    // Queranschluss (171, −57, 2) an.
+    const again: LayoutElement[] = [
+      part("r1", "gerade-342"),
+      part("r2", "kurve-1-90", "rechts"),
+      part("r3", "kurve-1-90", "rechts"),
+      part("r4", "kurve-1-90", "rechts"),
+      part("r5", "gerade-114"),
+    ];
+    const prefix = okTrace(runTrace([...ACHT, ...again], ORIGIN));
+    expect(at(prefix.steps, 14).pose).toEqual(P(171, -57, 2));
+    const layout = [...ACHT, ...again, crossing("q2", "e1"), part("r7", "gerade-114")];
+    expect(runTrace(layout, ORIGIN)).toEqual({
+      ok: false,
+      errors: [{ kind: "bereitsGequert", index: 15, id: "q2", ref: "e1" }],
+    });
   });
 
   test.skip("[REQ-CORE-27] Ankunft an der Position des Anschlusses, aber aus der Kreuzung heraus", () => {
@@ -1350,19 +1376,32 @@ describe("Kern: Fehler an Querungen und Unabhängigkeit", () => {
       crossing("q2", "k"),
       crossing("q3", "k"),
     ];
-    const r = runTrace(layout, ORIGIN);
-    if (r.ok) throw new Error("Fehler erwartet");
-    expect(r.errors).toEqual(
-      expect.arrayContaining([
+    // q2 (index 7) hat einen gültigen Verweis, aber vor ihr liegen fehlerhafte Elemente: ihre
+    // Ankunft wird nicht beurteilt. Genau diese sechs Fehler, kein Ankunftsfehler.
+    expect(runTrace(layout, ORIGIN)).toEqual({
+      ok: false,
+      errors: [
         { kind: "ungueltigerVerweis", index: 1, id: "q1", ref: "nirgends" },
         { kind: "doppelteElementId", id: "a", indices: [2, 3] },
         { kind: "unbekanntesTeil", index: 4, partId: "gibt-es-nicht" },
         { kind: "nichtPlatzierbar", index: 5, partId: "steilkehre" },
         { kind: "richtungFehlt", index: 6, partId: "kurve-1-45" },
         { kind: "bereitsGequert", index: 8, id: "q3", ref: "k" },
-      ]),
-    );
-    expect(r.errors.filter((e) => e.kind === "ankunftNichtAmQueranschluss")).toEqual([]);
+      ],
+    });
+  });
+
+  test.skip("[REQ-CORE-28] fehlerhafte Querung meldet nie zusätzlich einen Ankunftsfehler", () => {
+    // Querung mit ungültigem Verweis an einer Stelle, an der eine Ankunft falsch wäre
+    const layout = [
+      ...replaceAt(ACHT, 4, part("e5", "gerade-171")).slice(0, 5),
+      crossing("e6", "e2"),
+      ...ACHT.slice(6),
+    ];
+    expect(runTrace(layout, ORIGIN)).toEqual({
+      ok: false,
+      errors: [{ kind: "ungueltigerVerweis", index: 5, id: "e6", ref: "e2" }],
+    });
   });
 
   test.skip("[REQ-CORE-29] doppelte Element-ID: Fehler mit der ID und allen Positionen", () => {
@@ -1386,9 +1425,59 @@ describe("Kern: Fehler an Querungen und Unabhängigkeit", () => {
 
   test.skip("[REQ-CORE-29] doppelte Element-ID zwischen Teil-Element und Querung", () => {
     const layout: LayoutElement[] = [...ACHT.slice(0, 5), crossing("e2", "e1")];
-    const r = runTrace(layout, ORIGIN);
-    if (r.ok) throw new Error("Fehler erwartet");
-    expect(r.errors).toContainEqual({ kind: "doppelteElementId", id: "e2", indices: [1, 5] });
+    expect(runTrace(layout, ORIGIN)).toEqual({
+      ok: false,
+      errors: [{ kind: "doppelteElementId", id: "e2", indices: [1, 5] }],
+    });
+  });
+
+  test.skip("[REQ-CORE-29] [REQ-CORE-28] doppelte ID vor der Querung: Ankunft wird nicht mehr beurteilt", () => {
+    // e3 trägt die ID von e2; Nr. 5 ist Gerade 171, die Ankunft wäre also falsch
+    const layout = replaceAt(
+      replaceAt(ACHT, 4, part("e5", "gerade-171")),
+      2,
+      part("e2", "kurve-1-90", "rechts"),
+    );
+    expect(runTrace(layout, ORIGIN)).toEqual({
+      ok: false,
+      errors: [{ kind: "doppelteElementId", id: "e2", indices: [1, 2] }],
+    });
+  });
+
+  test.skip("[REQ-CORE-29] [REQ-CORE-28] doppelte ID erst hinter der Querung: Ankunft wird beurteilt", () => {
+    // e8 trägt die ID von e7 (beide hinter der Querung); Nr. 5 ist Gerade 171
+    const layout = replaceAt(
+      replaceAt(ACHT, 4, part("e5", "gerade-171")),
+      7,
+      part("e7", "kurve-1-90", "links"),
+    );
+    expect(runTrace(layout, ORIGIN)).toEqual({
+      ok: false,
+      errors: [
+        {
+          kind: "ankunftNichtAmQueranschluss",
+          index: 5,
+          id: "e6",
+          ref: "e1",
+          arrival: P(171, 0, 2),
+        },
+        { kind: "doppelteElementId", id: "e7", indices: [6, 7] },
+      ],
+    });
+  });
+
+  test.skip("[REQ-CORE-29] [REQ-CORE-28] Querung trägt eine doppelte ID: kein Ankunftsfehler", () => {
+    // Die Querung selbst teilt ihre ID mit einem Element hinter ihr; vor ihr ist alles fehlerfrei,
+    // ihre Ankunft (Gerade 171) wäre falsch. Sie ist fehlerhaft und wird nicht beurteilt.
+    const layout = replaceAt(
+      replaceAt(ACHT, 4, part("e5", "gerade-171")),
+      6,
+      part("e6", "anschlussstueck"),
+    );
+    expect(runTrace(layout, ORIGIN)).toEqual({
+      ok: false,
+      errors: [{ kind: "doppelteElementId", id: "e6", indices: [5, 6] }],
+    });
   });
 });
 
@@ -1462,10 +1551,13 @@ describe("Kern: Abnahmefall Acht", () => {
 
   test.skip("[REQ-CORE-31] (d) zweite Querung derselben Kreuzung direkt hinter Nr. 6: bereits gequert", () => {
     const layout = [...ACHT.slice(0, 6), crossing("e6b", "e1"), ...ACHT.slice(6)];
-    const r = runClosure(layout, ORIGIN);
-    if (r.ok) throw new Error("Fehler erwartet");
-    expect(r.errors).toContainEqual({ kind: "bereitsGequert", index: 6, id: "e6b", ref: "e1" });
-    expect(r.errors.some((e) => errKey(e) < 6)).toBe(false);
+    // Ankunft der zweiten Querung wäre (171, 57, 2): nicht am Anschluss, wird aber nicht geprüft
+    const expected = {
+      ok: false,
+      errors: [{ kind: "bereitsGequert", index: 6, id: "e6b", ref: "e1" }],
+    };
+    expect(runTrace(layout, ORIGIN)).toEqual(expected);
+    expect(runClosure(layout, ORIGIN)).toEqual(expected);
   });
 
   test.skip("[REQ-CORE-31] (e) Querung an Position 1 vor der Kreuzung: ungültiger Verweis", () => {
@@ -1575,6 +1667,27 @@ describe("Teileverbrauch", () => {
       { kind: "unbekanntesTeil", index: 1, partId: "gibt-es-nicht" },
       { kind: "unbekanntesTeil", index: 3, partId: "auch-nicht" },
     ]);
+  });
+
+  test.skip("[REQ-CORE-21] Richtungen werden für den Verbrauch nicht geprüft, fehlend oder überzählig", () => {
+    expect(
+      core.consumption(cat(), [
+        part("a", "kurve-1-90"),
+        part("b", "gerade-342", "links"),
+        part("c", "kreuzung", "rechts"),
+        part("d", "steilkehre", "links"),
+        part("e", "kurve-2-45"),
+      ]),
+    ).toEqual({
+      ok: true,
+      counts: {
+        "kurve-1-90": 3,
+        "gerade-342": 1,
+        kreuzung: 1,
+        "steilkehre-teil": 4,
+        "kurve-2-45": 1,
+      },
+    });
   });
 
   test.skip("[REQ-CORE-21] Verweise und Element-IDs von Querungen werden für den Verbrauch nicht geprüft", () => {

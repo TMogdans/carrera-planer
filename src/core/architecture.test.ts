@@ -36,7 +36,7 @@ const INLINE_CATALOG = [
   {
     id: "gerade-342",
     name: "Gerade 342",
-    articleNumbers: ["61602"],
+    articleNumbers: ["20061602"],
     source: "CT",
     certainty: "hoch",
     geometry: { kind: "gerade", length: 342 },
@@ -44,7 +44,7 @@ const INLINE_CATALOG = [
   {
     id: "kurve-1-90",
     name: "Kurve 1/90°",
-    articleNumbers: ["61603"],
+    articleNumbers: ["20061603"],
     source: "Messung",
     certainty: "hoch",
     geometry: { kind: "kurve", radius: 171, angle: 90 },

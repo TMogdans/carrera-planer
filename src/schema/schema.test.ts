@@ -6,7 +6,8 @@
  *     CatalogEntrySchema: Schema<CatalogEntry, …>
  *     LayoutSchema: Schema<Layout, …>
  * - CatalogEntry wie im Katalog-Test: { id, name, articleNumbers: string[] (nicht leer) |
- *   "keineEigene", source, certainty: "hoch"|"mittel"|"niedrig", geometry }, geometry ∈
+ *   "keineEigene", source, certainty: "hoch"|"mittel"|"niedrig", geometry }. Jede Art.-Nr. ist
+ *   eine Zeichenkette aus genau 8 ASCII-Ziffern (z. B. "20061602"). geometry ∈
  *   { kind: "gerade", length } | { kind: "kurve", radius, angle: 45|90 }
  *   | { kind: "kreuzung", length, crossLength } | { kind: "masseFehlen" }
  *   | { kind: "baugruppe", parts: [{ part, count }] }.
@@ -61,7 +62,7 @@ const accepted = (r: Either.Either<unknown, unknown>): boolean => Either.isRight
 const ENTRY: CatalogEntry = {
   id: "gerade-342",
   name: "Gerade 342",
-  articleNumbers: ["61602"],
+  articleNumbers: ["20061602"],
   source: "CT",
   certainty: "hoch",
   geometry: { kind: "gerade", length: 342 },
@@ -103,7 +104,9 @@ describe("Katalog-Schema", () => {
       if (Either.isRight(r)) expect(r.right).toEqual(entry);
     }
     expect(accepted(decodeEntry({ ...ENTRY, articleNumbers: "keineEigene" }))).toBe(true);
-    expect(accepted(decodeEntry({ ...ENTRY, articleNumbers: ["61530", "61666"] }))).toBe(true);
+    expect(accepted(decodeEntry({ ...ENTRY, articleNumbers: ["20061530", "20061666"] }))).toBe(
+      true,
+    );
     for (const certainty of ["hoch", "mittel", "niedrig"]) {
       expect(accepted(decodeEntry({ ...ENTRY, certainty }))).toBe(true);
     }
@@ -118,6 +121,32 @@ describe("Katalog-Schema", () => {
     }
     expect(accepted(decodeEntry({ ...ENTRY, certainty: "sehr hoch" }))).toBe(false);
     expect(accepted(decodeEntry({ ...ENTRY, articleNumbers: "keine" }))).toBe(false);
+  });
+
+  test.skip("[REQ-SCHEMA-1] weist Art.-Nr. ab, die nicht aus genau 8 Ziffern bestehen", () => {
+    const invalid: ReadonlyArray<unknown> = [
+      ["61602"],
+      ["2006160a"],
+      ["200616020"],
+      ["2006160"],
+      [""],
+      [" 20061602"],
+      ["20061602 "],
+      ["2006-1602"],
+      ["２００６１６０２"],
+      [20061602],
+      ["20061530", "61666"],
+      [],
+      "20061602",
+    ];
+    for (const articleNumbers of invalid) {
+      expect({
+        articleNumbers,
+        accepted: accepted(decodeEntry({ ...ENTRY, articleNumbers })),
+      }).toEqual({ articleNumbers, accepted: false });
+    }
+    expect(accepted(decodeEntry({ ...ENTRY, articleNumbers: ["00000000"] }))).toBe(true);
+    expect(accepted(decodeEntry({ ...ENTRY, articleNumbers: ["20088107"] }))).toBe(true);
   });
 
   test.skip("[REQ-SCHEMA-1] weist Kurven mit einem anderen Winkel als 45° oder 90° ab", () => {
