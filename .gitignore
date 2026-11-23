@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+reports/
+.stryker-tmp/
+*.tsbuildinfo
+.env
+*.sqlite
+*.sqlite-journal
+
+# Claude Code: lokale, persönliche Konfiguration (nicht teilen)
+.claude/settings.local.json
+.claude/worktrees/
