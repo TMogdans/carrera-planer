@@ -71,8 +71,8 @@ Kopierfehler auf CT, nicht übernehmen: 61645 nennt „30°" (gemeint 45°), 616
 | Steilkehre-Teile (K) | 4 | – | – | 4 |
 
 Belege: Mach 8 aus der Zeichnung der Anleitung, am Karton bestätigt (2026-11-23): genau eine
-kurze Gerade, und die ist 114 mm. Keine 100-mm-Geraden, 61658 liegt also nicht bei, obwohl CT
-es listet. Kurze Gerade + Zeitnahme + Anschluss = 3 × 114 = 342 mm, eine lange Gerade.
+kurze Gerade, und die ist 114 mm. Sie gehört zu Art.-Nr. 20061658 (Packung mit 3 × 100 und
+3 × 114 mm); dem Mach 8 liegt davon nur ein 114er bei, keine 100-mm-Gerade. Kurze Gerade + Zeitnahme + Anschluss = 3 × 114 = 342 mm, eine lange Gerade.
 Damit liegt der ganze Bestand auf dem 57-mm-Raster; nur die 45°-Kurven brauchen √2.
 Ausbauset 1 nur über Händler, Ausbauset 3 von CT (dort als „Digital 143" gelabelt, Teile
 kompatibel). Wireless Upgrade Kit: Anschlussstück + 2 Regler, keine weiteren Schienen.

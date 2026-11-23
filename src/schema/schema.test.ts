@@ -112,6 +112,17 @@ describe("Katalog-Schema", () => {
     }
   });
 
+  test("[REQ-SCHEMA-1] [REQ-CAT-2] leerer Name, leere Quelle oder leere ID wird abgewiesen", () => {
+    // Eine leere Zeichenkette ist kein Name, keine Quelle und keine ID (REQ-CAT-2). Nur Leerraum
+    // wird hier bewusst nicht festgelegt: die Spec sagt dazu nichts.
+    for (const key of ["name", "source", "id"]) {
+      expect({ key, accepted: accepted(decodeEntry({ ...ENTRY, [key]: "" })) }).toEqual({
+        key,
+        accepted: false,
+      });
+    }
+  });
+
   test("[REQ-SCHEMA-1] weist Einträge ohne Quelle, ohne Sicherheit oder ohne andere Pflichtfelder ab", () => {
     for (const key of ["id", "name", "articleNumbers", "source", "certainty", "geometry"]) {
       expect({ key, accepted: accepted(decodeEntry(withoutKey(ENTRY, key))) }).toEqual({
@@ -154,6 +165,41 @@ describe("Katalog-Schema", () => {
       const entry = { ...ENTRY, geometry: { kind: "kurve", radius: 171, angle } };
       expect({ angle, accepted: accepted(decodeEntry(entry)) }).toEqual({ angle, accepted: false });
     }
+  });
+
+  test("[REQ-SCHEMA-1] Bestandteile einer Baugruppe brauchen Teil-ID und Anzahl ≥ 1", () => {
+    const assembly = (parts: unknown) => ({ ...ENTRY, geometry: { kind: "baugruppe", parts } });
+    expect(accepted(decodeEntry(assembly([{ part: "kurve-1-90", count: 1 }])))).toBe(true);
+    const invalid: ReadonlyArray<unknown> = [
+      [{ part: "kurve-1-90" }],
+      [{ part: "kurve-1-90", count: 0 }],
+      [{ part: "kurve-1-90", count: -2 }],
+      [{ part: "kurve-1-90", count: 1.5 }],
+      [{ part: "kurve-1-90", count: "2" }],
+      [{ count: 2 }],
+      [{ part: "", count: 2 }],
+      [{ part: 7, count: 2 }],
+      [5],
+      ["kurve-1-90"],
+      [null],
+      [{}],
+      [{ part: "kurve-1-90", count: 2 }, { part: "steilkehre-teil" }],
+      [],
+    ];
+    for (const parts of invalid) {
+      expect({ parts, accepted: accepted(decodeEntry(assembly(parts))) }).toEqual({
+        parts,
+        accepted: false,
+      });
+    }
+  });
+
+  test("[REQ-SCHEMA-3] Bestandteil einer Baugruppe mit unbekanntem Zusatzfeld wird abgewiesen", () => {
+    const entry = {
+      ...ENTRY,
+      geometry: { kind: "baugruppe", parts: [{ part: "kurve-1-90", count: 2, hoehe: 1 }] },
+    };
+    expect(accepted(decodeEntry(entry))).toBe(false);
   });
 
   test("[REQ-SCHEMA-1] Kreuzung braucht Längs- und Querweglänge, Baugruppe ihre Bestandteile", () => {
