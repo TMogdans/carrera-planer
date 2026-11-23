@@ -1,0 +1,14 @@
+[
+  ".github/**",
+  ".devloop/**",
+  ".specify/constitution.md",
+  "**/.semgrep/**",
+  ".semgrepignore",
+  "stryker.config.json",
+  "vitest.config.ts",
+  "vitest.mutation.config.ts",
+  "biome.json",
+  "tsconfig.json",
+  "package.json",
+  "pnpm-lock.yaml"
+]

@@ -1,0 +1,9 @@
+{
+  "_comment": "Von spec-to-tests geschriebene Tests in den T2/T3-Bereichen. Tests der Oberfläche (src/web) sind frei.",
+  "globs": [
+    "src/core/**/*.test.ts",
+    "src/catalog/**/*.test.ts",
+    "src/schema/**/*.test.ts",
+    "src/server/**/*.test.ts"
+  ]
+}
