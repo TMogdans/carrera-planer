@@ -42,7 +42,8 @@ Folge für den Rechenkern:
 | Engstelle | 61610 | 228 × 114 | hoch |
 | Schikane | 61647 | 2 Teile, zusammen 458 × 225 | hoch |
 | Kreuzung | 61616 | 342 × 114 | hoch |
-| Anschlussstück | 61530 / 61666 | 114 × 114 (61530) | hoch / unbekannt |
+| Anschlussstück | 61530 / 61666 | 114 × 114 | hoch (61666 nachgemessen) |
+| Zeitnahme / Rundenzähler | 88107 | 114 × 114 | hoch (nachgemessen) |
 | Wireless-Anschluss | aus 61676 | unbekannt, vermutlich 114 × 114 | niedrig |
 | Looping | 61613 | 8 Teile, Maße unbekannt | niedrig |
 | Brücke, Sprungschanze, Stützen | 61604, 61641, 61642 | ohne Maße | niedrig |
@@ -65,12 +66,14 @@ Kopierfehler auf CT, nicht übernehmen: 61645 nennt „30°" (gemeint 45°), 616
 | Anschluss / Zeitnahme | 1 / 1 | – | – | 1 / 1 |
 | Loop-Teile | 12 (8 L + 4 K) | – | – | 12, Zuordnung unklar |
 
-Belege: Mach 8 aus der Zeichnung der Anleitung (CT listet andere Packungen, Widerspruch),
+Belege: Mach 8 aus der Zeichnung der Anleitung, am Karton bestätigt (2026-11-23): genau eine
+kurze Gerade, und die ist 114 mm. Keine 100-mm-Geraden, 61658 liegt also nicht bei, obwohl CT
+es listet. Kurze Gerade + Zeitnahme + Anschluss = 3 × 114 = 342 mm, eine lange Gerade.
+Damit liegt der ganze Bestand auf dem 57-mm-Raster; nur die 45°-Kurven brauchen √2.
 Ausbauset 1 nur über Händler, Ausbauset 3 von CT (dort als „Digital 143" gelabelt, Teile
 kompatibel). Wireless Upgrade Kit: Anschlussstück + 2 Regler, keine weiteren Schienen.
 
-**An der echten Packung prüfen:** Stückzahlen Mach 8 (insbesondere 100-/114-mm-Geraden),
-Funktion der Teile K und L, Inhalt Ausbauset 1.
+**Noch an der echten Packung prüfen:** Funktion der Teile K und L, Inhalt Ausbauset 1.
 
 ## Vorhandene Planer
 
@@ -86,5 +89,5 @@ Kein kostenloser Browser-Editor speziell für GO!!! gefunden.
 1. Radien nur abgeleitet → nachmessen.
 2. Spurabstand Mitte–Mitte unbekannt.
 3. Radius der Steilkurven unbekannt.
-4. Maße von Loop, Brücke, Sprungschanze, Zeitnahme, Wireless-Anschluss fehlen.
+4. Maße von Loop, Brücke, Sprungschanze, Wireless-Anschluss fehlen.
 5. Streckenlänge Mach 8 (5,3 m laut CT) nicht nachgerechnet.
