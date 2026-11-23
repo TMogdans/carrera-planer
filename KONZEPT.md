@@ -43,10 +43,16 @@ ein exakter Vergleich ohne Millimeter-Toleranz.
   markiert ist.
 - **Offen:** Lücke zwischen Ende und Start, angezeigt als Versatz in mm und Winkel.
 
+**Baugruppen.** Manche Elemente bestehen aus mehreren Katalogteilen. Beispiel Steilkehre: 4
+K-Teile plus zwei normale 1/90°-Kurven, die oben als steile 180°-Kehre angesteckt werden. Im
+Editor ist eine Baugruppe ein einzelnes Element mit Eingang und Ausgang; im Bestand verbraucht
+sie alle ihre Teile. Die Steilkehre nimmt also zwei der acht 1/90°-Kurven weg. Auch der Looping
+ist eine Baugruppe (8 L-Teile).
+
 **Höhe** gibt es in Version 1 nur als Markierung (Teil ist erhöht / ist Brücke / ist Loop). Eine
 markierte Überschneidung ist erlaubt, eine unmarkierte ist ein Fehler.
 
-**Teile mit unbekannten Maßen** (Looping, Steilkurve, Wireless-Anschluss) gehen als Blackbox ein:
+**Teile mit unbekannten Maßen** (Looping, Steilkehre, Steilkurve 1/45°, Wireless-Anschluss) gehen als Blackbox ein:
 Versatz und Drehung zwischen Eingang und Ausgang, von uns gemessen. Bis dahin sind sie im Katalog
 als „Maße fehlen“ gekennzeichnet und nicht verwendbar.
 
@@ -92,8 +98,8 @@ bekommt einen Hinweis statt still überschrieben zu werden. Live-Mitbearbeitung 
 
 ## Offen
 
-1. Vermessen: Looping (Versatz Eingang→Ausgang), Steilkurve 1/45° (Radius), Teile K und L aus dem
-   Mach-8-Karton.
+1. Vermessen: Looping und Steilkehre (jeweils Lage des Ausgangs relativ zum Eingang auf dem
+   Boden), Steilkurve 1/45° (Radius).
 2. Inhalt Ausbauset 1 am Karton bestätigen (Händlerangabe: 2× Kurve 1/90°, 2× Spurwechsel,
    2× Gerade 342).
 3. Arbeitsweise: devloop-Kette (Spec → Tests → Implementierung → Kritiker) oder freier pro

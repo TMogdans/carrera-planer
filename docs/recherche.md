@@ -65,7 +65,8 @@ Kopierfehler auf CT, nicht übernehmen: 61645 nennt „30°" (gemeint 45°), 616
 | Engstelle | 1 | – | – | 1 |
 | Kreuzung | 1 | – | – | 1 |
 | Anschluss / Zeitnahme | 1 / 1 | – | – | 1 / 1 |
-| Loop-Teile | 12 (8 L + 4 K) | – | – | 12, Zuordnung unklar |
+| Looping-Teile (L) | 8 | – | – | 8 (2 Spuren × 4) |
+| Steilkehre-Teile (K) | 4 | – | – | 4 |
 
 Belege: Mach 8 aus der Zeichnung der Anleitung, am Karton bestätigt (2026-11-23): genau eine
 kurze Gerade, und die ist 114 mm. Keine 100-mm-Geraden, 61658 liegt also nicht bei, obwohl CT
@@ -74,7 +75,12 @@ Damit liegt der ganze Bestand auf dem 57-mm-Raster; nur die 45°-Kurven brauchen
 Ausbauset 1 nur über Händler, Ausbauset 3 von CT (dort als „Digital 143" gelabelt, Teile
 kompatibel). Wireless Upgrade Kit: Anschlussstück + 2 Regler, keine weiteren Schienen.
 
-**Noch an der echten Packung prüfen:** Funktion der Teile K und L, Inhalt Ausbauset 1.
+**Teile K und L am Karton geklärt (2026-11-23):** L sind die 8 Looping-Teile, 2 Spuren zu je 4.
+K sind 4 kürzere gebogene Teile, etwa halb so lang wie ein Looping-Teil. Mit ihnen werden oben
+zwei normale 1/90°-Kurven als hohe, steile 180°-Kehre angesteckt. Die Kehre verbraucht also
+zwei Kurven aus dem Bestand.
+
+**Noch an der echten Packung prüfen:** Inhalt Ausbauset 1.
 
 ## Vorhandene Planer
 
@@ -90,5 +96,6 @@ Kein kostenloser Browser-Editor speziell für GO!!! gefunden.
 1. R2/R3 nur abgeleitet (nicht im Bestand, daher unkritisch).
 2. Spurabstand Mitte–Mitte unbekannt.
 3. Radius der Steilkurven unbekannt.
-4. Maße von Loop, Brücke, Sprungschanze, Wireless-Anschluss fehlen.
+4. Maße von Loop, Steilkehre (Lage des Ausgangs relativ zum Eingang), Brücke, Sprungschanze,
+   Wireless-Anschluss fehlen.
 5. Streckenlänge Mach 8 (5,3 m laut CT) nicht nachgerechnet.
