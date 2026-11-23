@@ -22,6 +22,8 @@ Folge für den Rechenkern:
 - 45°-Kurven bringen √2 hinein und brechen das Raster. Exakt bleibt es mit Koordinaten der Form
   `a + b·√2` (a, b rational) — „geschlossen" ist dann ein exakter Vergleich, keine Toleranz.
 - Toleranz der Steckverbindungen: keine Quelle gefunden.
+- Raster 57 mm = halbe Schienenbreite. Passt auch zu einspurigen Streckenelementen, die es laut
+  Nutzer gibt (nicht im Bestand, Teile noch nicht identifiziert).
 
 ## Teile
 
