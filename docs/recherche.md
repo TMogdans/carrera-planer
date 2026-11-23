@@ -6,7 +6,8 @@ Bauanleitung Mach 8 (20062492, V04-01, 11.2022, als PDF bei CT), Händlerseiten.
 ## Geometrie
 
 Carrera nennt Außenmaße, aber **keine Radien**. Die Radien sind abgeleitet; vier unabhängige
-Maße passen auf < 1 mm, zwei auf 2–3 mm. **Vor dem Bau an einer echten Kurve nachmessen.**
+Maße passen auf < 1 mm, zwei auf 2–3 mm. **R1 am 2026-11-23 bestätigt:** zwei 1/90° als
+Halbkreis, Mitte zu Mitte passt exakt eine 342-mm-Gerade → R1 = 171 mm. R2/R3 weiter abgeleitet.
 
 - Schienenbreite: 114 mm (CT)
 - Mittellinien-Radien: R1 = 171 mm, R2 = 285 mm, R3 = 399 mm (Innen/Außen jeweils ±57 mm)
@@ -30,7 +31,7 @@ Folge für den Rechenkern:
 | Gerade halb | 61656 | 171 × 114 | hoch |
 | Gerade mittel | 61658 | 114 × 114 | hoch |
 | Gerade kurz | 61658 | 100 × 114 | hoch |
-| Kurve 1/90° | 61603 | 228 × 228 außen, R 171 | Maß hoch, Radius mittel |
+| Kurve 1/90° | 61603 | 228 × 228 außen, R 171 | hoch (nachgemessen) |
 | Kurve 1/45° | 61611 | Länge 161 | hoch |
 | Kurve 2/45° | 61617 | 242 × 179 | hoch |
 | Kurve 3/45° | 61645 | 323 × 211 | hoch |
@@ -86,7 +87,7 @@ Kein kostenloser Browser-Editor speziell für GO!!! gefunden.
 
 ## Offene Lücken
 
-1. Radien nur abgeleitet → nachmessen.
+1. R2/R3 nur abgeleitet (nicht im Bestand, daher unkritisch).
 2. Spurabstand Mitte–Mitte unbekannt.
 3. Radius der Steilkurven unbekannt.
 4. Maße von Loop, Brücke, Sprungschanze, Wireless-Anschluss fehlen.
