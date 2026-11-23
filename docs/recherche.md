@@ -37,12 +37,12 @@ Folge für den Rechenkern:
 | Kurve 3/45° | 61645 | 323 × 211 | hoch |
 | Steilkurve 1/45° | 61612 | 155 × 155, Radius unbekannt | mittel |
 | Steilkurve 2/45° | 61646 | 226 × 166, Radius unbekannt | mittel |
-| Spurwechselkurve | 61655 | 228 × 228 | hoch |
-| Spurwechsel gerade | 61609 | 228 × 114 | mittel |
+| Spurwechselkurve | 61655 | 228 × 228, deckungsgleich mit Kurve 1/90° | hoch (Nutzer bestätigt) |
+| Spurwechsel gerade | 61609 | 228 × 114 (⅔ Standardgerade), keine Einbaurichtung | hoch (Nutzer bestätigt) |
 | Mech. Spurwechsel | 61618 | 342 × 215 | mittel |
 | Engstelle | 61610 | 228 × 114 | hoch |
 | Schikane | 61647 | 2 Teile, zusammen 458 × 225 | hoch |
-| Kreuzung | 61616 | 342 × 114 | hoch |
+| Kreuzung | 61616 | 342 × 114, Querweg 114 mittig (Acht) | hoch (nachgemessen) |
 | Anschlussstück | 61530 / 61666 | 114 × 114 | hoch (61666 nachgemessen) |
 | Zeitnahme / Rundenzähler | 88107 | 114 × 114 | hoch (nachgemessen) |
 | Wireless-Anschluss | aus 61676 | unbekannt, vermutlich 114 × 114 | niedrig |
@@ -80,7 +80,12 @@ K sind 4 kürzere gebogene Teile, etwa halb so lang wie ein Looping-Teil. Mit ih
 zwei normale 1/90°-Kurven als hohe, steile 180°-Kehre angesteckt. Die Kehre verbraucht also
 zwei Kurven aus dem Bestand.
 
-**Noch an der echten Packung prüfen:** Inhalt Ausbauset 1.
+**Kreuzung und Spurwechsel (2026-11-23):** Die Kreuzung ist für eine Acht gedacht; das
+Mach-8-Layout ist laut Anleitung vereinfacht eine Acht. Querarme mittig oben und unten,
+Schienenbreite nachgemessen genau 114 mm, also Querweg 114 mm. Der Spurwechsel in Ausbauset 1 ist
+vermutlich der gerade 61609 (228 mm, ohne Einbaurichtung).
+
+**Noch an der echten Packung prüfen:** Inhalt Ausbauset 1 (Spurwechsel gerade oder Kurve).
 
 ## Vorhandene Planer
 

@@ -29,8 +29,22 @@ Grundlage: [docs/recherche.md](docs/recherche.md). R1 = 171 mm ist nachgemessen.
 
 **Modell.** Jedes Teil hat einen Eingang und einen Ausgang. Ein Layout ist eine **geordnete Folge
 von Teilen**; der Ausgang des einen ist der Eingang des nächsten. Verzweigungen gibt es bei GO!!!
-analog nicht: Spurwechsel und Kreuzung tauschen nur die Spuren innerhalb eines Teils. Eine Kurve
-hat zusätzlich eine Richtung (links/rechts).
+analog nicht: Der Spurwechsel tauscht nur die Spuren innerhalb eines Teils. Eine Kurve hat
+zusätzlich eine Richtung (links/rechts).
+
+**Kreuzung (Acht).** Die Kreuzung ist das einzige Teil, das die Strecke zweimal durchfährt: einmal
+längs (342 mm) und einmal quer durch die Mitte. Die Queranschlüsse liegen mittig, 171 mm hinter
+dem Eingang, und 114 mm voneinander entfernt (eine Schienenbreite). Der Querweg ist also 114 mm
+lang und steht im rechten Winkel zum Längsweg (nachgemessen 2026-11-23). In der Kette ist der
+zweite Durchgang ein eigenes Element **Querung**, das auf eine frühere Kreuzung verweist. Die
+Strecke muss exakt an einem Queranschluss ankommen und verlässt die Kreuzung am gegenüberliegenden.
+Die Querung verbraucht kein Teil. Fehler sind: Verweis auf keine Kreuzung, zweite Querung derselben
+Kreuzung, ungenaue Ankunft. Für die Überschneidungsprüfung ist die Kreuzung die einzige erlaubte
+Stelle ohne Markierung.
+
+**Raster.** Fast alle Längen sind Vielfache von 114 mm (Schienenbreite = ⅓ Standardgerade). Die
+Kurve 1/90° mit R1 = 171 mm und die halbe Gerade bringen halbe Schritte hinein; das gemeinsame
+Raster ist deshalb 57 mm. 45°-Kurven verlassen jedes Raster.
 
 **Exakte Rechnung statt Toleranz.** Alle Richtungen sind Vielfache von 45°. Sinus und Cosinus sind
 damit immer 0, ±1 oder ±√2/2. Jede Koordinate lässt sich exakt als `a + b·√2` darstellen, mit
