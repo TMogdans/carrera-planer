@@ -68,10 +68,11 @@ als „Maße fehlen“ gekennzeichnet und nicht verwendbar.
 
 | Teil | Wahl | Grund |
 |---|---|---|
-| Geometriekern | reines TypeScript-Modul, ohne UI und I/O | testbar, Herz der App |
-| Teilekatalog | Daten (JSON/TS), mit Quelle und Sicherheit je Maß | Recherche bleibt nachvollziehbar |
-| Frontend | Vite + TypeScript, Preact, Darstellung in SVG | klein, React-ähnlich, SVG reicht für 2D |
-| Backend | Node + Hono, SQLite | Layouts und Bestand für beide gemeinsam |
+| Datenvertrag | Effect Schema für Katalog, Layout, Bestand, API | einmal definiert, in Frontend und Backend geprüft; alte Layouts scheitern laut statt still |
+| Geometriekern | reines TypeScript-Modul, ohne UI, I/O und Effect-Laufzeit | reine Mathematik, Effect wäre nur Zeremonie |
+| Teilekatalog | Daten, gegen das Schema geprüft, mit Quelle und Sicherheit je Maß | Recherche bleibt nachvollziehbar |
+| Frontend | Vite + TypeScript, Preact, Darstellung in SVG; Effect nur als Schema | klein, React-ähnlich, SVG reicht für 2D |
+| Backend | Node, `@effect/platform` (HttpApi), `@effect/sql-sqlite-node` | typisierte Fehler, API aus dem Schema; Muster wie in paperless-mcp |
 | Deploy | Docker auf dem Raspi, eigener Port | kein Login, Heimnetz + VPN |
 
 Gleichzeitiges Bearbeiten: Versionsnummer je Layout. Wer auf einer veralteten Version speichert,
@@ -79,7 +80,7 @@ bekommt einen Hinweis statt still überschrieben zu werden. Live-Mitbearbeitung 
 
 ## Prüfen
 
-- Eigenschaftstests (fast-check) für den Kern, zum Beispiel: acht 45°- oder vier 90°-Kurven
+- Eigenschaftstests (fast-check, Generatoren aus dem Schema abgeleitet) für den Kern, zum Beispiel: acht 45°- oder vier 90°-Kurven
   derselben Richtung schließen exakt; ein Layout verschoben oder gedreht bleibt geschlossen;
   ein zusätzliches Teil öffnet ein geschlossenes Layout.
 - Bekannte reale Layouts als Abnahmefälle: Oval aus Bestand; das Mach-8-Layout aus der Anleitung,
@@ -94,7 +95,18 @@ bekommt einen Hinweis statt still überschrieben zu werden. Live-Mitbearbeitung 
 | M2 | Editor im Sandbox-Modus, Layout lokal im Browser | erste Strecken planbar |
 | M3 | Backend, Bestand, Bestandsmodus, Einkaufsliste | Kern der Idee fertig |
 | M4 | Deploy auf den Raspi | im Heimnetz nutzbar |
-| später | Spurlängen je Spur (Fairness), Tischmaß-Prüfung, „Strecke schließen“-Vorschlag, Einkaufsliste in kaufbaren Packungen, Höhen genauer | – |
+| später | Zufallsstrecke aus dem Bestand (s. u.), Spurlängen je Spur (Fairness), Tischmaß-Prüfung, „Strecke schließen“-Vorschlag, Einkaufsliste in kaufbaren Packungen, Höhen genauer | – |
+
+**Zufallsstrecke.** Ein aus dem Schema abgeleiteter Generator liefert *formal gültige* Layouts,
+aber fast nie *geschlossene*. Eine Zufallsstrecke zum Nachbauen braucht deshalb eine eigene Suche:
+zufällige Teilefolgen aus dem Bestand, die exakt schließen und sich nicht unmarkiert überschneiden.
+Der exakte Kern macht das „schließt?“ billig. Interessant wird es mit deutlich mehr Teilen.
+
+## Arbeitsweise
+
+- Rechenkern (M1): devloop-Kette — Spec → Tests → Implementierung → Kritiker.
+- Editor und Backend: freier pro Meilenstein, Fehler sind dort sichtbar.
+- Offene Punkte und Ideen als GitHub-Issues in TMogdans/carrera-planer.
 
 ## Offen
 
@@ -102,5 +114,3 @@ bekommt einen Hinweis statt still überschrieben zu werden. Live-Mitbearbeitung 
    Boden), Steilkurve 1/45° (Radius).
 2. Inhalt Ausbauset 1 am Karton bestätigen (Händlerangabe: 2× Kurve 1/90°, 2× Spurwechsel,
    2× Gerade 342).
-3. Arbeitsweise: devloop-Kette (Spec → Tests → Implementierung → Kritiker) oder freier pro
-   Meilenstein?
