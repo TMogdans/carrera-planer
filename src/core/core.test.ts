@@ -820,6 +820,74 @@ describe("Kern: Geschlossen und offen", () => {
     expect(runClosure(SAME_POSITION_OTHER_DIR, ORIGIN)).toEqual(open(ZERO, ZERO, 4));
   });
 
+  // Je Komponente der Pose (x = xa + xb·√2, y = ya + yb·√2, Richtung) ein reales Layout ab
+  // (0, 0, 0), dessen Ende NUR in dieser Komponente von der Startpose abweicht. Ein Vergleich,
+  // der eine Komponente auslässt, meldet dort fälschlich „geschlossen“.
+  const ONE_COMPONENT_OPEN: ReadonlyArray<{
+    readonly component: string;
+    readonly layout: LayoutElement[];
+    readonly end: Pose;
+    readonly expected: ClosureResult;
+  }> = [
+    {
+      component: "xa",
+      layout: [part("a", "gerade-342")],
+      end: P(342, 0, 0),
+      expected: open(C(-342), ZERO, 0),
+    },
+    {
+      component: "xb",
+      layout: ids("x", [
+        { part: "engstelle" },
+        { part: "kurve-1-90", turn: "links" },
+        { part: "kurve-2-45", turn: "links" },
+        { part: "kurve-1-90", turn: "links" },
+        { part: "kurve-2-45", turn: "links" },
+        { part: "kurve-1-90", turn: "links" },
+      ]),
+      end: P(C(0, 114), 0, 0),
+      expected: open(C(0, -114), ZERO, 0),
+    },
+    {
+      component: "ya",
+      layout: ids("y", [
+        { part: "gerade-342" },
+        { part: "kurve-1-90", turn: "links" },
+        { part: "kurve-1-90", turn: "links" },
+        { part: "gerade-342" },
+        { part: "kurve-1-90", turn: "rechts" },
+        { part: "kurve-1-90", turn: "rechts" },
+      ]),
+      end: P(0, 684, 0),
+      expected: open(ZERO, C(-684), 0),
+    },
+    {
+      component: "yb",
+      layout: ids("y", [
+        { part: "kurve-1-90", turn: "links" },
+        { part: "engstelle" },
+        { part: "kurve-1-90", turn: "links" },
+        { part: "kurve-2-45", turn: "links" },
+        { part: "kurve-1-90", turn: "links" },
+        { part: "kurve-2-45", turn: "links" },
+      ]),
+      end: P(0, C(0, 114), 0),
+      expected: open(ZERO, C(0, -114), 0),
+    },
+    {
+      component: "Richtung",
+      layout: [...SAME_POSITION_OTHER_DIR],
+      end: P(0, 0, 4),
+      expected: open(ZERO, ZERO, 4),
+    },
+  ];
+  for (const c of ONE_COMPONENT_OPEN) {
+    test.skip(`[REQ-CORE-10] [REQ-CORE-11] Ende weicht nur in ${c.component} vom Start ab: offen`, () => {
+      expect(okTrace(runTrace(c.layout, ORIGIN)).end).toEqual(c.end);
+      expect(runClosure(c.layout, ORIGIN)).toEqual(c.expected);
+    });
+  }
+
   test.skip("[REQ-CORE-10] [REQ-ARCH-2] Abweichung von 0,0085 mm ist offen, ohne Toleranz", () => {
     const end = okTrace(runTrace(NEAR_MISS, ORIGIN)).end;
     expect(end).toEqual(P(C(191691, -135546), 0, 0));
@@ -1279,6 +1347,73 @@ describe("Kern: Kreuzung und Querung", () => {
       ],
     });
   });
+
+  // Je Komponente eine Ankunft, die NUR in dieser Komponente vom rechten Queranschluss
+  // (171, −57, 2) der Acht-Kreuzung abweicht (Nr. 5 der Acht durch den Weg ersetzt). Für xb wird
+  // derselbe Weg wie für yb aus der Startpose (0, 0, 2) verfolgt: um 90° gedreht wird aus der
+  // Abweichung im √2-Anteil von y eine im √2-Anteil von x (Anschluss dann (57, 171, 4)).
+  const YB_WAY: ReadonlyArray<PartElement> = ids("w", [
+    { part: "gerade-114" },
+    { part: "kurve-1-45", turn: "links" },
+    { part: "kurve-1-90", turn: "rechts" },
+    { part: "kurve-1-45", turn: "links" },
+  ]);
+  const ONE_COMPONENT_ARRIVAL: ReadonlyArray<{
+    readonly component: string;
+    readonly way: ReadonlyArray<PartElement>;
+    readonly start: Pose;
+    readonly arrival: Pose;
+  }> = [
+    {
+      component: "xa",
+      way: ids("w", [
+        { part: "gerade-114" },
+        { part: "kurve-1-90", turn: "links" },
+        { part: "kurve-1-90", turn: "links" },
+        { part: "kurve-1-90", turn: "rechts" },
+        { part: "kurve-1-90", turn: "rechts" },
+      ]),
+      start: ORIGIN,
+      arrival: P(-513, -57, 2),
+    },
+    { component: "xb", way: YB_WAY, start: P(0, 0, 2), arrival: P(C(57, -342), 171, 4) },
+    { component: "ya", way: [part("w0", "gerade-342")], start: ORIGIN, arrival: P(171, 171, 2) },
+    { component: "yb", way: YB_WAY, start: ORIGIN, arrival: P(171, C(-57, 342), 2) },
+    {
+      component: "Richtung",
+      // erst an den Anschluss, dann die Schleife aus SAME_POSITION_OTHER_DIR: gleiche Position,
+      // Richtung um 180° gedreht (aus der Kreuzung heraus)
+      way: ids("w", [
+        { part: "gerade-114" },
+        { part: "gerade-342" },
+        ...repeat(3, "kurve-1-90", "links"),
+        { part: "kurve-1-90", turn: "rechts" },
+      ]),
+      start: ORIGIN,
+      arrival: P(171, -57, 6),
+    },
+  ];
+  for (const c of ONE_COMPONENT_ARRIVAL) {
+    test.skip(`[REQ-CORE-27] Ankunft weicht nur in ${c.component} vom Queranschluss ab: Fehler`, () => {
+      const head = [...(ACHT.slice(0, 4) as PartElement[]), ...c.way];
+      const ok = okTrace(runTrace(head, c.start));
+      const ports = at(ok.steps, 0).crossPorts;
+      expect(at(ok.steps, head.length - 1).pose).toEqual(c.arrival);
+      expect(ports?.right).toEqual(c.start.dir === 2 ? P(57, 171, 4) : P(171, -57, 2));
+      expect(runTrace([...head, crossing("q", "e1")], c.start)).toEqual({
+        ok: false,
+        errors: [
+          {
+            kind: "ankunftNichtAmQueranschluss",
+            index: head.length,
+            id: "q",
+            ref: "e1",
+            arrival: c.arrival,
+          },
+        ],
+      });
+    });
+  }
 
   test.skip("[REQ-CORE-27] jede andere Ankunft als ein Queranschluss ist ein Fehler, ohne Toleranz", () => {
     // Nr. 5 (Gerade 114) der Acht wird durch eine beliebige nicht leere Teilefolge ersetzt.
