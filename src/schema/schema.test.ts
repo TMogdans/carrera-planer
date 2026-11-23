@@ -112,6 +112,17 @@ describe("Katalog-Schema", () => {
     }
   });
 
+  test.skip("[REQ-SCHEMA-1] [REQ-CAT-2] leerer Name, leere Quelle oder leere ID wird abgewiesen", () => {
+    // Eine leere Zeichenkette ist kein Name, keine Quelle und keine ID (REQ-CAT-2). Nur Leerraum
+    // wird hier bewusst nicht festgelegt: die Spec sagt dazu nichts.
+    for (const key of ["name", "source", "id"]) {
+      expect({ key, accepted: accepted(decodeEntry({ ...ENTRY, [key]: "" })) }).toEqual({
+        key,
+        accepted: false,
+      });
+    }
+  });
+
   test.skip("[REQ-SCHEMA-1] weist Einträge ohne Quelle, ohne Sicherheit oder ohne andere Pflichtfelder ab", () => {
     for (const key of ["id", "name", "articleNumbers", "source", "certainty", "geometry"]) {
       expect({ key, accepted: accepted(decodeEntry(withoutKey(ENTRY, key))) }).toEqual({
