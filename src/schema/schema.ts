@@ -1,0 +1,90 @@
+/**
+ * Datenvertrag M1 (Spec .specify/specs/m1-rechenkern/spec.md, REQ-SCHEMA-1 bis -5): Katalogeintrag
+ * und Layout als Effect Schema (effect@3).
+ *
+ * Unbekannte Zusatzfelder macht das Schema selbst zum Fehler (parseOptions-Annotation
+ * `onExcessProperty: "error"` an der Wurzel; sie gilt für alle verschachtelten Strukturen). So
+ * scheitern alte oder fremde Daten laut, auch wenn der Aufrufer keine eigenen ParseOptions angibt.
+ */
+import { Schema } from "effect";
+
+const STRICT = { parseOptions: { onExcessProperty: "error" } } as const;
+
+/** Längen und Radien in mm: positive ganze Zahlen. */
+const Millimeters = Schema.Int.pipe(Schema.positive());
+
+/** Volle Art.-Nr. des Einzelartikels: genau 8 ASCII-Ziffern als Zeichenkette (REQ-CAT-2). */
+const ArticleNumber = Schema.String.pipe(Schema.pattern(/^[0-9]{8}$/));
+
+export const CertaintySchema = Schema.Literal("hoch", "mittel", "niedrig");
+
+export const GeometrySchema = Schema.Union(
+  Schema.Struct({ kind: Schema.Literal("gerade"), length: Millimeters }),
+  Schema.Struct({
+    kind: Schema.Literal("kurve"),
+    radius: Millimeters,
+    angle: Schema.Literal(45, 90),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("kreuzung"),
+    length: Millimeters,
+    crossLength: Millimeters,
+  }),
+  Schema.Struct({ kind: Schema.Literal("masseFehlen") }),
+  Schema.Struct({
+    kind: Schema.Literal("baugruppe"),
+    parts: Schema.NonEmptyArray(
+      Schema.Struct({
+        part: Schema.NonEmptyString,
+        count: Schema.Int.pipe(Schema.greaterThanOrEqualTo(1)),
+      }),
+    ),
+  }),
+);
+
+export const CatalogEntrySchema = Schema.Struct({
+  id: Schema.NonEmptyString,
+  name: Schema.NonEmptyString,
+  articleNumbers: Schema.Union(Schema.NonEmptyArray(ArticleNumber), Schema.Literal("keineEigene")),
+  source: Schema.NonEmptyString,
+  certainty: CertaintySchema,
+  geometry: GeometrySchema,
+}).annotations(STRICT);
+
+export type Certainty = typeof CertaintySchema.Type;
+export type Geometry = typeof GeometrySchema.Type;
+export type CatalogEntry = typeof CatalogEntrySchema.Type;
+
+/** Element-ID: nicht leere Zeichenkette, im Layout eindeutig (REQ-SCHEMA-2, REQ-SCHEMA-5). */
+const ElementId = Schema.NonEmptyString;
+
+export const TurnSchema = Schema.Literal("links", "rechts");
+
+/** Teil-Element: Teil-ID, bei Kurven Richtung. Ein Verweis (`crosses`) ist ein Zusatzfeld. */
+export const PartElementSchema = Schema.Struct({
+  id: ElementId,
+  part: Schema.String,
+  turn: Schema.optional(TurnSchema),
+});
+
+/** Querung: Verweis auf die Element-ID einer früheren Kreuzung, sonst nichts. */
+export const CrossingElementSchema = Schema.Struct({
+  id: ElementId,
+  crosses: Schema.String,
+});
+
+export const LayoutElementSchema = Schema.Union(PartElementSchema, CrossingElementSchema);
+
+const uniqueIds = (elements: ReadonlyArray<{ readonly id: string }>): boolean =>
+  new Set(elements.map((element) => element.id)).size === elements.length;
+
+export const LayoutSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(1),
+  elements: Schema.Array(LayoutElementSchema).pipe(Schema.filter(uniqueIds)),
+}).annotations(STRICT);
+
+export type Turn = typeof TurnSchema.Type;
+export type PartElement = typeof PartElementSchema.Type;
+export type CrossingElement = typeof CrossingElementSchema.Type;
+export type LayoutElement = typeof LayoutElementSchema.Type;
+export type Layout = typeof LayoutSchema.Type;

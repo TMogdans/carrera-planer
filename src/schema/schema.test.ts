@@ -82,7 +82,7 @@ const LAYOUT: Layout = {
 };
 
 describe("Katalog-Schema", () => {
-  test.skip("[REQ-SCHEMA-1] akzeptiert alle Geometriearten mit den Feldern aus REQ-CAT-2", () => {
+  test("[REQ-SCHEMA-1] akzeptiert alle Geometriearten mit den Feldern aus REQ-CAT-2", () => {
     const geometries: ReadonlyArray<Geometry> = [
       { kind: "gerade", length: 342 },
       { kind: "kurve", radius: 171, angle: 90 },
@@ -112,7 +112,7 @@ describe("Katalog-Schema", () => {
     }
   });
 
-  test.skip("[REQ-SCHEMA-1] weist Einträge ohne Quelle, ohne Sicherheit oder ohne andere Pflichtfelder ab", () => {
+  test("[REQ-SCHEMA-1] weist Einträge ohne Quelle, ohne Sicherheit oder ohne andere Pflichtfelder ab", () => {
     for (const key of ["id", "name", "articleNumbers", "source", "certainty", "geometry"]) {
       expect({ key, accepted: accepted(decodeEntry(withoutKey(ENTRY, key))) }).toEqual({
         key,
@@ -123,7 +123,7 @@ describe("Katalog-Schema", () => {
     expect(accepted(decodeEntry({ ...ENTRY, articleNumbers: "keine" }))).toBe(false);
   });
 
-  test.skip("[REQ-SCHEMA-1] weist Art.-Nr. ab, die nicht aus genau 8 Ziffern bestehen", () => {
+  test("[REQ-SCHEMA-1] weist Art.-Nr. ab, die nicht aus genau 8 Ziffern bestehen", () => {
     const invalid: ReadonlyArray<unknown> = [
       ["61602"],
       ["2006160a"],
@@ -149,14 +149,14 @@ describe("Katalog-Schema", () => {
     expect(accepted(decodeEntry({ ...ENTRY, articleNumbers: ["20088107"] }))).toBe(true);
   });
 
-  test.skip("[REQ-SCHEMA-1] weist Kurven mit einem anderen Winkel als 45° oder 90° ab", () => {
+  test("[REQ-SCHEMA-1] weist Kurven mit einem anderen Winkel als 45° oder 90° ab", () => {
     for (const angle of [0, 22.5, 30, 60, 135, 180, 360, -45, "45"]) {
       const entry = { ...ENTRY, geometry: { kind: "kurve", radius: 171, angle } };
       expect({ angle, accepted: accepted(decodeEntry(entry)) }).toEqual({ angle, accepted: false });
     }
   });
 
-  test.skip("[REQ-SCHEMA-1] Kreuzung braucht Längs- und Querweglänge, Baugruppe ihre Bestandteile", () => {
+  test("[REQ-SCHEMA-1] Kreuzung braucht Längs- und Querweglänge, Baugruppe ihre Bestandteile", () => {
     expect(accepted(decodeEntry({ ...ENTRY, geometry: { kind: "kreuzung", length: 342 } }))).toBe(
       false,
     );
@@ -171,14 +171,14 @@ describe("Katalog-Schema", () => {
 });
 
 describe("Layout-Schema", () => {
-  test.skip("[REQ-SCHEMA-2] Layout mit Schema-Version und Teil-Elementen und Querungen", () => {
+  test("[REQ-SCHEMA-2] Layout mit Schema-Version und Teil-Elementen und Querungen", () => {
     const r = decodeLayout(LAYOUT);
     expect(accepted(r)).toBe(true);
     if (Either.isRight(r)) expect(r.right).toEqual(LAYOUT);
     expect(accepted(decodeLayout({ schemaVersion: 1, elements: [] }))).toBe(true);
   });
 
-  test.skip("[REQ-SCHEMA-2] Element-ID ist eine nicht leere Zeichenkette, Richtung nur links/rechts", () => {
+  test("[REQ-SCHEMA-2] Element-ID ist eine nicht leere Zeichenkette, Richtung nur links/rechts", () => {
     const one = (el: unknown) => ({ schemaVersion: 1, elements: [el] });
     expect(accepted(decodeLayout(one({ id: "a", part: "gerade-342" })))).toBe(true);
     expect(accepted(decodeLayout(one({ id: "a", part: "kurve-1-90", turn: "links" })))).toBe(true);
@@ -190,7 +190,7 @@ describe("Layout-Schema", () => {
     );
   });
 
-  test.skip("[REQ-SCHEMA-3] fehlende oder fremde Schema-Version wird abgewiesen", () => {
+  test("[REQ-SCHEMA-3] fehlende oder fremde Schema-Version wird abgewiesen", () => {
     expect(accepted(decodeLayout({ elements: [] }))).toBe(false);
     for (const schemaVersion of [0, 2, "1", null, 1.5]) {
       expect({
@@ -200,7 +200,7 @@ describe("Layout-Schema", () => {
     }
   });
 
-  test.skip("[REQ-SCHEMA-3] unbekannte Zusatzfelder werden abgewiesen, nicht still entfernt", () => {
+  test("[REQ-SCHEMA-3] unbekannte Zusatzfelder werden abgewiesen, nicht still entfernt", () => {
     expect(accepted(decodeLayout({ ...LAYOUT, name: "Acht" }))).toBe(false);
     expect(
       accepted(
@@ -216,7 +216,7 @@ describe("Layout-Schema", () => {
     ).toBe(false);
   });
 
-  test.skip("[REQ-SCHEMA-3] falsch getypte Felder werden abgewiesen", () => {
+  test("[REQ-SCHEMA-3] falsch getypte Felder werden abgewiesen", () => {
     const cases: ReadonlyArray<unknown> = [
       { schemaVersion: 1, elements: {} },
       { schemaVersion: 1, elements: "e1" },
@@ -240,7 +240,7 @@ describe("Layout-Schema", () => {
     expect(accepted(decodeEntry({ ...ENTRY, source: 42 }))).toBe(false);
   });
 
-  test.skip("[REQ-SCHEMA-4] Kodieren und Dekodieren eines gültigen Layouts ergibt denselben Wert", () => {
+  test("[REQ-SCHEMA-4] Kodieren und Dekodieren eines gültigen Layouts ergibt denselben Wert", () => {
     const roundtrip = (v: Layout): Layout =>
       Schema.decodeUnknownSync(schemas.LayoutSchema)(Schema.encodeSync(schemas.LayoutSchema)(v));
     expect(roundtrip(LAYOUT)).toEqual(LAYOUT);
@@ -251,7 +251,7 @@ describe("Layout-Schema", () => {
     );
   });
 
-  test.skip("[REQ-SCHEMA-4] Kodieren und Dekodieren eines gültigen Katalogeintrags ergibt denselben Wert", () => {
+  test("[REQ-SCHEMA-4] Kodieren und Dekodieren eines gültigen Katalogeintrags ergibt denselben Wert", () => {
     const roundtrip = (v: CatalogEntry): CatalogEntry =>
       Schema.decodeUnknownSync(schemas.CatalogEntrySchema)(
         Schema.encodeSync(schemas.CatalogEntrySchema)(v),
@@ -264,7 +264,7 @@ describe("Layout-Schema", () => {
     );
   });
 
-  test.skip("[REQ-SCHEMA-5] doppelte oder leere Element-ID wird abgewiesen", () => {
+  test("[REQ-SCHEMA-5] doppelte oder leere Element-ID wird abgewiesen", () => {
     expect(
       accepted(
         decodeLayout({
@@ -296,7 +296,7 @@ describe("Layout-Schema", () => {
     );
   });
 
-  test.skip("[REQ-SCHEMA-5] Querung mit Teil-ID oder Richtung, Teil-Element mit Verweis werden abgewiesen", () => {
+  test("[REQ-SCHEMA-5] Querung mit Teil-ID oder Richtung, Teil-Element mit Verweis werden abgewiesen", () => {
     const one = (el: unknown) => ({
       schemaVersion: 1,
       elements: [{ id: "k", part: "kreuzung" }, el],
@@ -309,7 +309,7 @@ describe("Layout-Schema", () => {
     ).toBe(false);
   });
 
-  test.skip("[REQ-SCHEMA-5] Ziel und Ankunft einer Querung prüft nicht das Schema, sondern der Kern", () => {
+  test("[REQ-SCHEMA-5] Ziel und Ankunft einer Querung prüft nicht das Schema, sondern der Kern", () => {
     const layouts: ReadonlyArray<Layout> = [
       { schemaVersion: 1, elements: [{ id: "q", crosses: "gibt-es-nicht" }] },
       {

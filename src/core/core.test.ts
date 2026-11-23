@@ -516,7 +516,7 @@ const arbVec = (bound: bigint): fc.Arbitrary<Vec> =>
 // ---------------------------------------------------------------------------------------------
 
 describe("Kern: Lage berechnen", () => {
-  test.skip("[REQ-CORE-1] liefert die Pose nach jedem Element und die Endpose exakt (Beispiel)", () => {
+  test("[REQ-CORE-1] liefert die Pose nach jedem Element und die Endpose exakt (Beispiel)", () => {
     const layout = [
       part("a", "gerade-342"),
       part("b", "kurve-1-90", "links"),
@@ -532,7 +532,7 @@ describe("Kern: Lage berechnen", () => {
     expect(r.steps.every((s) => s.crossPorts === undefined)).toBe(true);
   });
 
-  test.skip("[REQ-CORE-1] Spur stimmt für beliebige Layouts und Startposen mit dem Orakel überein", () => {
+  test("[REQ-CORE-1] Spur stimmt für beliebige Layouts und Startposen mit dem Orakel überein", () => {
     fc.assert(
       fc.property(arbParts("p", 20), arbStart(), (layout, start) => {
         const r = okTrace(runTrace(layout, start));
@@ -554,7 +554,7 @@ describe("Kern: Lage berechnen", () => {
     );
   });
 
-  test.skip("[REQ-CORE-1] Zähler und Nenner der gelieferten Koordinaten sind bigint", () => {
+  test("[REQ-CORE-1] Zähler und Nenner der gelieferten Koordinaten sind bigint", () => {
     const raw = core.trace(cat(), [part("a", "kurve-1-45", "links")], ORIGIN);
     if (!raw.ok) throw new Error("unerwarteter Fehler");
     const pose = at(raw.steps, 0).pose;
@@ -567,12 +567,12 @@ describe("Kern: Lage berechnen", () => {
     }
   });
 
-  test.skip("[REQ-CORE-2] Gerade 342 aus (0, 0, k = 1) endet bei (171·√2, 171·√2, k = 1)", () => {
+  test("[REQ-CORE-2] Gerade 342 aus (0, 0, k = 1) endet bei (171·√2, 171·√2, k = 1)", () => {
     const r = okTrace(runTrace([part("a", "gerade-342")], P(0, 0, 1)));
     expect(r.end).toEqual(P(C(0, 171), C(0, 171), 1));
   });
 
-  test.skip("[REQ-CORE-2] jede Gerade verschiebt um ihre Länge in Fahrtrichtung, Richtung bleibt", () => {
+  test("[REQ-CORE-2] jede Gerade verschiebt um ihre Länge in Fahrtrichtung, Richtung bleibt", () => {
     const lengths: Record<string, number> = {
       "gerade-342": 342,
       "gerade-171": 171,
@@ -592,7 +592,7 @@ describe("Kern: Lage berechnen", () => {
     );
   });
 
-  test.skip("[REQ-CORE-3] Kurve 1/90° aus (0, 0, 0): links (171, 171, 2), rechts (171, −171, 6)", () => {
+  test("[REQ-CORE-3] Kurve 1/90° aus (0, 0, 0): links (171, 171, 2), rechts (171, −171, 6)", () => {
     expect(okTrace(runTrace([part("a", "kurve-1-90", "links")], ORIGIN)).end).toEqual(
       P(171, 171, 2),
     );
@@ -601,7 +601,7 @@ describe("Kern: Lage berechnen", () => {
     );
   });
 
-  test.skip("[REQ-CORE-4] Kurven 1/45°, 2/45°, 3/45° aus (0, 0, 0) mit R = 171, 285, 399", () => {
+  test("[REQ-CORE-4] Kurven 1/45°, 2/45°, 3/45° aus (0, 0, 0) mit R = 171, 285, 399", () => {
     for (const [partId, r] of [
       ["kurve-1-45", 171],
       ["kurve-2-45", 285],
@@ -616,19 +616,19 @@ describe("Kern: Lage berechnen", () => {
     }
   });
 
-  test.skip("[REQ-CORE-4] Kurve 1/45° links endet bei (171/2·√2, 171 − 171/2·√2, k = 1)", () => {
+  test("[REQ-CORE-4] Kurve 1/45° links endet bei (171/2·√2, 171 − 171/2·√2, k = 1)", () => {
     const r = okTrace(runTrace([part("a", "kurve-1-45", "links")], ORIGIN));
     expect(r.end).toEqual({ x: C(0, [171, 2]), y: C(171, [-171, 2]), dir: 1 });
   });
 
-  test.skip("[REQ-CORE-5] zwei Kurven 1/90° gleicher Richtung: Halbkreis mit 342 mm Abstand", () => {
+  test("[REQ-CORE-5] zwei Kurven 1/90° gleicher Richtung: Halbkreis mit 342 mm Abstand", () => {
     const left = ids("a", repeat(2, "kurve-1-90", "links"));
     const right = ids("a", repeat(2, "kurve-1-90", "rechts"));
     expect(okTrace(runTrace(left, ORIGIN)).end).toEqual(P(0, 342, 4));
     expect(okTrace(runTrace(right, ORIGIN)).end).toEqual(P(0, -342, 4));
   });
 
-  test.skip("[REQ-CORE-6] zwei Kurven 1/45° gleicher Richtung enden wie eine Kurve 1/90°", () => {
+  test("[REQ-CORE-6] zwei Kurven 1/45° gleicher Richtung enden wie eine Kurve 1/90°", () => {
     fc.assert(
       fc.property(arbStart(), arbTurn, (start, turn) => {
         const two = okTrace(runTrace(ids("a", repeat(2, "kurve-1-45", turn)), start));
@@ -638,7 +638,7 @@ describe("Kern: Lage berechnen", () => {
     );
   });
 
-  test.skip("[REQ-CORE-7] Gerade 342 ersetzt durch 3 × 114 oder durch eine Kreuzung: Endpose gleich", () => {
+  test("[REQ-CORE-7] Gerade 342 ersetzt durch 3 × 114 oder durch eine Kreuzung: Endpose gleich", () => {
     fc.assert(
       fc.property(arbParts("p"), arbParts("s"), arbStart(), (prefix, suffix, start) => {
         const base = [...prefix, part("x", "gerade-342"), ...suffix];
@@ -657,7 +657,7 @@ describe("Kern: Lage berechnen", () => {
     );
   });
 
-  test.skip("[REQ-CORE-8] verschobene und gedrehte Startpose verschiebt und dreht jede Pose der Spur", () => {
+  test("[REQ-CORE-8] verschobene und gedrehte Startpose verschiebt und dreht jede Pose der Spur", () => {
     fc.assert(
       fc.property(
         arbParts("p", 25),
@@ -674,7 +674,7 @@ describe("Kern: Lage berechnen", () => {
     );
   });
 
-  test.skip("[REQ-CORE-8] [REQ-ARCH-2] Tausende Elemente und riesige Verschiebungen ohne Genauigkeitsverlust", () => {
+  test("[REQ-CORE-8] [REQ-ARCH-2] Tausende Elemente und riesige Verschiebungen ohne Genauigkeitsverlust", () => {
     fc.assert(
       fc.property(
         fc.array(arbPlaceable, { minLength: 3000, maxLength: 3000 }).map((ps) => ids("p", ps)),
@@ -693,7 +693,7 @@ describe("Kern: Lage berechnen", () => {
     );
   });
 
-  test.skip("[REQ-CORE-8] mit Querung: Queranschlüsse wandern mit, die Querung bleibt gültig", () => {
+  test("[REQ-CORE-8] mit Querung: Queranschlüsse wandern mit, die Querung bleibt gültig", () => {
     fc.assert(
       fc.property(
         arbParts("p"),
@@ -713,7 +713,7 @@ describe("Kern: Lage berechnen", () => {
     );
   });
 
-  test.skip("[REQ-CORE-9] Kurvenrichtungen getauscht: Spur ist das Spiegelbild an der Startachse", () => {
+  test("[REQ-CORE-9] Kurvenrichtungen getauscht: Spur ist das Spiegelbild an der Startachse", () => {
     fc.assert(
       fc.property(arbParts("p", 25), arbStart(), (layout, start) => {
         const a = okTrace(runTrace(layout, start));
@@ -724,7 +724,7 @@ describe("Kern: Lage berechnen", () => {
     );
   });
 
-  test.skip("[REQ-CORE-9] Spiegelung mit Querung: Ankunft links wird zu Ankunft rechts und umgekehrt", () => {
+  test("[REQ-CORE-9] Spiegelung mit Querung: Ankunft links wird zu Ankunft rechts und umgekehrt", () => {
     fc.assert(
       fc.property(arbParts("p"), arbParts("s"), arbStart(), (prefix, suffix, start) => {
         const layout = [...prefix, ...ACHT, ...suffix];
@@ -808,25 +808,25 @@ const CLOSED_CASES: ReadonlyArray<ClosedCase> = [
 ];
 
 describe("Kern: Geschlossen und offen", () => {
-  test.skip("[REQ-CORE-10] geschlossen genau bei exakt gleicher Endposition und Endrichtung", () => {
+  test("[REQ-CORE-10] geschlossen genau bei exakt gleicher Endposition und Endrichtung", () => {
     expect(runClosure(ids("c", repeat(4, "kurve-1-90", "links")), ORIGIN)).toEqual(closedAt0());
     // ein Element mehr: nicht mehr exakt gleich
     expect(runClosure(ids("c", repeat(5, "kurve-1-90", "links")), ORIGIN).ok).toBe(true);
     expect(runClosure(ids("c", repeat(5, "kurve-1-90", "links")), ORIGIN)).not.toEqual(closedAt0());
   });
 
-  test.skip("[REQ-CORE-10] gleiche Position mit anderer Richtung ist offen", () => {
+  test("[REQ-CORE-10] gleiche Position mit anderer Richtung ist offen", () => {
     expect(okTrace(runTrace(SAME_POSITION_OTHER_DIR, ORIGIN)).end).toEqual(P(0, 0, 4));
     expect(runClosure(SAME_POSITION_OTHER_DIR, ORIGIN)).toEqual(open(ZERO, ZERO, 4));
   });
 
-  test.skip("[REQ-CORE-10] [REQ-ARCH-2] Abweichung von 0,0085 mm ist offen, ohne Toleranz", () => {
+  test("[REQ-CORE-10] [REQ-ARCH-2] Abweichung von 0,0085 mm ist offen, ohne Toleranz", () => {
     const end = okTrace(runTrace(NEAR_MISS, ORIGIN)).end;
     expect(end).toEqual(P(C(191691, -135546), 0, 0));
     expect(runClosure(NEAR_MISS, ORIGIN)).toEqual(open(C(-191691, 135546), ZERO, 0));
   });
 
-  test.skip("[REQ-CORE-10] geschlossen genau dann, wenn die Orakel-Endpose exakt die Startpose ist", () => {
+  test("[REQ-CORE-10] geschlossen genau dann, wenn die Orakel-Endpose exakt die Startpose ist", () => {
     const arbLayout = fc.oneof(
       arbParts("p", 10),
       fc
@@ -846,7 +846,7 @@ describe("Kern: Geschlossen und offen", () => {
     );
   });
 
-  test.skip("[REQ-CORE-11] offenes Layout: Versatz Ende → Start exakt und Winkel Start − Ende", () => {
+  test("[REQ-CORE-11] offenes Layout: Versatz Ende → Start exakt und Winkel Start − Ende", () => {
     expect(runClosure([part("a", "gerade-342")], ORIGIN)).toEqual(open(C(-342), ZERO, 0));
     expect(runClosure([part("a", "kurve-1-90", "links")], ORIGIN)).toEqual(
       open(C(-171), C(-171), -2),
@@ -870,7 +870,7 @@ describe("Kern: Geschlossen und offen", () => {
     );
   });
 
-  test.skip("[REQ-CORE-11] Versatz und Winkel für beliebige Layouts und Startposen", () => {
+  test("[REQ-CORE-11] Versatz und Winkel für beliebige Layouts und Startposen", () => {
     fc.assert(
       fc.property(arbParts("p", 15), arbStart(), (layout, start) => {
         fc.pre(layout.length > 0);
@@ -890,7 +890,7 @@ describe("Kern: Geschlossen und offen", () => {
     );
   });
 
-  test.skip("[REQ-CORE-11] geschlossen: Versatz und Winkel sind null", () => {
+  test("[REQ-CORE-11] geschlossen: Versatz und Winkel sind null", () => {
     fc.assert(
       fc.property(fc.constantFrom(...CLOSED_CASES), arbTurn, arbStart(), (c, turn, start) => {
         expect(runClosure(c.build(turn), start)).toEqual(closedAt0());
@@ -898,7 +898,7 @@ describe("Kern: Geschlossen und offen", () => {
     );
   });
 
-  test.skip("[REQ-CORE-12] leeres Layout hat den Status leer", () => {
+  test("[REQ-CORE-12] leeres Layout hat den Status leer", () => {
     fc.assert(
       fc.property(arbStart(), (start) => {
         expect(runClosure([], start)).toEqual({ ok: true, closure: { status: "leer" } });
@@ -907,7 +907,7 @@ describe("Kern: Geschlossen und offen", () => {
   });
 
   for (const c of CLOSED_CASES) {
-    test.skip(`[REQ-CORE-13] ${c.name} gleicher Richtung schließt aus beliebiger Startpose, links und rechts`, () => {
+    test(`[REQ-CORE-13] ${c.name} gleicher Richtung schließt aus beliebiger Startpose, links und rechts`, () => {
       fc.assert(
         fc.property(arbStart(), arbTurn, (start, turn) => {
           expect(runClosure(c.build(turn), start)).toEqual(closedAt0());
@@ -916,7 +916,7 @@ describe("Kern: Geschlossen und offen", () => {
     });
   }
 
-  test.skip("[REQ-CORE-14] ein eingefügtes Teil oder ein entferntes Element öffnet ein geschlossenes Layout", () => {
+  test("[REQ-CORE-14] ein eingefügtes Teil oder ein entferntes Element öffnet ein geschlossenes Layout", () => {
     const bases: ReadonlyArray<(t: Turn) => LayoutElement[]> = [
       ...CLOSED_CASES.map((c) => c.build),
       (t) => (t === "rechts" ? [...ACHT] : flipTurns(ACHT)),
@@ -967,7 +967,7 @@ describe("Kern: Geschlossen und offen", () => {
     );
   });
 
-  test.skip("[REQ-CORE-14] Einfügen vorn, mitten und hinten in das Oval öffnet es", () => {
+  test("[REQ-CORE-14] Einfügen vorn, mitten und hinten in das Oval öffnet es", () => {
     const oval = OVAL("links");
     for (const i of [0, 3, oval.length]) {
       const changed = [...oval.slice(0, i), part("neu", "gerade-114"), ...oval.slice(i)];
@@ -976,7 +976,7 @@ describe("Kern: Geschlossen und offen", () => {
     }
   });
 
-  test.skip("[REQ-CORE-15] Gesamtdrehung kein Vielfaches von 360°: offen, Winkel ≠ 0", () => {
+  test("[REQ-CORE-15] Gesamtdrehung kein Vielfaches von 360°: offen, Winkel ≠ 0", () => {
     const stepsOf = (el: PartElement): number => {
       const g = refGeom(el.part);
       return g.kind === "kurve" ? (el.turn === "links" ? g.steps : -g.steps) : 0;
@@ -1001,7 +1001,7 @@ describe("Kern: Geschlossen und offen", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Kern: Fehler", () => {
-  test.skip("[REQ-CORE-16] unbekannte Teil-ID: Fehler mit Index und Teil-ID, kein gültiges Teilergebnis", () => {
+  test("[REQ-CORE-16] unbekannte Teil-ID: Fehler mit Index und Teil-ID, kein gültiges Teilergebnis", () => {
     const layout = [part("a", "gerade-342"), part("b", "gerade-100"), part("c", "gerade-171")];
     expect(runTrace(layout, ORIGIN)).toEqual({
       ok: false,
@@ -1013,7 +1013,7 @@ describe("Kern: Fehler", () => {
     });
   });
 
-  test.skip("[REQ-CORE-17] nicht platzierbare Einträge: Fehler nichtPlatzierbar mit Index und Teil-ID", () => {
+  test("[REQ-CORE-17] nicht platzierbare Einträge: Fehler nichtPlatzierbar mit Index und Teil-ID", () => {
     for (const partId of NON_PLACEABLE_IDS) {
       const layout = [part("a", "gerade-342"), part("b", partId)];
       expect(runTrace(layout, ORIGIN)).toEqual({
@@ -1023,7 +1023,7 @@ describe("Kern: Fehler", () => {
     }
   });
 
-  test.skip("[REQ-CORE-18] Kurve ohne Richtung und Nicht-Kurve mit Richtung: Fehler mit Index und Teil-ID", () => {
+  test("[REQ-CORE-18] Kurve ohne Richtung und Nicht-Kurve mit Richtung: Fehler mit Index und Teil-ID", () => {
     expect(runTrace([part("a", "gerade-114"), part("b", "kurve-1-90")], ORIGIN)).toEqual({
       ok: false,
       errors: [{ kind: "richtungFehlt", index: 1, partId: "kurve-1-90" }],
@@ -1044,7 +1044,7 @@ describe("Kern: Fehler", () => {
     }
   });
 
-  test.skip("[REQ-CORE-19] Fehler sind Rückgabewerte und alle fehlerhaften Elemente werden gemeldet", () => {
+  test("[REQ-CORE-19] Fehler sind Rückgabewerte und alle fehlerhaften Elemente werden gemeldet", () => {
     const layout = [
       part("a", "gerade-342"),
       part("b", "gibt-es-nicht"),
@@ -1071,7 +1071,7 @@ describe("Kern: Fehler", () => {
     expect(() => core.consumption(cat(), layout)).not.toThrow();
   });
 
-  test.skip("[REQ-CORE-19] Querungsfehler werfen nicht und werden alle gemeldet", () => {
+  test("[REQ-CORE-19] Querungsfehler werfen nicht und werden alle gemeldet", () => {
     const layout: LayoutElement[] = [
       crossing("q0", "nirgends"),
       part("k", "kreuzung"),
@@ -1097,14 +1097,14 @@ describe("Kern: Fehler", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Kern: Kreuzung und Querung", () => {
-  test.skip("[REQ-CORE-23] Kreuzung aus (0, 0, 0): Ausgang (342, 0, 0), Queranschlüsse (171, ±57)", () => {
+  test("[REQ-CORE-23] Kreuzung aus (0, 0, 0): Ausgang (342, 0, 0), Queranschlüsse (171, ±57)", () => {
     const r = okTrace(runTrace([part("k", "kreuzung")], ORIGIN));
     expect(r.steps).toEqual([
       { pose: P(342, 0, 0), crossPorts: { left: P(171, 57, 6), right: P(171, -57, 2) } },
     ]);
   });
 
-  test.skip("[REQ-CORE-23] Kreuzung aus (0, 0, 1): Queranschlüsse (57√2, 114√2, 7) und (114√2, 57√2, 3)", () => {
+  test("[REQ-CORE-23] Kreuzung aus (0, 0, 1): Queranschlüsse (57√2, 114√2, 7) und (114√2, 57√2, 3)", () => {
     const r = okTrace(runTrace([part("k", "kreuzung")], P(0, 0, 1)));
     expect(r.steps).toEqual([
       {
@@ -1117,7 +1117,7 @@ describe("Kern: Kreuzung und Querung", () => {
     ]);
   });
 
-  test.skip("[REQ-CORE-23] Kreuzung aus beliebiger Pose: Längsweg wie Gerade 342, Anschlüsse nach Definition", () => {
+  test("[REQ-CORE-23] Kreuzung aus beliebiger Pose: Längsweg wie Gerade 342, Anschlüsse nach Definition", () => {
     fc.assert(
       fc.property(arbStart(), (start) => {
         const r = okTrace(runTrace([part("k", "kreuzung")], start));
@@ -1128,19 +1128,19 @@ describe("Kern: Kreuzung und Querung", () => {
     );
   });
 
-  test.skip("[REQ-CORE-24] Ankunft am rechten Anschluss (171, −57, 2) ergibt Ausgang (171, 57, 2)", () => {
+  test("[REQ-CORE-24] Ankunft am rechten Anschluss (171, −57, 2) ergibt Ausgang (171, 57, 2)", () => {
     const r = okTrace(runTrace(ACHT.slice(0, 6), ORIGIN));
     expect(at(r.steps, 4).pose).toEqual(P(171, -57, 2));
     expect(at(r.steps, 5)).toEqual({ pose: P(171, 57, 2) });
   });
 
-  test.skip("[REQ-CORE-24] Ankunft am linken Anschluss (171, 57, 6) ergibt Ausgang (171, −57, 6)", () => {
+  test("[REQ-CORE-24] Ankunft am linken Anschluss (171, 57, 6) ergibt Ausgang (171, −57, 6)", () => {
     const r = okTrace(runTrace(flipTurns(ACHT).slice(0, 6), ORIGIN));
     expect(at(r.steps, 4).pose).toEqual(P(171, 57, 6));
     expect(at(r.steps, 5)).toEqual({ pose: P(171, -57, 6) });
   });
 
-  test.skip("[REQ-CORE-24] Querung führt 114 mm in Fahrtrichtung zum gegenüberliegenden Anschluss", () => {
+  test("[REQ-CORE-24] Querung führt 114 mm in Fahrtrichtung zum gegenüberliegenden Anschluss", () => {
     fc.assert(
       fc.property(arbParts("p"), fc.boolean(), arbStart(), (prefix, mirrored, start) => {
         const layout = [...prefix, ...(mirrored ? flipTurns(ACHT) : ACHT)];
@@ -1157,7 +1157,7 @@ describe("Kern: Kreuzung und Querung", () => {
     );
   });
 
-  test.skip("[REQ-CORE-25] Verweis auf unbekannte ID, Nicht-Kreuzung, Querung oder spätere Position", () => {
+  test("[REQ-CORE-25] Verweis auf unbekannte ID, Nicht-Kreuzung, Querung oder spätere Position", () => {
     const cases: ReadonlyArray<{
       layout: LayoutElement[];
       index: number;
@@ -1207,7 +1207,7 @@ describe("Kern: Kreuzung und Querung", () => {
     }
   });
 
-  test.skip("[REQ-CORE-26] mehrere Querungen derselben Kreuzung: erste gültig, jede weitere Fehler", () => {
+  test("[REQ-CORE-26] mehrere Querungen derselben Kreuzung: erste gültig, jede weitere Fehler", () => {
     const layout = [...ACHT, crossing("q2", "e1"), part("g", "gerade-114"), crossing("q3", "e1")];
     // q2 kommt bei (0, 0, 0) an, q3 bei (114, 0, 0): beide nicht am Anschluss, aber nur
     // bereitsGequert, kein Ankunftsfehler
@@ -1220,7 +1220,7 @@ describe("Kern: Kreuzung und Querung", () => {
     });
   });
 
-  test.skip("[REQ-CORE-26] zweite Querung mit Ankunft genau am Queranschluss: trotzdem nur bereits gequert", () => {
+  test("[REQ-CORE-26] zweite Querung mit Ankunft genau am Queranschluss: trotzdem nur bereits gequert", () => {
     // Nach der Acht steht die Bahn wieder am Eingang der Kreuzung e1. Derselbe Weg noch einmal
     // (Gerade 342 statt Kreuzung, 3 Kurven rechts, Gerade 114) kommt exakt am rechten
     // Queranschluss (171, −57, 2) an.
@@ -1240,7 +1240,7 @@ describe("Kern: Kreuzung und Querung", () => {
     });
   });
 
-  test.skip("[REQ-CORE-27] Ankunft an der Position des Anschlusses, aber aus der Kreuzung heraus", () => {
+  test("[REQ-CORE-27] Ankunft an der Position des Anschlusses, aber aus der Kreuzung heraus", () => {
     // Kreuzung, drei Kurven links, 2 × 114: Ankunft (171, −57, 6) = rechte Position, Richtung k+6
     const layout = [
       part("k", "kreuzung"),
@@ -1263,7 +1263,7 @@ describe("Kern: Kreuzung und Querung", () => {
     });
   });
 
-  test.skip("[REQ-CORE-27] Ankunft an der linken Position mit Richtung 2 (aus der Kreuzung heraus)", () => {
+  test("[REQ-CORE-27] Ankunft an der linken Position mit Richtung 2 (aus der Kreuzung heraus)", () => {
     const layout = [...ACHT.slice(0, 4), part("g1", "gerade-114"), part("g2", "gerade-114")];
     const withCrossing = [...layout, crossing("q", "e1")];
     expect(runTrace(withCrossing, ORIGIN)).toEqual({
@@ -1280,7 +1280,7 @@ describe("Kern: Kreuzung und Querung", () => {
     });
   });
 
-  test.skip("[REQ-CORE-27] jede andere Ankunft als ein Queranschluss ist ein Fehler, ohne Toleranz", () => {
+  test("[REQ-CORE-27] jede andere Ankunft als ein Queranschluss ist ein Fehler, ohne Toleranz", () => {
     // Nr. 5 (Gerade 114) der Acht wird durch eine beliebige nicht leere Teilefolge ersetzt.
     fc.assert(
       fc.property(
@@ -1310,7 +1310,7 @@ describe("Kern: Kreuzung und Querung", () => {
 });
 
 describe("Kern: Fehler an Querungen und Unabhängigkeit", () => {
-  test.skip("[REQ-CORE-28] Fehler vor der Querung: Ankunft unbestimmt, kein Ankunftsfehler", () => {
+  test("[REQ-CORE-28] Fehler vor der Querung: Ankunft unbestimmt, kein Ankunftsfehler", () => {
     const layout = replaceAt(
       replaceAt(ACHT, 4, part("e5", "gerade-171")),
       2,
@@ -1322,7 +1322,7 @@ describe("Kern: Fehler an Querungen und Unabhängigkeit", () => {
     });
   });
 
-  test.skip("[REQ-CORE-28] Fehler hinter der Querung werden zusätzlich zum Ankunftsfehler gemeldet", () => {
+  test("[REQ-CORE-28] Fehler hinter der Querung werden zusätzlich zum Ankunftsfehler gemeldet", () => {
     const layout = replaceAt(
       replaceAt(ACHT, 4, part("e5", "gerade-171")),
       7,
@@ -1343,7 +1343,7 @@ describe("Kern: Fehler an Querungen und Unabhängigkeit", () => {
     });
   });
 
-  test.skip("[REQ-CORE-28] höchstens ein Ankunftsfehler je Verfolgung", () => {
+  test("[REQ-CORE-28] höchstens ein Ankunftsfehler je Verfolgung", () => {
     const wrongAcht = (prefix: string): LayoutElement[] =>
       replaceAt(ACHT, 4, part("e5", "gerade-171")).map((el) =>
         isCrossing(el)
@@ -1364,7 +1364,7 @@ describe("Kern: Fehler an Querungen und Unabhängigkeit", () => {
     ]);
   });
 
-  test.skip("[REQ-CORE-28] Fehler nach 16, 17, 18, 25, 26 und 29 werden unabhängig voneinander gemeldet", () => {
+  test("[REQ-CORE-28] Fehler nach 16, 17, 18, 25, 26 und 29 werden unabhängig voneinander gemeldet", () => {
     const layout: LayoutElement[] = [
       part("k", "kreuzung"),
       crossing("q1", "nirgends"),
@@ -1391,7 +1391,7 @@ describe("Kern: Fehler an Querungen und Unabhängigkeit", () => {
     });
   });
 
-  test.skip("[REQ-CORE-28] fehlerhafte Querung meldet nie zusätzlich einen Ankunftsfehler", () => {
+  test("[REQ-CORE-28] fehlerhafte Querung meldet nie zusätzlich einen Ankunftsfehler", () => {
     // Querung mit ungültigem Verweis an einer Stelle, an der eine Ankunft falsch wäre
     const layout = [
       ...replaceAt(ACHT, 4, part("e5", "gerade-171")).slice(0, 5),
@@ -1404,7 +1404,7 @@ describe("Kern: Fehler an Querungen und Unabhängigkeit", () => {
     });
   });
 
-  test.skip("[REQ-CORE-29] doppelte Element-ID: Fehler mit der ID und allen Positionen", () => {
+  test("[REQ-CORE-29] doppelte Element-ID: Fehler mit der ID und allen Positionen", () => {
     const layout = [
       part("a", "gerade-114"),
       part("b", "gerade-114"),
@@ -1423,7 +1423,7 @@ describe("Kern: Fehler an Querungen und Unabhängigkeit", () => {
     expect(runClosure(layout, ORIGIN).ok).toBe(false);
   });
 
-  test.skip("[REQ-CORE-29] doppelte Element-ID zwischen Teil-Element und Querung", () => {
+  test("[REQ-CORE-29] doppelte Element-ID zwischen Teil-Element und Querung", () => {
     const layout: LayoutElement[] = [...ACHT.slice(0, 5), crossing("e2", "e1")];
     expect(runTrace(layout, ORIGIN)).toEqual({
       ok: false,
@@ -1431,7 +1431,7 @@ describe("Kern: Fehler an Querungen und Unabhängigkeit", () => {
     });
   });
 
-  test.skip("[REQ-CORE-29] [REQ-CORE-28] doppelte ID vor der Querung: Ankunft wird nicht mehr beurteilt", () => {
+  test("[REQ-CORE-29] [REQ-CORE-28] doppelte ID vor der Querung: Ankunft wird nicht mehr beurteilt", () => {
     // e3 trägt die ID von e2; Nr. 5 ist Gerade 171, die Ankunft wäre also falsch
     const layout = replaceAt(
       replaceAt(ACHT, 4, part("e5", "gerade-171")),
@@ -1444,7 +1444,7 @@ describe("Kern: Fehler an Querungen und Unabhängigkeit", () => {
     });
   });
 
-  test.skip("[REQ-CORE-29] [REQ-CORE-28] doppelte ID erst hinter der Querung: Ankunft wird beurteilt", () => {
+  test("[REQ-CORE-29] [REQ-CORE-28] doppelte ID erst hinter der Querung: Ankunft wird beurteilt", () => {
     // e8 trägt die ID von e7 (beide hinter der Querung); Nr. 5 ist Gerade 171
     const layout = replaceAt(
       replaceAt(ACHT, 4, part("e5", "gerade-171")),
@@ -1466,7 +1466,7 @@ describe("Kern: Fehler an Querungen und Unabhängigkeit", () => {
     });
   });
 
-  test.skip("[REQ-CORE-29] [REQ-CORE-28] Querung trägt eine doppelte ID: kein Ankunftsfehler", () => {
+  test("[REQ-CORE-29] [REQ-CORE-28] Querung trägt eine doppelte ID: kein Ankunftsfehler", () => {
     // Die Querung selbst teilt ihre ID mit einem Element hinter ihr; vor ihr ist alles fehlerfrei,
     // ihre Ankunft (Gerade 171) wäre falsch. Sie ist fehlerhaft und wird nicht beurteilt.
     const layout = replaceAt(
@@ -1482,7 +1482,7 @@ describe("Kern: Fehler an Querungen und Unabhängigkeit", () => {
 });
 
 describe("Kern: Abnahmefall Acht", () => {
-  test.skip("[REQ-CORE-30] Acht aus (0, 0, 0): jede Zwischenpose wie in der Tabelle, geschlossen", () => {
+  test("[REQ-CORE-30] Acht aus (0, 0, 0): jede Zwischenpose wie in der Tabelle, geschlossen", () => {
     const r = okTrace(runTrace(ACHT, ORIGIN));
     expect(r.steps).toEqual(
       ACHT_POSES.map((pose, i) =>
@@ -1493,14 +1493,14 @@ describe("Kern: Abnahmefall Acht", () => {
     expect(runClosure(ACHT, ORIGIN)).toEqual(closedAt0());
   });
 
-  test.skip("[REQ-CORE-30] Acht gespiegelt: Zwischenposen wie in der Tabelle, geschlossen", () => {
+  test("[REQ-CORE-30] Acht gespiegelt: Zwischenposen wie in der Tabelle, geschlossen", () => {
     const mirrored = flipTurns(ACHT);
     const r = okTrace(runTrace(mirrored, ORIGIN));
     expect(r.steps.map((s) => s.pose)).toEqual(ACHT_MIRRORED_POSES);
     expect(runClosure(mirrored, ORIGIN)).toEqual(closedAt0());
   });
 
-  test.skip("[REQ-CORE-30] Acht schließt aus beliebiger Startpose, auch gespiegelt", () => {
+  test("[REQ-CORE-30] Acht schließt aus beliebiger Startpose, auch gespiegelt", () => {
     fc.assert(
       fc.property(arbStart(), fc.boolean(), (start, mirrored) => {
         const layout = mirrored ? flipTurns(ACHT) : ACHT;
@@ -1509,14 +1509,14 @@ describe("Kern: Abnahmefall Acht", () => {
     );
   });
 
-  test.skip("[REQ-CORE-30] Verbrauch der Acht: Kreuzung 1, Kurve 1/90° 6, Gerade 114 1, Anschlussstück 1", () => {
+  test("[REQ-CORE-30] Verbrauch der Acht: Kreuzung 1, Kurve 1/90° 6, Gerade 114 1, Anschlussstück 1", () => {
     expect(core.consumption(cat(), ACHT)).toEqual({
       ok: true,
       counts: { kreuzung: 1, "kurve-1-90": 6, "gerade-114": 1, anschlussstueck: 1 },
     });
   });
 
-  test.skip("[REQ-CORE-31] (a) Gerade 171 statt 114 vor der Querung: Ankunft nicht am Queranschluss", () => {
+  test("[REQ-CORE-31] (a) Gerade 171 statt 114 vor der Querung: Ankunft nicht am Queranschluss", () => {
     const layout = replaceAt(ACHT, 4, part("e5", "gerade-171"));
     const expected = {
       ok: false,
@@ -1534,12 +1534,12 @@ describe("Kern: Abnahmefall Acht", () => {
     expect(runClosure(layout, ORIGIN)).toEqual(expected);
   });
 
-  test.skip("[REQ-CORE-31] (b) Querung entfernt: offen, Versatz (0, 114), Winkel 0", () => {
+  test("[REQ-CORE-31] (b) Querung entfernt: offen, Versatz (0, 114), Winkel 0", () => {
     const layout = [...ACHT.slice(0, 5), ...ACHT.slice(6)];
     expect(runClosure(layout, ORIGIN)).toEqual(open(ZERO, C(114), 0));
   });
 
-  test.skip("[REQ-CORE-31] (c) Querung verweist auf Nr. 2 (Kurve): ungültiger Verweis", () => {
+  test("[REQ-CORE-31] (c) Querung verweist auf Nr. 2 (Kurve): ungültiger Verweis", () => {
     const layout = replaceAt(ACHT, 5, crossing("e6", "e2"));
     const expected = {
       ok: false,
@@ -1549,7 +1549,7 @@ describe("Kern: Abnahmefall Acht", () => {
     expect(runClosure(layout, ORIGIN)).toEqual(expected);
   });
 
-  test.skip("[REQ-CORE-31] (d) zweite Querung derselben Kreuzung direkt hinter Nr. 6: bereits gequert", () => {
+  test("[REQ-CORE-31] (d) zweite Querung derselben Kreuzung direkt hinter Nr. 6: bereits gequert", () => {
     const layout = [...ACHT.slice(0, 6), crossing("e6b", "e1"), ...ACHT.slice(6)];
     // Ankunft der zweiten Querung wäre (171, 57, 2): nicht am Anschluss, wird aber nicht geprüft
     const expected = {
@@ -1560,7 +1560,7 @@ describe("Kern: Abnahmefall Acht", () => {
     expect(runClosure(layout, ORIGIN)).toEqual(expected);
   });
 
-  test.skip("[REQ-CORE-31] (e) Querung an Position 1 vor der Kreuzung: ungültiger Verweis", () => {
+  test("[REQ-CORE-31] (e) Querung an Position 1 vor der Kreuzung: ungültiger Verweis", () => {
     const layout = [crossing("e6", "e1"), ...ACHT.slice(0, 5), ...ACHT.slice(6)];
     const expected = {
       ok: false,
@@ -1603,7 +1603,7 @@ const countsOf = (els: ReadonlyArray<LayoutElement>): Readonly<Record<string, nu
 };
 
 describe("Teileverbrauch", () => {
-  test.skip("[REQ-CORE-20] Baugruppen werden aufgelöst: Steilkehre + Kurve 1/90° und Looping", () => {
+  test("[REQ-CORE-20] Baugruppen werden aufgelöst: Steilkehre + Kurve 1/90° und Looping", () => {
     expect(
       core.consumption(cat(), [part("a", "steilkehre"), part("b", "kurve-1-90", "links")]),
     ).toEqual({ ok: true, counts: { "kurve-1-90": 3, "steilkehre-teil": 4 } });
@@ -1613,7 +1613,7 @@ describe("Teileverbrauch", () => {
     });
   });
 
-  test.skip("[REQ-CORE-20] je Katalogeintrag die Anzahl, Querung verbraucht nichts, Kreuzung einmal", () => {
+  test("[REQ-CORE-20] je Katalogeintrag die Anzahl, Querung verbraucht nichts, Kreuzung einmal", () => {
     const layout: LayoutElement[] = [
       part("a", "gerade-342"),
       part("b", "gerade-342"),
@@ -1636,7 +1636,7 @@ describe("Teileverbrauch", () => {
     expect(core.consumption(cat(), [])).toEqual({ ok: true, counts: {} });
   });
 
-  test.skip("[REQ-CORE-21] Verbrauch auch mit nicht platzierbaren Einträgen definiert", () => {
+  test("[REQ-CORE-21] Verbrauch auch mit nicht platzierbaren Einträgen definiert", () => {
     expect(
       core.consumption(cat(), [
         part("a", "steilkurve-1-45"),
@@ -1655,7 +1655,7 @@ describe("Teileverbrauch", () => {
     });
   });
 
-  test.skip("[REQ-CORE-21] unbekannte Teil-IDs sind Fehler, alle gemeldet", () => {
+  test("[REQ-CORE-21] unbekannte Teil-IDs sind Fehler, alle gemeldet", () => {
     const r = core.consumption(cat(), [
       part("a", "gerade-342"),
       part("b", "gibt-es-nicht"),
@@ -1669,7 +1669,7 @@ describe("Teileverbrauch", () => {
     ]);
   });
 
-  test.skip("[REQ-CORE-21] Richtungen werden für den Verbrauch nicht geprüft, fehlend oder überzählig", () => {
+  test("[REQ-CORE-21] Richtungen werden für den Verbrauch nicht geprüft, fehlend oder überzählig", () => {
     expect(
       core.consumption(cat(), [
         part("a", "kurve-1-90"),
@@ -1690,7 +1690,7 @@ describe("Teileverbrauch", () => {
     });
   });
 
-  test.skip("[REQ-CORE-21] Verweise und Element-IDs von Querungen werden für den Verbrauch nicht geprüft", () => {
+  test("[REQ-CORE-21] Verweise und Element-IDs von Querungen werden für den Verbrauch nicht geprüft", () => {
     const layout: LayoutElement[] = [
       crossing("q", "nirgends"),
       part("a", "gerade-114"),
@@ -1701,7 +1701,7 @@ describe("Teileverbrauch", () => {
     expect(core.consumption(cat(), layout)).toEqual({ ok: true, counts: { "gerade-114": 2 } });
   });
 
-  test.skip("[REQ-CORE-22] unabhängig von Reihenfolge, Kurvenrichtung und Element-IDs", () => {
+  test("[REQ-CORE-22] unabhängig von Reihenfolge, Kurvenrichtung und Element-IDs", () => {
     fc.assert(
       fc.property(arbAnyElement("p"), fc.array(fc.nat()), (layout, keys) => {
         const base = countsOf(layout);
@@ -1721,7 +1721,7 @@ describe("Teileverbrauch", () => {
     );
   });
 
-  test.skip("[REQ-CORE-22] Verbrauch zweier hintereinandergehängter Layouts ist die Summe", () => {
+  test("[REQ-CORE-22] Verbrauch zweier hintereinandergehängter Layouts ist die Summe", () => {
     fc.assert(
       fc.property(arbAnyElement("a"), arbAnyElement("b"), (first, second) => {
         const sum: Record<string, number> = { ...countsOf(first) };

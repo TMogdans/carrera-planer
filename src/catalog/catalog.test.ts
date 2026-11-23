@@ -208,7 +208,7 @@ const isPlaceable = (e: CatalogEntry): boolean =>
   e.geometry.kind === "gerade" || e.geometry.kind === "kurve" || e.geometry.kind === "kreuzung";
 
 describe("Katalog", () => {
-  test.skip("[REQ-CAT-1] enthält genau die Einträge der Tabelle Katalog M1", () => {
+  test("[REQ-CAT-1] enthält genau die Einträge der Tabelle Katalog M1", () => {
     expect(
       cat()
         .map((e) => e.id)
@@ -216,7 +216,7 @@ describe("Katalog", () => {
     ).toEqual(EXPECTED.map((e) => e.id).sort());
   });
 
-  test.skip("[REQ-CAT-1] Geometrie, Art.-Nr. und Sicherheit je Eintrag wie in der Tabelle", () => {
+  test("[REQ-CAT-1] Geometrie, Art.-Nr. und Sicherheit je Eintrag wie in der Tabelle", () => {
     for (const exp of EXPECTED) {
       const e = byId(exp.id);
       expect({ id: e.id, geometry: sortedParts(e.geometry) }).toEqual({
@@ -238,7 +238,7 @@ describe("Katalog", () => {
     }
   });
 
-  test.skip("[REQ-CAT-1] Platzierbarkeit wie in der Tabelle: Looping, Steilkehre, Steilkurve, Wireless, K und L nicht", () => {
+  test("[REQ-CAT-1] Platzierbarkeit wie in der Tabelle: Looping, Steilkehre, Steilkurve, Wireless, K und L nicht", () => {
     for (const e of cat()) {
       expect({ id: e.id, placeable: isPlaceable(e) }).toEqual({
         id: e.id,
@@ -247,7 +247,7 @@ describe("Katalog", () => {
     }
   });
 
-  test.skip("[REQ-CAT-2] jeder Eintrag hat eindeutige ID, Namen, Art.-Nr., Quelle und Sicherheit", () => {
+  test("[REQ-CAT-2] jeder Eintrag hat eindeutige ID, Namen, Art.-Nr., Quelle und Sicherheit", () => {
     const entries = cat();
     expect(new Set(entries.map((e) => e.id)).size).toBe(entries.length);
     for (const e of entries) {
@@ -267,7 +267,7 @@ describe("Katalog", () => {
     expect(new Set(entries.map((e) => e.name)).size).toBe(entries.length);
   });
 
-  test.skip("[REQ-CAT-3] jeder Katalogeintrag besteht die Prüfung gegen das Katalog-Schema", () => {
+  test("[REQ-CAT-3] jeder Katalogeintrag besteht die Prüfung gegen das Katalog-Schema", () => {
     for (const e of cat()) {
       const decoded = Schema.decodeUnknownEither(schemaApi.CatalogEntrySchema)(e);
       expect({ id: e.id, valid: Either.isRight(decoded) }).toEqual({ id: e.id, valid: true });
@@ -275,7 +275,7 @@ describe("Katalog", () => {
     }
   });
 
-  test.skip("[REQ-CAT-4] Bestandteile verweisen auf vorhandene Einträge, Anzahl ≥ 1, keine verschachtelte Baugruppe", () => {
+  test("[REQ-CAT-4] Bestandteile verweisen auf vorhandene Einträge, Anzahl ≥ 1, keine verschachtelte Baugruppe", () => {
     const ids = new Set(cat().map((e) => e.id));
     const assemblies = cat().filter((e) => e.geometry.kind === "baugruppe");
     expect(assemblies.map((e) => e.id).sort()).toEqual(["looping", "steilkehre"]);
@@ -291,7 +291,7 @@ describe("Katalog", () => {
     }
   });
 
-  test.skip("[REQ-CAT-5] Geometrien platzierbarer Einträge liegen auf dem 57-mm-Raster", () => {
+  test("[REQ-CAT-5] Geometrien platzierbarer Einträge liegen auf dem 57-mm-Raster", () => {
     const multipleOf57 = (v: number): boolean => Number.isInteger(v) && v > 0 && v % 57 === 0;
     for (const e of cat().filter(isPlaceable)) {
       const g = e.geometry;
