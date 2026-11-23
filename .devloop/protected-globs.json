@@ -10,5 +10,7 @@
   "biome.json",
   "tsconfig.json",
   "package.json",
-  "pnpm-lock.yaml"
+  "pnpm-lock.yaml",
+  "pnpm-workspace.yaml",
+  ".nvmrc"
 ]

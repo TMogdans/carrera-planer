@@ -16,6 +16,8 @@
 /tsconfig.json              @TMogdans
 /package.json               @TMogdans
 /pnpm-lock.yaml             @TMogdans
+/pnpm-workspace.yaml        @TMogdans
+/.nvmrc                     @TMogdans
 
 # T3: Datenvertrag, Migrationen
 /src/schema/                @TMogdans

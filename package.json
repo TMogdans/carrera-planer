@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "test": "vitest run --passWithNoTests",
-    "test:mutation": "if [ -n \"$(find src/core src/catalog src/schema -name '*.ts' ! -name '*.test.ts' ! -name 'index.ts')\" ]; then stryker run; else echo 'test:mutation: noch kein mutierbarer Code in src/core|catalog|schema, nichts zu pruefen'; fi"
+    "test:mutation": "for d in src/core src/catalog src/schema; do [ -d \"$d\" ] || { echo \"test:mutation: $d fehlt\" >&2; exit 1; }; done; if [ -n \"$(find src/core src/catalog src/schema -name '*.ts' ! -name '*.test.ts' ! -name 'index.ts')\" ]; then stryker run; else echo 'test:mutation: noch kein mutierbarer Code in src/core|catalog|schema, nichts zu pruefen'; fi"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.8",
