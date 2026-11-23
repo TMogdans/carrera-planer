@@ -401,12 +401,13 @@ M3.
 
 ## Smoke
 
-Aufrufer des geänderten Pfads: **keiner.** Nachgesehen am Basisstand `a0eb290` und erneut am
-Branch-Stand `65ec16a` (unverändert): alle
-`src/*/index.ts` sind Platzhalter (`src/web/index.ts:2`, `src/server/index.ts:2`,
-`src/core/index.ts:2`, `src/catalog/index.ts:2`, `src/schema/index.ts:2`, jeweils `export {};`),
-und kein Quelltext unter `src/` importiert etwas. Oberfläche (M2) und Backend (M3) gibt es noch
-nicht; MCP oder andere Dienste rufen nichts auf.
+Aufrufer des geänderten Pfads: **keiner.** Zur Spec-Abnahme (Basisstand `a0eb290`, Branch-Stand
+`65ec16a`) waren alle `src/*/index.ts` Platzhalter (`export {};`). Seit der Implementierung
+(`3db7bc8`, #9) exportieren `src/core/index.ts`, `src/catalog/index.ts` und
+`src/schema/index.ts` die M1-API; Platzhalter sind nur noch `src/web/index.ts:2` und
+`src/server/index.ts:2`. Importe gibt es nur innerhalb von M1 (`core` und `catalog` beziehen
+Typen aus `schema`) und in den Tests; außerhalb von M1 importiert nichts unter `src/` den Kern.
+Oberfläche (M2) und Backend (M3) gibt es noch nicht; MCP oder andere Dienste rufen nichts auf.
 
 Abnahme aus Nutzersicht ist deshalb der Mensch am Testlauf und am Katalog:
 
