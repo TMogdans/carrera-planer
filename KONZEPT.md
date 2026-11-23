@@ -1,6 +1,6 @@
 # Konzept: carrera-planer
 
-**Status: Entwurf, 2026-11-23, wartet auf Abnahme.** Dieses Dokument ist die Wurzel. Spätere
+**Status: abgenommen am 2026-11-23.** Dieses Dokument ist die Wurzel. Spätere
 Änderungen werden vor dem Weiterbauen abgenommen.
 
 ## Ziel
@@ -95,7 +95,7 @@ bekommt einen Hinweis statt still überschrieben zu werden. Live-Mitbearbeitung 
 | M2 | Editor im Sandbox-Modus, Layout lokal im Browser | erste Strecken planbar |
 | M3 | Backend, Bestand, Bestandsmodus, Einkaufsliste | Kern der Idee fertig |
 | M4 | Deploy auf den Raspi | im Heimnetz nutzbar |
-| später | Zufallsstrecke aus dem Bestand (s. u.), Spurlängen je Spur (Fairness), Tischmaß-Prüfung, „Strecke schließen“-Vorschlag, Einkaufsliste in kaufbaren Packungen, Höhen genauer | – |
+| später | Zufallsstrecke aus dem Bestand (#3), Drag & Drop im Editor (#4), Leaderboard für Rennzeiten, später mit digitalem Rundenzähler (#5), Spurlängen je Spur (Fairness), Tischmaß-Prüfung, „Strecke schließen“-Vorschlag, Einkaufsliste in kaufbaren Packungen, Höhen genauer | – |
 
 **Zufallsstrecke.** Ein aus dem Schema abgeleiteter Generator liefert *formal gültige* Layouts,
 aber fast nie *geschlossene*. Eine Zufallsstrecke zum Nachbauen braucht deshalb eine eigene Suche:
@@ -111,6 +111,6 @@ Der exakte Kern macht das „schließt?“ billig. Interessant wird es mit deutl
 ## Offen
 
 1. Vermessen: Looping und Steilkehre (jeweils Lage des Ausgangs relativ zum Eingang auf dem
-   Boden), Steilkurve 1/45° (Radius).
+   Boden), Steilkurve 1/45° (Radius). → #1
 2. Inhalt Ausbauset 1 am Karton bestätigen (Händlerangabe: 2× Kurve 1/90°, 2× Spurwechsel,
-   2× Gerade 342).
+   2× Gerade 342). → #2
