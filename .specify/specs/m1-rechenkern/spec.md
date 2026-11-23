@@ -80,7 +80,7 @@ Carrera-Außenmaßen geschlossen, nicht nachgemessen.
 | Kreuzung | 61616 | Kreuzung: längs 342 mm, Querweg 114 mm mittig und senkrecht (Acht) | ja | hoch (nachgemessen) | CT, Messung 2026-11-23 |
 | Anschlussstück | 61530, 61666 | Gerade 114 mm | ja | hoch (61666 nachgemessen) | CT, Messung |
 | Rundenzähler | 88107 | Gerade 114 mm | ja | hoch (nachgemessen) | CT, Messung |
-| Wireless-Anschluss | aus 61676 | Maße fehlen | nein | niedrig | Händler |
+| Wireless-Anschluss | 61673 | Maße fehlen | nein | niedrig | CT Einzelartikel 20061673 „GO!!! Wireless Anschluss-Schiene“; 1 × enthalten im Wireless Upgrade Kit 20061676 (Set-Vorlage erst M3) |
 | Steilkurve 1/45° | 61612 | Maße fehlen (Radius unbekannt) | nein | mittel (Außenmaß), Radius unbekannt | CT |
 | Looping-Teil (L) | keine eigene | Maße fehlen, nur in Baugruppe | nein | niedrig | Karton Mach 8 |
 | Steilkehre-Teil (K) | keine eigene | Maße fehlen, nur in Baugruppe | nein | niedrig | Karton Mach 8 |
@@ -159,8 +159,10 @@ Nicht im M1-Katalog: siehe Nicht-Ziele.
 - **REQ-CORE-17** [If/Then] Verweist ein Element auf einen nicht platzierbaren Eintrag („Maße
   fehlen“, Baugruppe ohne Maße, „nur in Baugruppe“), meldet die Verfolgung einen Fehler „nicht
   platzierbar“ mit Index und Teil-ID. Maße werden nie geschätzt.
-- **REQ-CORE-18** [If/Then] Fehlt bei einer Kurve die Richtung oder trägt ein Nicht-Kurven-Teil
-  eine Richtung, meldet die Verfolgung einen Fehler mit Index und Teil-ID.
+- **REQ-CORE-18** [If/Then] Fehlt bei einer Kurve die Richtung, meldet die Verfolgung einen
+  Fehler „Richtung fehlt“; trägt ein Nicht-Kurven-Teil eine Richtung, meldet sie einen Fehler
+  „Richtung überzählig“. Das sind zwei unterscheidbare Fehlerarten, jeweils mit Index und
+  Teil-ID.
 - **REQ-CORE-19** [Contract] Fehler sind Rückgabewerte des Kerns (unterscheidbares Ergebnis), keine
   geworfenen Ausnahmen. Es werden alle fehlerhaften Elemente gemeldet, nicht nur das erste; für
   Ankunftsfehler an Querungen gilt die Einschränkung aus REQ-CORE-28.
@@ -185,21 +187,28 @@ Nicht im M1-Katalog: siehe Nicht-Ziele.
   „ungültiger Verweis“ mit Position der Querung, Element-ID der Querung und verwiesener ID.
 - **REQ-CORE-26** [If/Then] Verweisen zwei oder mehr Querungen auf dieselbe Kreuzung, bleibt die
   erste (früheste Position) gültig, und jede weitere meldet einen Fehler „Kreuzung bereits
-  gequert“ mit ihrer Position, ihrer Element-ID und der verwiesenen ID.
+  gequert“ mit ihrer Position, ihrer Element-ID und der verwiesenen ID — und nur diesen: Eine
+  weitere Querung wird nicht auf ihre Ankunft geprüft, auch wenn die Ankunft zufällig an einem
+  Queranschluss läge oder nicht.
 - **REQ-CORE-27** [If/Then] Ist die Ankunftspose einer Querung mit gültigem Verweis nicht exakt
   gleich einem der beiden Queranschlüsse, meldet die Verfolgung einen Fehler „Ankunft nicht am
   Queranschluss“ mit Position, Element-ID, verwiesener ID und der tatsächlichen Ankunftspose. Das
   gilt ohne Toleranz und auch, wenn nur die Richtung abweicht (z. B. Ankunft an der Position des
   rechten Queranschlusses mit Richtung k+6, also aus der Kreuzung heraus, oder längs).
 - **REQ-CORE-28** [Contract] Fehler nach REQ-CORE-16, -17, -18, -25, -26 und -29 werden für alle
-  betroffenen Elemente gemeldet, unabhängig voneinander. Ein Ankunftsfehler (REQ-CORE-27) wird für
-  eine Querung genau dann beurteilt, wenn alle Elemente vor ihr fehlerfrei verfolgt sind; sonst
-  ist ihre Ankunftspose unbestimmt und wird weder als richtig noch als falsch gemeldet. Daher gibt
-  es höchstens einen Ankunftsfehler je Verfolgung.
+  betroffenen Elemente gemeldet, unabhängig voneinander. Ein Element mit einem dieser Fehler ist
+  **fehlerhaft**. Ein Ankunftsfehler (REQ-CORE-27) wird für eine Querung genau dann beurteilt,
+  wenn sie selbst nicht fehlerhaft ist und alle Elemente vor ihr fehlerfrei verfolgt sind; sonst
+  ist ihre Ankunftspose unbestimmt und wird weder als richtig noch als falsch gemeldet. Eine
+  fehlerhafte Querung meldet also nie zusätzlich einen Ankunftsfehler, und ab dem ersten
+  fehlerhaften Element (auch einem mit doppelter Element-ID) wird keine Ankunft mehr beurteilt.
+  Daher gibt es höchstens einen Ankunftsfehler je Verfolgung.
 - **REQ-CORE-29** [If/Then] Tragen zwei oder mehr Elemente dieselbe Element-ID, meldet die
   Verfolgung einen Fehler „doppelte Element-ID“ mit der ID und allen Positionen, an denen sie
-  vorkommt. (Das Schema weist solche Layouts schon beim Dekodieren ab, REQ-SCHEMA-5; der Kern
-  meldet es trotzdem selbst, damit er für jede Eingabe definiert ist.)
+  vorkommt. Alle Elemente mit dieser ID sind fehlerhaft im Sinne von REQ-CORE-28; ab dem ersten
+  von ihnen wird keine Ankunft mehr beurteilt. (Das Schema weist solche Layouts schon beim
+  Dekodieren ab, REQ-SCHEMA-5; der Kern meldet es trotzdem selbst, damit er für jede Eingabe
+  definiert ist.)
 - **REQ-CORE-30** [When] Abnahmefall Acht aus dem Bestand. Das Layout aus der Tabelle „Acht“ unten
   (Kreuzung, 3 × Kurve 1/90° rechts, Gerade 114, Querung, Anschlussstück, 3 × Kurve 1/90° links)
   ist geschlossen, aus beliebiger Startpose und auch gespiegelt (alle Kurvenrichtungen getauscht).
@@ -210,8 +219,8 @@ Nicht im M1-Katalog: siehe Nicht-Ziele.
   Nr. 6 mit Ankunftspose (171, 0, k = 2);
   (b) Querung (Nr. 6) entfernt: offen, Versatz Ende → Start (0, 114), Winkel 0;
   (c) Querung verweist auf Nr. 2 (Kurve): Fehler „ungültiger Verweis“;
-  (d) eine zweite Querung auf dieselbe Kreuzung direkt hinter Nr. 6 eingefügt: Fehler „Kreuzung
-  bereits gequert“ an der zweiten Querung;
+  (d) eine zweite Querung auf dieselbe Kreuzung direkt hinter Nr. 6 eingefügt: genau ein Fehler,
+  „Kreuzung bereits gequert“ an der zweiten Querung, kein Ankunftsfehler;
   (e) Querung an Position 1 vor die Kreuzung verschoben (Verweis auf die nun spätere Kreuzung):
   Fehler „ungültiger Verweis“.
 
@@ -254,8 +263,9 @@ berühren sich die beiden Schleifen nur an der Kreuzung.
   Querung verbraucht nichts; die Kreuzung zählt einmal, egal ob sie gequert wird.
 - **REQ-CORE-21** [If/Then] Der Verbrauch braucht keine Geometrie: er ist auch für Layouts mit
   nicht platzierbaren Einträgen definiert. Unbekannte Teil-IDs ergeben einen Fehler wie in
-  REQ-CORE-16. Querungen tragen nichts bei; ihre Verweise und Element-IDs werden für den
-  Verbrauch nicht geprüft.
+  REQ-CORE-16. Der Verbrauch zählt nur Teile: Richtungen (fehlend oder überzählig,
+  REQ-CORE-18) werden nicht geprüft und erzeugen keinen Fehler. Querungen tragen nichts bei; ihre
+  Verweise und Element-IDs werden für den Verbrauch nicht geprüft.
 - **REQ-CORE-22** [Contract] Der Verbrauch ist unabhängig von Reihenfolge, Kurvenrichtung und
   Element-IDs, und der Verbrauch zweier hintereinandergehängter Layouts ist die Summe der
   Einzelverbräuche.
@@ -266,7 +276,8 @@ berühren sich die beiden Schleifen nur an der Kreuzung.
   dort genannten Geometrien, Platzierbarkeiten und Bestandteilen.
 - **REQ-CAT-2** [Contract] Jeder Katalogeintrag hat eine stabile, eindeutige ID, einen Namen,
   Art.-Nr. (eine oder mehrere, oder ausdrücklich „keine eigene“), Quelle und Sicherheit
-  (hoch/mittel/niedrig).
+  (hoch/mittel/niedrig). Art.-Nr. ist immer die Nummer des Einzelartikels in der Kurzform der
+  Tabelle (z. B. 61673 für 20061673), nie ein Verweis auf ein Set, in dem das Teil steckt.
 - **REQ-CAT-3** [Contract] Jeder Katalogeintrag besteht die Prüfung gegen das Katalog-Schema
   (REQ-SCHEMA-1).
 - **REQ-CAT-4** [Contract] Bestandteile einer Baugruppe verweisen nur auf vorhandene
