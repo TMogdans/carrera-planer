@@ -38,7 +38,7 @@ const thousand: ReadonlyArray<LayoutElement> = Array.from({ length: 100 }, (_, k
   ),
 ).flat();
 
-test.skip("[REQ-EDIT-20] 1000 Elemente: Anhängen samt Neuberechnung höchstens 250 ms im Maximum über 20 Durchläufe", async () => {
+test("[REQ-EDIT-20] 1000 Elemente: Anhängen samt Neuberechnung höchstens 250 ms im Maximum über 20 Durchläufe", async () => {
   const E = await loadEditor();
   const S = await loadStatus();
   const D = await loadDrawing();

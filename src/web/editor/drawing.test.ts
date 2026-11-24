@@ -63,7 +63,7 @@ const edgeOffset = (center: Centerline, edge: Centerline): number => {
 };
 
 describe("Gezeichneter Abschnitt", () => {
-  test.skip("[REQ-EDIT-18] Acht mit Gerade 171: gezeichnet Nr. 1–5, nicht gezeichnet 5; fehlerfrei alles", async () => {
+  test("[REQ-EDIT-18] Acht mit Gerade 171: gezeichnet Nr. 1–5, nicht gezeichnet 5; fehlerfrei alles", async () => {
     const D = await loadDrawing();
     const broken = D.drawnSection(CATALOG, ACHT_G171);
     expect(broken.firstErrorIndex).toBe(5);
@@ -87,7 +87,7 @@ describe("Gezeichneter Abschnitt", () => {
     });
   });
 
-  test.skip("[REQ-EDIT-18] Erster Fehlerindex = kleinster Index aller Kern-Fehler, bei doppelter ID der kleinste ihrer Indizes", async () => {
+  test("[REQ-EDIT-18] Erster Fehlerindex = kleinster Index aller Kern-Fehler, bei doppelter ID der kleinste ihrer Indizes", async () => {
     const D = await loadDrawing();
     const dup: Elements = [
       { id: "a", part: "gerade-342" },
@@ -113,7 +113,7 @@ describe("Gezeichneter Abschnitt", () => {
     expect(D.drawnSection(CATALOG, two)).toMatchObject({ firstErrorIndex: 2, drawnCount: 2 });
   });
 
-  test.skip("[REQ-EDIT-18] Eigenschaft: gezeichneter Abschnitt ist der Anfang bis vor den ersten Fehlerindex, allein fehlerfrei verfolgt", async () => {
+  test("[REQ-EDIT-18] Eigenschaft: gezeichneter Abschnitt ist der Anfang bis vor den ersten Fehlerindex, allein fehlerfrei verfolgt", async () => {
     const D = await loadDrawing();
     fc.assert(
       fc.property(fc.oneof(elementsArb, validElementsArb), (elements) => {
@@ -140,7 +140,7 @@ describe("Gezeichneter Abschnitt", () => {
 });
 
 describe("Zeichengeometrie", () => {
-  test.skip("[REQ-EDIT-19] Kurve 1/90° links ab Start endet bei Bildschirm (171, −171); Band 114 mm, links innen", async () => {
+  test("[REQ-EDIT-19] Kurve 1/90° links ab Start endet bei Bildschirm (171, −171); Band 114 mm, links innen", async () => {
     const D = await loadDrawing();
     const shapes = D.drawing(CATALOG, [{ id: "k", part: "kurve-1-90", turn: "links" }]);
     expect(shapes).toHaveLength(1);
@@ -163,7 +163,7 @@ describe("Zeichengeometrie", () => {
     expect(s?.ports).toBeUndefined();
   });
 
-  test.skip("[REQ-EDIT-19] Gerade und Kreuzung: Strecke, Bandränder ±57 mm, Queranschlüsse der Kreuzung", async () => {
+  test("[REQ-EDIT-19] Gerade und Kreuzung: Strecke, Bandränder ±57 mm, Queranschlüsse der Kreuzung", async () => {
     const D = await loadDrawing();
     const [g] = D.drawing(CATALOG, [{ id: "g", part: "gerade-342" }]);
     expect(g?.centerline.kind).toBe("strecke");
@@ -182,7 +182,7 @@ describe("Zeichengeometrie", () => {
     expectPointNear(k?.ports?.right as ScreenPoint, { x: 171, y: 57 });
   });
 
-  test.skip("[REQ-EDIT-19] Acht: Querung als Strecke über den Querweg, jedes Element mit 114 mm breitem Band", async () => {
+  test("[REQ-EDIT-19] Acht: Querung als Strecke über den Querweg, jedes Element mit 114 mm breitem Band", async () => {
     const D = await loadDrawing();
     const shapes = D.drawing(CATALOG, ACHT);
     expect(shapes.map((s) => s.id)).toEqual(ACHT.map((e) => e.id));
@@ -200,13 +200,13 @@ describe("Zeichengeometrie", () => {
     expect(shapes.filter((s) => s.ports !== undefined).map((s) => s.id)).toEqual(["e1"]);
   });
 
-  test.skip("[REQ-EDIT-19] Nur der gezeichnete Abschnitt wird gezeichnet", async () => {
+  test("[REQ-EDIT-19] Nur der gezeichnete Abschnitt wird gezeichnet", async () => {
     const D = await loadDrawing();
     expect(D.drawing(CATALOG, ACHT_G171).map((s) => s.id)).toEqual(["e1", "e2", "e3", "e4", "e5"]);
     expect(D.drawing(CATALOG, [])).toEqual([]);
   });
 
-  test.skip("[REQ-EDIT-19] Eigenschaft: Mittellinien verketten die Kern-Posen in Bildschirmkoordinaten (x, −y)", async () => {
+  test("[REQ-EDIT-19] Eigenschaft: Mittellinien verketten die Kern-Posen in Bildschirmkoordinaten (x, −y)", async () => {
     const D = await loadDrawing();
     fc.assert(
       fc.property(validElementsArb, (elements) => {
@@ -235,7 +235,7 @@ describe("Zeichengeometrie", () => {
     );
   });
 
-  test.skip("[REQ-EDIT-19] Umrechnung a + b·√2 → Zahl weicht höchstens 0,01 mm vom exakten Wert ab", async () => {
+  test("[REQ-EDIT-19] Umrechnung a + b·√2 → Zahl weicht höchstens 0,01 mm vom exakten Wert ab", async () => {
     const D = await loadDrawing();
     // Pell-Paar: 665857 − 470832·√2 ≈ 7,5e−7 (starke Auslöschung)
     const pell = coord(rat(665857n), rat(-470832n));

@@ -1,0 +1,486 @@
+/* Oberfläche M2 (REQ-UI-1): Laptop, Tablet, Handy ohne waagerechtes Scrollen der Seite;
+   Tippziele mindestens 44 × 44 CSS-Pixel; keine Schriften oder Dateien von außen (REQ-UI-10). */
+
+:root {
+  --bg: #f4f2ee;
+  --panel: #ffffff;
+  --ink: #1d232a;
+  --muted: #6b7280;
+  --line: #d6d3cc;
+  --accent: #c8102e;
+  --band: #4b5563;
+  --band-edge: #1f2937;
+  --sel: #f59e0b;
+  --ok: #15803d;
+  --open: #b45309;
+  --err: #b91c1c;
+  --tap: 44px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+button,
+.button {
+  font: inherit;
+  min-width: var(--tap);
+  min-height: var(--tap);
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  touch-action: manipulation;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.app {
+  display: grid;
+  height: 100dvh;
+  width: 100vw;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
+  grid-template-areas: "toolbar" "messages" "canvas" "selbar" "palette" "status";
+}
+
+@media (min-width: 900px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr) 260px;
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "toolbar toolbar"
+      "messages messages"
+      "canvas palette"
+      "selbar palette"
+      "status palette";
+  }
+}
+
+.toolbar {
+  grid-area: toolbar;
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  align-items: center;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+.toolbar .title {
+  margin-left: auto;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 6px;
+}
+
+@media (max-width: 599px) {
+  .toolbar .label {
+    display: none;
+  }
+}
+
+.messages {
+  grid-area: messages;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 6px;
+  /* Begrenzt, damit Fläche, Leiste und Status bedienbar bleiben; scrollt in sich. */
+  max-height: 22dvh;
+  overflow-y: auto;
+}
+
+.dialog-problems {
+  margin: 6px 0 0;
+  padding: 6px 10px 6px 24px;
+  border-radius: 8px;
+  background: #fde8e8;
+  border: 1px solid #f5b5b5;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.message {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 4px 10px;
+  border-radius: 8px;
+  background: #fde8e8;
+  border: 1px solid #f5b5b5;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.canvas {
+  grid-area: canvas;
+  position: relative;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  background: #e9e6df;
+}
+
+.canvas-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.part .band {
+  fill: var(--band);
+  stroke: var(--band-edge);
+  stroke-width: 1.5;
+}
+
+.part .crossway {
+  fill: #6b7280;
+  stroke: var(--band-edge);
+  stroke-width: 1;
+}
+
+.part .centerline {
+  fill: none;
+  stroke: #e5e7eb;
+  stroke-width: 1;
+  stroke-dasharray: 6 6;
+  pointer-events: none;
+}
+
+.part.querung .band {
+  fill: #2563eb;
+  fill-opacity: 0.85;
+  stroke: #1e3a8a;
+}
+
+.selected {
+  fill: var(--sel);
+  fill-opacity: 0.45;
+  stroke: var(--sel);
+  stroke-width: 3;
+  pointer-events: none;
+}
+
+.target {
+  fill: none;
+  stroke: #059669;
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+  pointer-events: none;
+}
+
+.hot-port {
+  fill: var(--err);
+  fill-opacity: 0.7;
+  pointer-events: none;
+}
+
+.start {
+  fill: var(--ok);
+  pointer-events: none;
+}
+
+.end-arrow {
+  fill: var(--accent);
+  pointer-events: none;
+}
+
+.error-mark {
+  fill: var(--err);
+  pointer-events: none;
+}
+
+.error-mark-text {
+  fill: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.selbar {
+  grid-area: selbar;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 6px;
+  background: #fff7e6;
+  border-top: 1px solid var(--line);
+}
+
+.sel-name {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.action-hint {
+  color: var(--open);
+  font-weight: 600;
+}
+
+.palette {
+  grid-area: palette;
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 900px) {
+  .palette {
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-top: none;
+    border-left: 1px solid var(--line);
+  }
+}
+
+.palette-item,
+.turn-toggle {
+  flex: 0 0 auto;
+  min-height: 56px;
+  min-width: 88px;
+  flex-direction: column;
+  font-size: 13px;
+  line-height: 1.1;
+  text-align: center;
+  padding: 4px 8px;
+}
+
+@media (min-width: 900px) {
+  .palette-item,
+  .turn-toggle {
+    flex-direction: row;
+    justify-content: flex-start;
+    text-align: left;
+    min-height: var(--tap);
+  }
+}
+
+.palette-item.missing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.palette-item.missing small {
+  display: block;
+  font-size: 11px;
+}
+
+.part-icon {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.part-icon path {
+  fill: none;
+  stroke: var(--band);
+  stroke-width: 5;
+  stroke-linecap: butt;
+}
+
+.turn-arrow {
+  font-size: 22px;
+}
+
+.statusbar {
+  grid-area: status;
+  padding: 6px;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  max-height: 34dvh;
+  overflow-y: auto;
+}
+
+.status-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+}
+
+.status {
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #fff;
+}
+
+.status-leer {
+  background: var(--muted);
+}
+
+.status-geschlossen {
+  background: var(--ok);
+}
+
+.status-offen {
+  background: var(--open);
+}
+
+.status-fehlerhaft {
+  background: var(--err);
+}
+
+.overlap {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.not-drawn {
+  color: var(--err);
+  margin-top: 4px;
+}
+
+.errors,
+.usage {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+
+.errors button {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  color: var(--err);
+  border-color: #f5b5b5;
+  margin-top: 2px;
+}
+
+.usage li {
+  padding: 2px 0;
+}
+
+.usage-total {
+  font-weight: 600;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  z-index: 10;
+}
+
+.dialog {
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 12px;
+  width: min(560px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.dialog-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dialog h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.dialog h3 {
+  font-size: 15px;
+  margin: 16px 0 6px;
+}
+
+.save-row,
+.file-row {
+  display: flex;
+  gap: 6px;
+}
+
+.save-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--tap);
+  font: inherit;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.list li {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 3px 0;
+}
+
+.list-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.note,
+.empty {
+  color: var(--muted);
+  margin: 6px 0 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

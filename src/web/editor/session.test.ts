@@ -87,7 +87,7 @@ const BROKEN_SCHEMA: ReadonlyArray<readonly [string, string]> = [
 const NOT_JSON = "{ schemaVersion: 1, elements: [";
 
 describe("Speichern und Laden", () => {
-  test.skip("[REQ-STORE-1] Gespeichert wird genau das kodierte Layout als JSON (schemaVersion, elements), sonst nichts", async () => {
+  test("[REQ-STORE-1] Gespeichert wird genau das kodierte Layout als JSON (schemaVersion, elements), sonst nichts", async () => {
     const api = await loadSession();
     const storage = new MemoryStorage();
     const s = withLayout(api, storage, ACHT);
@@ -106,7 +106,7 @@ describe("Speichern und Laden", () => {
     expect(api.layoutKey("Acht")).toContain("Acht");
   });
 
-  test.skip("[REQ-STORE-2] Nach jedem wirksamen Befehl Autosicherung unter festem Schlüssel; beim Start wird sie geladen", async () => {
+  test("[REQ-STORE-2] Nach jedem wirksamen Befehl Autosicherung unter festem Schlüssel; beim Start wird sie geladen", async () => {
     const api = await loadSession();
     const storage = new MemoryStorage();
     const s = open(api, storage);
@@ -134,7 +134,7 @@ describe("Speichern und Laden", () => {
     expect(reopened.messages).toEqual([]);
   });
 
-  test.skip("[REQ-STORE-2] Rückgängig und Wiederholen sichern; Auswahl, Aktion und Leistenrichtung lösen keine Sicherung aus", async () => {
+  test("[REQ-STORE-2] Rückgängig und Wiederholen sichern; Auswahl, Aktion und Leistenrichtung lösen keine Sicherung aus", async () => {
     const api = await loadSession();
     const storage = new MemoryStorage();
     const s = open(api, storage);
@@ -170,7 +170,7 @@ describe("Speichern und Laden", () => {
     expect(writes()).toBe(before);
   });
 
-  test.skip("[REQ-STORE-3] Speichern unter Namen: getrimmt, nicht leer, Überschreiben nur bestätigt, alphabetische Liste, Löschen", async () => {
+  test("[REQ-STORE-3] Speichern unter Namen: getrimmt, nicht leer, Überschreiben nur bestätigt, alphabetische Liste, Löschen", async () => {
     const api = await loadSession();
     const storage = new MemoryStorage();
     const s = withLayout(api, storage, OVAL);
@@ -205,7 +205,7 @@ describe("Speichern und Laden", () => {
     expect(storage.data.has(api.layoutKey("Kreis"))).toBe(false);
   });
 
-  test.skip("[REQ-STORE-3] Laden ersetzt die Folge als Befehl (rückgängig machbar) und hebt die Auswahl auf", async () => {
+  test("[REQ-STORE-3] Laden ersetzt die Folge als Befehl (rückgängig machbar) und hebt die Auswahl auf", async () => {
     const api = await loadSession();
     const E = await loadEditor();
     const storage = new MemoryStorage();
@@ -222,7 +222,7 @@ describe("Speichern und Laden", () => {
     expect(s.state.elements).toEqual(ACHT);
   });
 
-  test.skip("[REQ-STORE-3] Eigenschaft: jeder nicht leere Name lässt sich speichern und auflisten, ohne Arbeitsstand oder defekte Sicherungen zu berühren", async () => {
+  test("[REQ-STORE-3] Eigenschaft: jeder nicht leere Name lässt sich speichern und auflisten, ohne Arbeitsstand oder defekte Sicherungen zu berühren", async () => {
     const api = await loadSession();
     fc.assert(
       fc.property(
@@ -243,7 +243,7 @@ describe("Speichern und Laden", () => {
     );
   });
 
-  test.skip("[REQ-STORE-4] Eigenschaft: Speichern und Laden ergibt exakt dieselbe Folge", async () => {
+  test("[REQ-STORE-4] Eigenschaft: Speichern und Laden ergibt exakt dieselbe Folge", async () => {
     const api = await loadSession();
     fc.assert(
       fc.property(fc.array(editCommandArb, { maxLength: 30 }), (gens) => {
@@ -261,7 +261,7 @@ describe("Speichern und Laden", () => {
     );
   });
 
-  test.skip("[REQ-STORE-5] Kaputter gespeicherter Wert: Laden scheitert laut mit Name und Schema-Grund, nichts verändert oder gelöscht", async () => {
+  test("[REQ-STORE-5] Kaputter gespeicherter Wert: Laden scheitert laut mit Name und Schema-Grund, nichts verändert oder gelöscht", async () => {
     const api = await loadSession();
     const E = await loadEditor();
     for (const [label, raw] of [...BROKEN_SCHEMA, ["kein JSON", NOT_JSON] as const]) {
@@ -289,7 +289,7 @@ describe("Speichern und Laden", () => {
     }
   });
 
-  test.skip("[REQ-STORE-6] Schema-gültig, aber Kern-Fehler: wird geladen, Fehler erscheinen wie bei der Bearbeitung", async () => {
+  test("[REQ-STORE-6] Schema-gültig, aber Kern-Fehler: wird geladen, Fehler erscheinen wie bei der Bearbeitung", async () => {
     const api = await loadSession();
     const S = await loadStatus();
     const cases: ReadonlyArray<readonly [Elements, string]> = [
@@ -310,7 +310,7 @@ describe("Speichern und Laden", () => {
     }
   });
 
-  test.skip("[REQ-STORE-7] Kaputter Arbeitsstand beim Start: Rohtext unverändert unter Ausweichschlüssel mit UTC-Zeitstempel, Start leer, Meldung, normales Weitersichern", async () => {
+  test("[REQ-STORE-7] Kaputter Arbeitsstand beim Start: Rohtext unverändert unter Ausweichschlüssel mit UTC-Zeitstempel, Start leer, Meldung, normales Weitersichern", async () => {
     const api = await loadSession();
     const storage = new MemoryStorage();
     const raw = JSON.stringify({ schemaVersion: 2, elements: [] });
@@ -341,7 +341,7 @@ describe("Speichern und Laden", () => {
     expect(storage.data.get(backupKey)).toBe(raw);
   });
 
-  test.skip("[REQ-STORE-7] Belegter Ausweichschlüssel: -2, -3 …, ein früherer Fund wird nie überschrieben; auflisten, Rohtext, löschen, nicht ladbar", async () => {
+  test("[REQ-STORE-7] Belegter Ausweichschlüssel: -2, -3 …, ein früherer Fund wird nie überschrieben; auflisten, Rohtext, löschen, nicht ladbar", async () => {
     const api = await loadSession();
     const storage = new MemoryStorage();
     const base = `${api.STORAGE_PREFIX}:defekt:${ISO}`;
@@ -370,7 +370,7 @@ describe("Speichern und Laden", () => {
     expect([...s.defectBackups()].sort()).toEqual([base, `${base}-3`].sort());
   });
 
-  test.skip("[REQ-STORE-7] Scheitert das Verschieben, bleibt der kaputte Wert unter dem Arbeitsstand-Schlüssel und wird in der Sitzung nicht überschrieben", async () => {
+  test("[REQ-STORE-7] Scheitert das Verschieben, bleibt der kaputte Wert unter dem Arbeitsstand-Schlüssel und wird in der Sitzung nicht überschrieben", async () => {
     const api = await loadSession();
     const storage = new MemoryStorage();
     storage.data.set(api.WORKING_KEY, NOT_JSON);
@@ -386,7 +386,7 @@ describe("Speichern und Laden", () => {
     expect(storage.data.get(api.WORKING_KEY)).toBe(NOT_JSON);
   });
 
-  test.skip("[REQ-STORE-8] Speicher wirft (lesen/schreiben/aufzählen): Meldung, Folge bleibt im Speicher der Seite, keine Ausnahme", async () => {
+  test("[REQ-STORE-8] Speicher wirft (lesen/schreiben/aufzählen): Meldung, Folge bleibt im Speicher der Seite, keine Ausnahme", async () => {
     const api = await loadSession();
     // Lesen beim Start scheitert
     const r = new MemoryStorage();
@@ -427,7 +427,7 @@ describe("Speichern und Laden", () => {
 });
 
 describe("Export und Import", () => {
-  test.skip("[REQ-STORE-9] Export: Text = kodiertes Layout als JSON; Dateiname aus dem zuletzt verwendeten Namen", async () => {
+  test("[REQ-STORE-9] Export: Text = kodiertes Layout als JSON; Dateiname aus dem zuletzt verwendeten Namen", async () => {
     const api = await loadSession();
     const storage = new MemoryStorage();
     const s = withLayout(api, storage, ACHT);
@@ -444,7 +444,7 @@ describe("Export und Import", () => {
     expect(s.exportFile().fileName).toBe("Bogen.json");
   });
 
-  test.skip("[REQ-STORE-9] Dateiname: verbotene Zeichen, C0 und DEL werden zu _, C1 bleibt", async () => {
+  test("[REQ-STORE-9] Dateiname: verbotene Zeichen, C0 und DEL werden zu _, C1 bleibt", async () => {
     const api = await loadSession();
     const s = withLayout(api, new MemoryStorage(), OVAL);
     s.saveAs('a/b\\c:d*e?f"g<h>i|j\u0001k\u001fl\u007fm\u0000n');
@@ -454,7 +454,7 @@ describe("Export und Import", () => {
     expect(s.exportFile().fileName).toBe("x\u0085y\u009fz.json");
   });
 
-  test.skip("[REQ-STORE-9] Ohne Namen: strecke-JJJJ-MM-TT-HHmm.json aus den lokalen Bestandteilen der Uhr, nie aus UTC", async () => {
+  test("[REQ-STORE-9] Ohne Namen: strecke-JJJJ-MM-TT-HHmm.json aus den lokalen Bestandteilen der Uhr, nie aus UTC", async () => {
     const api = await loadSession();
     const at = (
       iso: string,
@@ -488,7 +488,7 @@ describe("Export und Import", () => {
     expect(JSON.parse(b.exportFile().text)).toStrictEqual(layoutJson([]));
   });
 
-  test.skip("[REQ-STORE-9] Eigenschaft: Export und anschließender Import ergibt exakt dieselbe Folge, mit und ohne Namen", async () => {
+  test("[REQ-STORE-9] Eigenschaft: Export und anschließender Import ergibt exakt dieselbe Folge, mit und ohne Namen", async () => {
     const api = await loadSession();
     fc.assert(
       fc.property(fc.array(editCommandArb, { maxLength: 30 }), fc.boolean(), (gens, named) => {
@@ -506,7 +506,7 @@ describe("Export und Import", () => {
     );
   });
 
-  test.skip("[REQ-STORE-10] Import ersetzt die Folge (Befehl, rückgängig machbar, Auswahl aufgehoben), Name ohne .json als Vorschlag, nichts gespeichert", async () => {
+  test("[REQ-STORE-10] Import ersetzt die Folge (Befehl, rückgängig machbar, Auswahl aufgehoben), Name ohne .json als Vorschlag, nichts gespeichert", async () => {
     const api = await loadSession();
     const storage = new MemoryStorage();
     const s = withLayout(api, storage, OVAL);
@@ -534,7 +534,7 @@ describe("Export und Import", () => {
     }
   });
 
-  test.skip("[REQ-STORE-10] Schema-gültige Datei mit Kern-Fehlern wird importiert wie beim Laden", async () => {
+  test("[REQ-STORE-10] Schema-gültige Datei mit Kern-Fehlern wird importiert wie beim Laden", async () => {
     const api = await loadSession();
     const S = await loadStatus();
     const s = open(api, new MemoryStorage());
@@ -546,7 +546,7 @@ describe("Export und Import", () => {
     ]);
   });
 
-  test.skip("[REQ-STORE-11] Gescheiterter Import: Folge, Verlauf, Speicher unverändert; Meldung mit Dateiname und Fehlerart", async () => {
+  test("[REQ-STORE-11] Gescheiterter Import: Folge, Verlauf, Speicher unverändert; Meldung mit Dateiname und Fehlerart", async () => {
     const api = await loadSession();
     const E = await loadEditor();
     const cases: ReadonlyArray<readonly [string, string, string]> = [
@@ -622,7 +622,7 @@ describe("Export und Import", () => {
 });
 
 describe("Nachtrag: Neustart", () => {
-  test.skip("[REQ-STORE-7] Kaputter Arbeitsstand wird verschoben, nicht kopiert: zweimal starten ohne Änderung ergibt genau einen Ausweichschlüssel", async () => {
+  test("[REQ-STORE-7] Kaputter Arbeitsstand wird verschoben, nicht kopiert: zweimal starten ohne Änderung ergibt genau einen Ausweichschlüssel", async () => {
     const api = await loadSession();
     const storage = new MemoryStorage();
     storage.data.set(api.WORKING_KEY, NOT_JSON);
@@ -647,7 +647,7 @@ describe("Nachtrag: Neustart", () => {
     expect(storage.data.get(backups[0] as string)).toBe(NOT_JSON);
   });
 
-  test.skip("[REQ-EDIT-16] Der Verlauf wird nicht gespeichert: nach dem Start mit gesichertem Arbeitsstand ist er leer, Rückgängig ändert nichts und sichert nicht", async () => {
+  test("[REQ-EDIT-16] Der Verlauf wird nicht gespeichert: nach dem Start mit gesichertem Arbeitsstand ist er leer, Rückgängig ändert nichts und sichert nicht", async () => {
     const api = await loadSession();
     const E = await loadEditor();
     const storage = new MemoryStorage({ [api.WORKING_KEY]: JSON.stringify(layoutJson(ACHT)) });
@@ -669,7 +669,7 @@ describe("Nachtrag: Neustart", () => {
 });
 
 describe("Nachtrag: Laden und Import heben die Auswahl auf", () => {
-  test.skip("[REQ-STORE-10] Laden eines gespeicherten Layouts und Import heben die Auswahl auf, auch bei gleicher Element-ID", async () => {
+  test("[REQ-STORE-10] Laden eines gespeicherten Layouts und Import heben die Auswahl auf, auch bei gleicher Element-ID", async () => {
     const api = await loadSession();
     const sameIds: Elements = ACHT.map((el) => ({ id: el.id, part: "gerade-114" }));
     const storage = new MemoryStorage({
@@ -691,7 +691,7 @@ describe("Nachtrag: Laden und Import heben die Auswahl auf", () => {
 });
 
 describe("Nachtrag: Name und „Neu“", () => {
-  test.skip("[REQ-EDIT-12] „Neu“ setzt den aktuellen Namen zurück, gleich ob er aus Speichern unter, Laden oder Import stammt; Export danach mit Zeitstempel-Namen", async () => {
+  test("[REQ-EDIT-12] „Neu“ setzt den aktuellen Namen zurück, gleich ob er aus Speichern unter, Laden oder Import stammt; Export danach mit Zeitstempel-Namen", async () => {
     const api = await loadSession();
     const clock = fixedClock("2026-11-24T07:15:00.000Z", {
       year: 2026,
@@ -734,7 +734,7 @@ describe("Nachtrag: Name und „Neu“", () => {
     expect(empty.name).toBeUndefined();
   });
 
-  test.skip("[REQ-STORE-9] Rückgängig und Wiederholen ändern den aktuellen Namen nie, auch nicht bei „Neu“ oder Import (Smoke-Fall 6 als Logik)", async () => {
+  test("[REQ-STORE-9] Rückgängig und Wiederholen ändern den aktuellen Namen nie, auch nicht bei „Neu“ oder Import (Smoke-Fall 6 als Logik)", async () => {
     const api = await loadSession();
     const storage = new MemoryStorage();
     const s = withLayout(api, storage, OVAL); // voriger Arbeitsstand des Handys, ohne Namen

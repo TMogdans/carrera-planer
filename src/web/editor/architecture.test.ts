@@ -69,7 +69,7 @@ const importFresh = async <T>(path: string): Promise<T> =>
   )) as T;
 
 describe("Architektur", () => {
-  test.skip("[REQ-WARCH-1] Editor-Logik lädt und rechnet ohne Preact und ohne DOM-Globale", async () => {
+  test("[REQ-WARCH-1] Editor-Logik lädt und rechnet ohne Preact und ohne DOM-Globale", async () => {
     vi.resetModules();
     for (const m of PREACT_MODULES) {
       vi.doMock(m, () => {
