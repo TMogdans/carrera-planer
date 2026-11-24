@@ -1,8 +1,8 @@
 # Spec: M3a — Bestand, Bestandsmodus, Einkaufsliste, Prägung (im Browser, ohne Server)
 
-Status: Entwurf, wartet auf Spec-Review (harter Stopp). Die offenen Fragen am Ende sind vor der
-Abnahme zu beantworten; die Kriterien verweisen mit „(Frage n)“ auf sie und sind nach den
-Empfehlungen formuliert.
+Status: abgenommen am 2026-11-24, Überarbeitung 1 (Entscheidungen zu den offenen Fragen
+eingetragen, Smoke als Station für T3). Die Kriterien verweisen mit „(Frage n)“ auf den Abschnitt
+„Entscheidungen (abgenommen 2026-11-24)“.
 Grundlage: [KONZEPT.md](../../../KONZEPT.md) (abgenommen 2026-11-23; Abschnitte „Modi“,
 „Geometrie“ → „Baugruppen“, „Architektur“, „Meilensteine“, „Offen“),
 [docs/recherche.md](../../../docs/recherche.md) (Tabelle „Bestand“),
@@ -22,8 +22,9 @@ Teilung noch nicht (Frage 15).
 `src/schema/**`: Bestands- und Set-Vorlagen-Schema sowie das Prägungsfeld gehören laut
 Constitution in den Datenvertrag. Gegenproben: ohne `src/schema` (nur Katalog + Web) → T2; nur
 `src/web/**` → T1. Das autoritative Tier rechnet CI aus dem tatsächlichen Diff.
-Folge: `.devloop/config.json` schaltet die Smoke-Station nur für T1 ein; der Abschnitt „Smoke“
-ist hier deshalb die Abnahmeliste für den Menschen, nicht für eine automatische Station.
+Smoke: `.devloop/config.json` schaltet die Smoke-Station bisher nur für T1 ein; T3 wird per
+eigenem Admin-PR in `smoke.tiers` aufgenommen. Der Abschnitt „Smoke“ läuft damit als Station und
+ist zugleich die Abnahmeliste für den Menschen.
 
 **Voraussetzung (Admin-PR am geschützten Satz, kein Agent dieser Kette fasst die Dateien an):**
 Die Vertragstypen und Testhilfen der Editor-Logik liegen in `src/web/test-support/**`, das im
@@ -189,7 +190,7 @@ sind, ist in #28 offen.
 - **REQ-MODUS-1** [When] Wenn der Modus zwischen „Sandbox“ und „Bestand“ umgeschaltet wird,
   bleiben Elementfolge, Verlauf, Auswahl, Aktion und aktueller Name unverändert; es entsteht kein
   Verlaufseintrag und kein Schreiben des Arbeitsstands. Start und Speicherung des Modus nach
-  Frage 6 (Empfehlung: zuletzt gewählter Modus unter `carrera-planer:modus`; fehlt oder ist der
+  Frage 6 (zuletzt gewählter Modus unter `carrera-planer:modus`; fehlt oder ist der
   Wert ungültig, „Sandbox“ und bei ungültigem Wert eine Meldung).
 - **REQ-MODUS-2** [Contract] Im Modus „Sandbox“ beeinflusst der Bestand keinen Befehl: Für
   beliebige Bestände und Befehlsfolgen ergibt die Sandbox dieselben Zustände wie der M2-Editor
@@ -349,67 +350,41 @@ sind, ist in #28 offen.
 - Bestands-Verlauf (Rückgängig für Bestandsänderungen).
 - Änderungen an `src/core` oder an `articleNumbers`.
 
-## Offene Fragen an den Menschen
+## Entscheidungen (abgenommen 2026-11-24)
 
-Je Frage eine Empfehlung; die Kriterien sind nach ihr formuliert und werden bei abweichender
-Antwort angepasst.
+Der Mensch hat bei allen Fragen die Empfehlung gewählt. Die Nummern bleiben als Verweisziel der
+„(Frage n)“-Vermerke in den Kriterien erhalten.
 
-1. **Vorbelegung des Bestands.** Empfehlung: **leer starten**, Erfassen per Set-Vorlagen (Mach 8,
-   Ausbauset 1, Ausbauset 3 = drei Klicks). Grund: Eine feste Vorbelegung wäre unser Bestand im
-   Code, für andere Nutzer falsch, und sie trüge die ungeprüften Inhalte von AS 1 und AS 3 still
-   hinein. Alternative: beim allerersten Start (kein Schlüssel) mit Mach 8 + AS 1 + AS 3 belegen.
-2. **Spurwechsel in Ausbauset 1.** Empfehlung: `spurwechsel-gerade` (laut Recherche
-   „vermutlich“), Sicherheit „niedrig“, bis #2 am Karton geklärt ist. Ist es die Spurwechselkurve,
-   ändert sich nur die Vorlage.
-3. **Set-Vorlage versehentlich doppelt.** Empfehlung: Rückfrage mit Inhaltsliste vor dem Addieren
-   (REQ-BUI-2), kein Bestands-Rückgängig; Korrektur über die Zähler oder „Bestand leeren“.
-   Alternative: „Set abziehen“ als Gegenstück (abziehen unter 0 müsste dann geregelt werden).
-4. **Was ist im Bestandsmodus gesperrt?** KONZEPT sagt nur „Ist ein Teil aufgebraucht, ist es
-   gesperrt“. Empfehlung: REQ-MODUS-3/-4 — gesperrt wird nur ein Befehl, der den Verbrauch eines
-   Teils über den Bestand hebt; Laden, Import, Rückgängig, Wiederholen und Moduswechsel nie,
-   ein Überzug wird angezeigt. Alternative: Laden eines überzogenen Layouts im Bestandsmodus
-   verweigern; Preis: dann lässt sich ein Sandbox-Entwurf dort nicht „prüfen“.
-5. **Leiste im Bestandsmodus: was nicht vorhanden ist.** Empfehlung: Teile mit Bestand 0
-   ausblenden (KONZEPT: „bietet nur, was wir besitzen“), aufgebrauchte (Rest ≤ 0) gesperrt
-   sichtbar lassen. Alternative: alle Teile zeigen, Bestand 0 ebenfalls gesperrt.
-6. **Modus merken.** Empfehlung: zuletzt gewählten Modus unter `carrera-planer:modus` speichern;
-   fehlend → „Sandbox“, ungültig → „Sandbox“ mit Meldung, der Wert wird beim nächsten Wechsel
-   überschrieben (er ist ein einzelnes Wort, ein Ausweichschlüssel lohnt nicht). Alternative:
-   nicht speichern, immer in „Sandbox“ starten.
-7. **Einkaufsliste in beiden Modi.** KONZEPT ordnet sie der Sandbox zu. Empfehlung: in beiden
-   Modi zeigen; im Bestandsmodus ist sie fast immer „Bestand reicht“, zeigt aber den Überzug
-   eines geladenen Entwurfs.
-8. **Prägung auch bei Teilen mit Artikelnummer zeigen?** #28 verlangt sie nur für
-   „keineEigene“. Empfehlung: zusätzlich zeigen (Gerade 342 → „20061602“ und „Prägung
-   142202-1“), weil Kleinanzeigen gebrauchte Teile eher über die Prägung finden.
-9. **Form des Prägungsfelds.** #28 schlägt `praegung: ["141903-1B"]` vor. Die Constitution
-   verlangt Quelle und Sicherheit für jeden Katalogwert, und die beiden Fundstellen sind
-   unterschiedlich gut. Empfehlung: Liste von `{ value, source, certainty }`; `value` ohne festes
-   Muster (nur zwei Beispiele bekannt), aber nicht genau 8 Ziffern. Alternative: reine
-   Zeichenketten, Quelle im Freitext `source` des Eintrags. Dazu: Feldname `praegung` wie in #28
-   (Mischung mit englischen Feldnamen wie `articleNumbers` ist bewusst hingenommen).
-10. **Teile ohne Artikelnummer und ohne Prägung** (heute L). Empfehlung: Hinweis „keine
-    Artikelnummer, keine Prägung bekannt“ plus „enthalten in <Baugruppe>, Art.-Nr. …“, aus dem
-    Katalog abgeleitet. Alternative: nur der Hinweis.
-11. **Bestand zwischen Geräten übertragen.** Empfehlung: kein Export/Import für den Bestand in
-    M3a (Set-Vorlagen machen das Erfassen billig, M3b gleicht ab). Alternative: Export/Import wie
-    bei Layouts (REQ-STORE-9 bis -11).
-12. **Unbekannte Teil-IDs im gespeicherten Bestand.** Empfehlung: laden, nicht zählen, melden,
-    unverändert mitspeichern (REQ-BEST-7), nie still entfernen; nur „Bestand leeren“ entfernt
-    sie. Alternative: den ganzen Bestand als kaputt behandeln (REQ-BEST-5).
-13. **Kaputter Bestand: eigene Liste?** Empfehlung: eigener Ausweichschlüssel
-    `carrera-planer:bestand:defekt:…` und eigene Liste im Bestandsdialog, damit die
-    Layout-Defektliste aus M2 unverändert bleibt. Alternative: gemeinsame Liste.
-14. **Testhilfen im geschützten Satz.** Wie in M2 (#20) wird spec-to-tests neue Vertragstypen und
-    Fixtures unter `src/web/test-support/` brauchen; das ist geschützt und nur per Admin-Override
-    zu mergen. Empfehlung: spec-to-tests legt eine **neue** Datei
-    `src/web/test-support/bestand-fixtures.ts` an (statt `editor-fixtures.ts` zu ändern), der
-    Mensch merged sie per Admin-Override.
-15. **KONZEPT nachziehen.** Die Meilenstein-Tabelle kennt M3 als Ganzes, und das Prägungsfeld
-    steht nicht im KONZEPT. Empfehlung: KONZEPT-Nachtrag (M3 → M3a/M3b, Prägung als
-    Katalogfeld) als eigener kleiner PR, zusammen mit dieser Spec abgenommen.
-16. **Ersatz durch deckungsgleiche Teile.** Empfehlung: kein Ersatz (Entscheidung 3); die
-    Spurwechselkurve deckt keine fehlende Kurve 1/90°, weil sie sich im Fahren anders verhält.
+1. **Vorbelegung:** Der Bestand startet leer; erfasst wird über die Set-Vorlagen (REQ-BEST-3).
+2. **Spurwechsel in Ausbauset 1:** `spurwechsel-gerade`, Sicherheit „niedrig“, bis #2 am Karton
+   geklärt ist.
+3. **Set-Vorlage doppelt:** Rückfrage mit Inhaltsliste vor dem Addieren (REQ-BUI-2), kein
+   Bestands-Rückgängig; Korrektur über die Zähler oder „Bestand leeren“.
+4. **Sperre im Bestandsmodus:** Gesperrt wird nur ein Befehl, der den Verbrauch eines Teils über
+   den Bestand hebt; Laden, Import, Neu, Rückgängig, Wiederholen und Moduswechsel nie, ein
+   Überzug wird angezeigt (REQ-MODUS-3/-4).
+5. **Leiste im Bestandsmodus:** Teile mit Bestand 0 entfallen, aufgebrauchte (Rest ≤ 0) bleiben
+   gesperrt sichtbar (REQ-MODUS-5).
+6. **Modus merken:** zuletzt gewählter Modus unter `carrera-planer:modus`; fehlend → „Sandbox“,
+   ungültig → „Sandbox“ mit Meldung, der Wert wird beim nächsten Wechsel überschrieben
+   (REQ-MODUS-1).
+7. **Einkaufsliste in beiden Modi** (REQ-EINK-5).
+8. **Prägung auch bei Teilen mit Artikelnummer** zusätzlich als Suchbegriff (REQ-EINK-3).
+9. **Prägungsfeld:** `praegung` als nicht leere Liste von `{ value, source, certainty }`; `value`
+   ohne festes Muster, aber nicht genau 8 Ziffern (REQ-PRAEG-1).
+10. **Teile ohne Artikelnummer und ohne Prägung:** Hinweis „keine Artikelnummer, keine Prägung
+    bekannt“ plus „enthalten in <Baugruppe>, Art.-Nr. …“ aus dem Katalog (REQ-EINK-3).
+11. **Bestand zwischen Geräten:** kein Export/Import in M3a; den Abgleich bringt M3b.
+12. **Unbekannte Teil-IDs im gespeicherten Bestand:** laden, nicht zählen, melden, unverändert
+    mitspeichern; nur „Bestand leeren“ entfernt sie (REQ-BEST-7, REQ-BEST-9).
+13. **Kaputter Bestand:** eigener Ausweichschlüssel `carrera-planer:bestand:defekt:…` und eigene
+    Liste im Bestandsdialog (REQ-BEST-5).
+14. **Testhilfen:** spec-to-tests legt eine neue Datei `src/web/test-support/bestand-fixtures.ts`
+    an (statt `editor-fixtures.ts` zu ändern); der Mensch merged sie per Admin-Override.
+15. **KONZEPT nachziehen:** M3 → M3a/M3b und Prägung als Katalogfeld kommen als eigener kleiner
+    PR ins KONZEPT.
+16. **Kein Ersatz durch deckungsgleiche Teile:** Die Spurwechselkurve deckt keine fehlende
+    Kurve 1/90° (Entscheidung 3 zum Umfang).
 
 ## Smoke
 
