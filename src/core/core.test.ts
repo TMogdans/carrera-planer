@@ -1921,7 +1921,7 @@ describe("Teileverbrauch", () => {
 });
 
 describe("Testnachtrag M1: Lücken aus #12 und #13", () => {
-  test.skip("[REQ-CORE-26] [REQ-CORE-28] zweite Querung nach gescheiterter erster: ankunftNichtAmQueranschluss und bereitsGequert", () => {
+  test("[REQ-CORE-26] [REQ-CORE-28] zweite Querung nach gescheiterter erster: ankunftNichtAmQueranschluss und bereitsGequert", () => {
     // Kreuzung, drei Kurven rechts, Gerade 171: Ankunft (171, 0, 2), nicht an (171, ±57)
     const layout = [
       part("k", "kreuzung"),
@@ -1945,7 +1945,7 @@ describe("Testnachtrag M1: Lücken aus #12 und #13", () => {
     });
   });
 
-  test.skip("[REQ-CORE-25] Querung auf Kreuzung mit überzähliger Richtung: nur richtungUeberzaehlig, kein ungültiger Verweis", () => {
+  test("[REQ-CORE-25] Querung auf Kreuzung mit überzähliger Richtung: nur richtungUeberzaehlig, kein ungültiger Verweis", () => {
     const layout = [part("k", "kreuzung", "links"), crossing("q", "k")];
     expect(runTrace(layout, ORIGIN)).toEqual({
       ok: false,
