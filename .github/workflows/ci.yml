@@ -93,7 +93,7 @@ jobs:
           CHANGED=$(git diff --name-only "origin/${BASE_REF}...HEAD")
           echo "Geänderte Dateien:"
           echo "$CHANGED"
-          if printf '%s\n' "$CHANGED" | grep -E '^(src/(core|catalog|schema)/|stryker\.config\.json$|vitest\.mutation\.config\.ts$|package\.json$|pnpm-lock\.yaml$|\.github/workflows/ci\.yml$)' >/dev/null; then
+          if printf '%s\n' "$CHANGED" | grep -E '^(src/(core|catalog|schema|web/editor)/|stryker\.config\.json$|vitest\.mutation\.config\.ts$|package\.json$|pnpm-lock\.yaml$|\.github/workflows/ci\.yml$)' >/dev/null; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
