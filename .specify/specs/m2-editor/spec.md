@@ -1,9 +1,6 @@
 # Spec: M2 — Editor im Sandbox-Modus, Layout lokal im Browser
 
-Status: Entwurf, Überarbeitung 3 (Überarbeitung 1: Antworten des Menschen vom 2026-11-24 auf die
-offenen Fragen; Überarbeitung 2: Exportname ohne Streckennamen mit Zeitstempel; Überarbeitung 3:
-Klarstellungen aus spec-to-tests, Leisten-Einteilung als Logik, Smoke ergänzt), wartet auf
-erneute Abnahme (harter Stopp).
+Status: Überarbeitung 4 (Klarstellung: Name bei „Neu“); Abnahme per Review des Nachtrag-PRs.
 Grundlage: [KONZEPT.md](../../../KONZEPT.md) (abgenommen 2026-11-23; Abschnitte „Ziel“, „Modi“,
 „Geometrie“, „Bedienung“, „Architektur“, „Prüfen“, „Meilensteine“),
 [docs/recherche.md](../../../docs/recherche.md), [constitution.md](../../constitution.md), die
@@ -148,7 +145,9 @@ fassen lässt, steht in der Logik-Schicht.
   Beispiel: Nr. 1 der Acht gelöscht → Fehler „ungültiger Verweis“ an Nr. 5, gezeichneter
   Abschnitt Nr. 1–4.
 - **REQ-EDIT-12** [When] Wenn „Neu“ ausgelöst wird, wird die Folge leer und die Auswahl
-  aufgehoben; das ist ein Befehl (rückgängig machbar).
+  aufgehoben; das ist ein Befehl (rückgängig machbar). „Neu“ setzt außerdem den aktuellen Namen
+  (REQ-STORE-9) zurück: danach ist kein Name gesetzt. Dieses Zurücksetzen gehört nicht zur
+  Folge und wird von Rückgängig/Wiederholen nicht rückgängig gemacht (REQ-STORE-9).
 - **REQ-EDIT-13** [When] Auswahl: Ein Element lässt sich über seine Element-ID auswählen, die
   Auswahl lässt sich zum vorigen oder nächsten Element der Folge bewegen (auch über Elemente
   außerhalb des gezeichneten Abschnitts) und aufheben. Eine Aktion lässt sich nur bei bestehender
@@ -297,8 +296,10 @@ fassen lässt, steht in der Logik-Schicht.
 
 - **REQ-STORE-9** [When] Export: Der Editor erzeugt für die aktuelle Folge einen Text, der genau
   das mit `LayoutSchema` kodierte Layout als JSON enthält (dasselbe Format wie der gespeicherte
-  Wert, REQ-STORE-1; Einrückung ist erlaubt), und einen Dateinamen. Name ist der zuletzt beim
-  Speichern, Laden oder Import verwendete.
+  Wert, REQ-STORE-1; Einrückung ist erlaubt), und einen Dateinamen. Der **aktuelle Name** ist
+  der zuletzt beim Speichern, Laden oder Import verwendete; „Neu“ (REQ-EDIT-12) setzt ihn zurück
+  (danach: kein Name). Rückgängig und Wiederholen ändern den aktuellen Namen nie, auch nicht beim
+  Rückgängig/Wiederholen von „Neu“ oder eines Imports; der Name gehört nicht zum Verlauf.
   - **Mit Namen:** `<Name>.json`; die Zeichen `/ \ : * ? " < > |` und Steuerzeichen im Namen
     werden durch `_` ersetzt. Auslegung: Steuerzeichen sind C0 (U+0000–U+001F) und DEL
     (U+007F); C1-Zeichen (U+0080–U+009F) bleiben erhalten.
@@ -523,7 +524,8 @@ Maus-Fälle am Laptop, Touch-Fälle an Tablet und Handy.
 6. **Austausch zwischen Geräten.** Am Laptop die Acht als „Acht“ speichern und exportieren →
    Datei `Acht.json`. Die Datei aufs Handy bringen (z. B. Messenger oder Seafile), dort
    „Importieren“ → dieselbe Acht, „geschlossen“, „2,30 m“, im Namensfeld steht „Acht“.
-   Rückgängig → der vorige Arbeitsstand des Handys ist wieder da. Ohne Namen: „Neu“, ein Oval
+   Rückgängig → der vorige Arbeitsstand des Handys ist wieder da. Ohne Namen (der Name aus dem
+   Import ist nach Rückgängig noch gesetzt, erst „Neu“ setzt ihn zurück): „Neu“, ein Oval
    tippen, ohne Speichern exportieren → Datei `strecke-<heutiges Datum>-<Uhrzeit>.json` mit der
    Ortszeit des Geräts (z. B. `strecke-2026-11-24-0815.json`); importiert ergibt sie dasselbe
    Oval, und im Namensfeld steht der Dateiname ohne `.json`.
