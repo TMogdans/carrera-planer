@@ -116,6 +116,21 @@ describe("Status", () => {
     });
   });
 
+  test.skip("[REQ-STAT-2] Eigenschaft: Winkel als Zahl = Kern-Winkel × 45, Bereich −135 … 180", async () => {
+    const S = await loadStatus();
+    fc.assert(
+      fc.property(validElementsArb, (elements) => {
+        const r = closure(CATALOG, elements, ORIGIN);
+        const v = S.statusOf(CATALOG, elements);
+        if (!r.ok || r.closure.status !== "offen") return;
+        if (v.kind !== "offen") return expect.fail(`erwartet offen, erhalten ${v.kind}`);
+        expect(v.angleDeg).toBe(r.closure.angleSteps * 45);
+        expect([-135, -90, -45, 0, 45, 90, 135, 180]).toContain(v.angleDeg);
+      }),
+      { numRuns: 300 },
+    );
+  });
+
   test.skip("[REQ-STAT-2] Lücke unter 0,5 mm bei Versatz ≠ 0 zeigt „< 1 mm“, exakt null zeigt „0 mm“", async () => {
     const S = await loadStatus();
     const zero = coord(rat(0n), rat(0n));
@@ -128,6 +143,8 @@ describe("Status", () => {
     // Rundungsgrenzen: 0,5 mm → „1 mm“ (nicht „< 1 mm“), 341,5 → „342 mm“
     expect(S.formatGap({ dx: coord(rat(1n, 2n)), dy: zero })).toBe("1 mm");
     expect(S.formatGap({ dx: coord(rat(-683n, 2n)), dy: zero })).toBe("342 mm");
+    expect(S.formatGap({ dx: coord(rat(483n, 2n)), dy: zero })).toBe("242 mm");
+    expect(S.formatGap({ dx: coord(rat(-499n, 1000n)), dy: zero })).toBe("< 1 mm");
     // Betrag: (3, 4) → 5 mm
     expect(S.formatGap({ dx: coord(rat(-3n)), dy: coord(rat(4n)) })).toBe("5 mm");
   });
@@ -174,6 +191,7 @@ describe("Status", () => {
     expect(byNumber(3)?.name).toBe("Looping (Baugruppe)");
     expect(byNumber(4)?.name).toBe("Kurve 1/90°");
     expect(byNumber(5)?.name).toBe("Gerade 114");
+    expect(byNumber(2)?.name).toBe("gibt-es-nicht");
     for (const e of entries) expect(e.name.length).toBeGreaterThan(0);
   });
 
@@ -305,7 +323,7 @@ describe("Status", () => {
     expect(S.formatLength(12345.6)).toBe("12,35 m");
   });
 
-  test.skip("[REQ-STAT-5] Länge unabhängig von Lagefehlern; „–“ bei unbekannter Länge", async () => {
+  test.skip("[REQ-STAT-5] Länge unabhängig von Lagefehlern; „–“ bei unbekannter Länge, auch Querung auf spätere Kreuzung; zweite Querung zählt", async () => {
     const S = await loadStatus();
     // Ankunftsfehler: Länge bleibt bestimmt (Gerade 171 statt 114)
     const g171 = S.totalLength(CATALOG, ACHT_G171);
@@ -324,11 +342,17 @@ describe("Status", () => {
       [...OVAL, { id: "z", part: "wireless-anschluss" }],
       [...OVAL, { id: "z", crosses: "o3" }], // Querung auf eine Gerade
       [...OVAL, { id: "z", crosses: "nirgends" }],
+      // Querung auf eine spätere Kreuzung (Kern: ungültiger Verweis)
+      [{ id: "q", crosses: "x" }, { id: "x", part: "kreuzung" }, ...OVAL],
     ];
     for (const els of unknownLength) {
       expect(S.totalLength(CATALOG, els), JSON.stringify(els.at(-1))).toBeUndefined();
     }
     expect(S.formatLength(undefined)).toBe("–");
+
+    // zweite Querung derselben früheren Kreuzung („bereits gequert“): Querweg zählt
+    const twice: Elements = [...ACHT.slice(0, 6), { id: "q2", crosses: "e1" }, ...ACHT.slice(6)];
+    expectNear(S.totalLength(CATALOG, twice) as number, 342 + 6 * 85.5 * Math.PI + 4 * 114, 1e-6);
   });
 });
 

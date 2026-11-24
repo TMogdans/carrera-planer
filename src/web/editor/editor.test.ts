@@ -445,18 +445,18 @@ describe("Befehle", () => {
     expect(E.apply(wide, s, { type: "appendCrossing" }).elements).toEqual(ACHT.slice(0, 5));
   });
 
-  test.skip("[REQ-EDIT-10] Querung nur am Ende: nie Ziel von Ersetzen oder Davor einfügen; vorhandene Querung lässt sich löschen", async () => {
+  test.skip("[REQ-EDIT-10] Querung nur am Ende: bei aktiver Aktion am Ende angehängt, Auswahl und Aktion unberührt; vorhandene Querung lässt sich löschen", async () => {
     const E = await loadEditor();
     const base = loaded(E, ACHT.slice(0, 5));
     for (const action of ["ersetzen", "davorEinfuegen"] as const) {
       const s = selectAndAct(E, base, "e3", action);
       const after = E.apply(CATALOG, s, { type: "appendCrossing" });
-      // das ausgewählte Element und alles davor bleiben; wenn etwas dazukommt, dann nur am Ende
+      // Auslegung (Spec): bei aktiver Aktion immer am Ende anhängen, Auswahl und Aktion unberührt
       expect(after.elements.slice(0, 5)).toEqual(ACHT.slice(0, 5));
-      expect(after.elements.length).toBeLessThanOrEqual(6);
-      if (after.elements.length === 6) {
-        expect(after.elements[5]).toMatchObject({ crosses: "e1" });
-      }
+      expect(after.elements).toHaveLength(6);
+      expect(after.elements[5]).toMatchObject({ crosses: "e1" });
+      expect(after.selection).toBe("e3");
+      expect(after.action).toBe(action);
     }
     const acht = loaded(E, ACHT);
     const del = E.apply(CATALOG, run(E, acht, [{ type: "select", id: "e6" }]), {
@@ -520,6 +520,62 @@ describe("Befehle", () => {
       expect(s.elements).toEqual(broken);
       expect(E.apply(CATALOG, s, { type: "undo" }).elements).toEqual([]);
       expect(E.canRedo(s)).toBe(false);
+    }
+  });
+});
+
+describe("Leisten-Einteilung", () => {
+  test.skip("[REQ-EDIT-21] M1-Katalog: 13 platzierbar, 4 Maße fehlen, L und K ausgeblendet, in Katalogreihenfolge", async () => {
+    const E = await loadEditor();
+    const entries = E.paletteEntries(CATALOG);
+    expect(entries.map((e) => e.partId)).toEqual(CATALOG.map((e) => e.id));
+    expect(entries.map((e) => e.name)).toEqual(CATALOG.map((e) => e.name));
+    const ofKind = (kind: string) => entries.filter((e) => e.kind === kind).map((e) => e.partId);
+    expect(ofKind("platzierbar")).toEqual(CATALOG.slice(0, 13).map((e) => e.id));
+    expect(ofKind("platzierbar")[0]).toBe("gerade-342");
+    expect(ofKind("platzierbar")[12]).toBe("rundenzaehler");
+    expect(ofKind("masseFehlen")).toEqual([
+      "wireless-anschluss",
+      "steilkurve-1-45",
+      "looping",
+      "steilkehre",
+    ]);
+    expect(ofKind("ausgeblendet")).toEqual(["looping-teil", "steilkehre-teil"]);
+    expect(entries).toHaveLength(CATALOG.length);
+  });
+
+  test.skip("[REQ-EDIT-21] Wirkungsnachweis: veränderter Katalog ändert die Einteilung; platzierbar heißt genau anhängbar", async () => {
+    const E = await loadEditor();
+    const changed: ReadonlyArray<CatalogEntry> = [
+      ...CATALOG.map(
+        (e): CatalogEntry =>
+          e.id === "steilkurve-1-45"
+            ? { ...e, geometry: { kind: "kurve", radius: 171, angle: 45 } }
+            : e,
+      ),
+      {
+        id: "wireless-set",
+        name: "Wireless-Set (Baugruppe)",
+        articleNumbers: "keineEigene",
+        source: "Test",
+        certainty: "niedrig",
+        geometry: { kind: "baugruppe", parts: [{ part: "wireless-anschluss", count: 1 }] },
+      },
+    ];
+    const kindOf = (catalog: ReadonlyArray<CatalogEntry>, id: string) =>
+      E.paletteEntries(catalog).find((e) => e.partId === id)?.kind;
+    expect(kindOf(CATALOG, "steilkurve-1-45")).toBe("masseFehlen");
+    expect(kindOf(changed, "steilkurve-1-45")).toBe("platzierbar");
+    expect(kindOf(CATALOG, "wireless-anschluss")).toBe("masseFehlen");
+    expect(kindOf(changed, "wireless-anschluss")).toBe("ausgeblendet");
+    expect(kindOf(changed, "wireless-set")).toBe("masseFehlen");
+    expect(E.paletteEntries(changed).map((e) => e.partId)).toEqual(changed.map((e) => e.id));
+    // „platzierbar“ deckt sich mit dem, was ein Tipp in die Folge bringt (REQ-EDIT-2)
+    for (const catalog of [CATALOG, changed]) {
+      for (const entry of E.paletteEntries(catalog)) {
+        const after = E.apply(catalog, E.initialState(), choose(entry.partId));
+        expect(after.elements.length, `${entry.partId}`).toBe(entry.kind === "platzierbar" ? 1 : 0);
+      }
     }
   });
 });

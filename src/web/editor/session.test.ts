@@ -134,6 +134,42 @@ describe("Speichern und Laden", () => {
     expect(reopened.messages).toEqual([]);
   });
 
+  test.skip("[REQ-STORE-2] Rückgängig und Wiederholen sichern; Auswahl, Aktion und Leistenrichtung lösen keine Sicherung aus", async () => {
+    const api = await loadSession();
+    const storage = new MemoryStorage();
+    const s = open(api, storage);
+    const saved = () => JSON.parse(storage.data.get(api.WORKING_KEY) as string) as unknown;
+    s.dispatch({ type: "choosePart", partId: "gerade-342" });
+    s.dispatch({ type: "choosePart", partId: "gerade-171" });
+    const two = s.state.elements;
+    s.dispatch({ type: "undo" });
+    expect(s.state.elements).toHaveLength(1);
+    expect(saved()).toStrictEqual(layoutJson(s.state.elements));
+    // Neuladen nach Rückgängig zeigt den Stand nach dem Rückgängig
+    expect(open(api, storage).state.elements).toEqual(s.state.elements);
+    s.dispatch({ type: "redo" });
+    expect(s.state.elements).toEqual(two);
+    expect(saved()).toStrictEqual(layoutJson(two));
+    expect(open(api, storage).state.elements).toEqual(two);
+
+    const writes = () =>
+      storage.log.filter((o) => (o.op === "set" || o.op === "remove") && o.key === api.WORKING_KEY)
+        .length;
+    const before = writes();
+    const neutral: ReadonlyArray<Command> = [
+      { type: "select", id: (two[0] as LayoutElement).id },
+      { type: "selectNext" },
+      { type: "selectPrevious" },
+      { type: "setAction", action: "ersetzen" },
+      { type: "setAction", action: "davorEinfuegen" },
+      { type: "togglePaletteTurn" },
+      { type: "clearSelection" },
+    ];
+    for (const c of neutral) s.dispatch(c);
+    expect(s.state.elements).toEqual(two);
+    expect(writes()).toBe(before);
+  });
+
   test.skip("[REQ-STORE-3] Speichern unter Namen: getrimmt, nicht leer, Überschreiben nur bestätigt, alphabetische Liste, Löschen", async () => {
     const api = await loadSession();
     const storage = new MemoryStorage();
@@ -163,6 +199,9 @@ describe("Speichern und Laden", () => {
     expect(s.savedNames()).toEqual(["Acht", "Kreis", "Oval"]);
     s.deleteSaved("Kreis");
     expect(s.savedNames()).toEqual(["Acht", "Oval"]);
+    // localeCompare „de“, Groß-/Kleinschreibung ignoriert (Codepunkt-Ordnung wäre anders)
+    for (const n of ["zebra", "apfel", "Ärger", "kreis", "Bär"]) s.saveAs(n);
+    expect(s.savedNames()).toEqual(["Acht", "apfel", "Ärger", "Bär", "kreis", "Oval", "zebra"]);
     expect(storage.data.has(api.layoutKey("Kreis"))).toBe(false);
   });
 
@@ -405,11 +444,14 @@ describe("Export und Import", () => {
     expect(s.exportFile().fileName).toBe("Bogen.json");
   });
 
-  test.skip("[REQ-STORE-9] Dateiname: verbotene Zeichen und Steuerzeichen werden zu _", async () => {
+  test.skip("[REQ-STORE-9] Dateiname: verbotene Zeichen, C0 und DEL werden zu _, C1 bleibt", async () => {
     const api = await loadSession();
     const s = withLayout(api, new MemoryStorage(), OVAL);
-    s.saveAs('a/b\\c:d*e?f"g<h>i|j\u0001k\u001fl\u007fm');
-    expect(s.exportFile().fileName).toBe("a_b_c_d_e_f_g_h_i_j_k_l_m.json");
+    s.saveAs('a/b\\c:d*e?f"g<h>i|j\u0001k\u001fl\u007fm\u0000n');
+    expect(s.exportFile().fileName).toBe("a_b_c_d_e_f_g_h_i_j_k_l_m_n.json");
+    // C1-Zeichen (U+0080–U+009F) bleiben erhalten
+    s.saveAs("x\u0085y\u009fz");
+    expect(s.exportFile().fileName).toBe("x\u0085y\u009fz.json");
   });
 
   test.skip("[REQ-STORE-9] Ohne Namen: strecke-JJJJ-MM-TT-HHmm.json aus den lokalen Bestandteilen der Uhr, nie aus UTC", async () => {
@@ -475,6 +517,8 @@ describe("Export und Import", () => {
     expect(s.name).toBe("Acht");
     expect(s.savedNames()).toEqual([]);
     expect(storage.data.has(api.layoutKey("Acht"))).toBe(false);
+    // Autosicherung läuft wie nach jeder Folgeänderung
+    expect(JSON.parse(storage.data.get(api.WORKING_KEY) as string)).toStrictEqual(layoutJson(ACHT));
     s.dispatch({ type: "undo" });
     expect(s.state.elements).toEqual(OVAL);
 

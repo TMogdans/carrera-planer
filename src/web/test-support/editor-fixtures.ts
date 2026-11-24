@@ -19,6 +19,9 @@
  *     apply(catalog, state, command): EditorState       unveränderlich, liefert neuen Zustand
  *     canUndo(state), canRedo(state): boolean
  *     flipAvailable(catalog, state): boolean            REQ-EDIT-4
+ *     paletteEntries(catalog): PaletteEntry[]           Leisten-Einteilung (REQ-EDIT-21):
+ *                                                       { partId, name, kind: "platzierbar" |
+ *                                                       "ausgeblendet" | "masseFehlen" }
  *     crossingTarget(catalog, elements): string | undefined
  *                                                       Element-ID der Kreuzung, auf die
  *                                                       „Querung anhängen“ jetzt verweisen würde,
@@ -103,6 +106,16 @@ export type EditorApi = {
   canRedo(state: EditorState): boolean;
   flipAvailable(catalog: Catalog, state: EditorState): boolean;
   crossingTarget(catalog: Catalog, elements: Elements): string | undefined;
+  /** Leisten-Einteilung (REQ-EDIT-21): je Katalogeintrag genau ein Eintrag, Katalogreihenfolge. */
+  paletteEntries(catalog: Catalog): ReadonlyArray<PaletteEntry>;
+};
+
+/** Klasse eines Katalogeintrags in der Teileleiste (REQ-EDIT-21). */
+export type PaletteKind = "platzierbar" | "ausgeblendet" | "masseFehlen";
+export type PaletteEntry = {
+  readonly partId: string;
+  readonly name: string;
+  readonly kind: PaletteKind;
 };
 
 // ---------------------------------------------------------------------------------------------

@@ -242,14 +242,20 @@ describe("Zeichengeometrie", () => {
     expectNear(D.coordToNumber(pell), coordExact(pell));
     expectNear(D.coordToNumber(coord(rat(5643n, 2n), rat(-1995n))), 0.1439, 0.0001);
     expect(D.coordToNumber(coord(rat(0n, 4n), rat(0n, 4n)))).toBe(0);
-    // Darstellbarer Bereich: Zähler bis 4·10⁷ (10⁷ mm), Nenner 1, 2 oder 4 wie im Kern
-    const ratArb = fc.record({
-      num: fc.bigInt({ min: -40_000_000n, max: 40_000_000n }),
-      den: fc.constantFrom(1n, 2n, 4n, -4n),
-    });
+    // Bereich laut Spec: Koordinaten mit Betrag ≤ 10⁷ mm. Erzeugt wird |a| ≤ 5·10⁶ und
+    // |b| ≤ 3,5·10⁶ (also |a + b·√2| < 10⁷), Nenner 1, 2 oder 4 wie im Kern, auch negativ.
+    const ratArb = (bound: bigint) =>
+      fc
+        .constantFrom(1n, 2n, 4n, -4n)
+        .chain((den) =>
+          fc
+            .bigInt({ min: -bound * (den < 0n ? -den : den), max: bound * (den < 0n ? -den : den) })
+            .map((num) => ({ num, den })),
+        );
     fc.assert(
-      fc.property(ratArb, ratArb, (a, b) => {
+      fc.property(ratArb(5_000_000n), ratArb(3_500_000n), (a, b) => {
         const c = coord(a, b);
+        expect(Math.abs(coordExact(c))).toBeLessThanOrEqual(1e7);
         expectNear(D.coordToNumber(c), coordExact(c));
       }),
       { numRuns: 1000 },
