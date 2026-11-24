@@ -4,7 +4,13 @@
  * Zustand. Lage, Fehler und Queranschlüsse kommen ausschließlich vom Kern (REQ-WARCH-3).
  * Zur Form (Funktionsdeklarationen) siehe parts.ts.
  */
-import { type LayoutElement, type Turn, trace } from "../../core/index.js";
+import {
+  type CrossPorts,
+  type LayoutElement,
+  type Pose,
+  type Turn,
+  trace,
+} from "../../core/index.js";
 import { geometryOf, isPlaceable, origin, partOf } from "./parts.js";
 import type { Action, Catalog, Command, EditorState, Elements, PaletteEntry } from "./types.js";
 
@@ -198,22 +204,35 @@ export function flipAvailable(catalog: Catalog, state: EditorState): boolean {
 }
 
 /**
- * Ziel von „Querung anhängen“ (REQ-EDIT-9): die früheste Kreuzung, für die der Kern eine probehalber
- * angehängte Querung fehlerfrei verfolgt. Damit entscheidet der Kern über exakte Ankunft,
- * „bereits gequert“ und Fehler davor. Nur Kreuzungen werden probiert (sonst 1000 Proben bei 1000
- * Elementen, REQ-EDIT-20). Die Probe-ID ist die ID der Kreuzung mit angehängtem NUL-Zeichen und
- * kollidiert nur mit absichtlich so gewählten fremden IDs (bekannte Grenze: dann gilt die Querung
- * als nicht verfügbar).
+ * Exakter Vergleichsschlüssel einer Kern-Pose (Position und Richtung). Gleiche Schlüssel heißen
+ * immer gleiche Pose. Umgekehrt liefert der Kern alle Posen einer Verfolgung mit derselben
+ * Startpose im selben Nenner (Startpose mit Nenner 1, Versatz in Viertel-mm), gleiche Posen also
+ * auch mit gleichem Schlüssel. Kein Gleitkomma, keine Toleranz.
+ */
+function poseKey(p: Pose): string {
+  return `${p.x.a.num}/${p.x.a.den} ${p.x.b.num}/${p.x.b.den} ${p.y.a.num}/${p.y.a.den} ${p.y.b.num}/${p.y.b.den} ${p.dir}`;
+}
+
+/**
+ * Ziel von „Querung anhängen“ (REQ-EDIT-9): die früheste ungequerte Kreuzung, deren
+ * Queranschluss (Position und Richtung) exakt gleich dem offenen Ende ist. Endpose und
+ * Queranschlüsse kommen aus einer einzigen Verfolgung durch den Kern mit dem übergebenen Katalog;
+ * der Editor vergleicht nur noch auf Gleichheit. Eine Querung entfernt ihre Kreuzung aus den
+ * offenen Kandidaten. Fehlerhafte Folgen haben kein offenes Ende, also kein Ziel. O(n).
  */
 export function crossingTarget(catalog: Catalog, elements: Elements): string | undefined {
-  for (const el of elements) {
-    if (
-      geometryOf(catalog, partOf(el))?.kind === "kreuzung" &&
-      // biome-ignore lint/style/useTemplate: Verkettung mit Literal hat genau einen Mutanten (NUL weg → Kollision → rot); ein Template würde zu "" mutiert und bliebe unbemerkt.
-      trace(catalog, [...elements, { id: el.id + "\u0000", crosses: el.id }], origin()).ok
-    ) {
-      return el.id;
-    }
+  const r = trace(catalog, elements, origin());
+  if (!r.ok) return undefined;
+  const open = new Map<string, CrossPorts>();
+  r.steps.forEach((step, i) => {
+    const el = elements[i] as LayoutElement;
+    step.crossPorts !== undefined
+      ? open.set(el.id, step.crossPorts)
+      : open.delete((el as { readonly crosses?: string }).crosses as string);
+  });
+  const end = poseKey(r.end);
+  for (const [id, ports] of open) {
+    if ([ports.left, ports.right].some((p) => poseKey(p) === end)) return id;
   }
   return undefined;
 }
