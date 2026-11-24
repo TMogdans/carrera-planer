@@ -243,6 +243,7 @@ export type InventoryMessage =
       readonly text: string;
     }
   | { readonly kind: "modusUngueltig"; readonly value: string; readonly text: string }
+  | { readonly kind: "bestandAbgleichKaputt"; readonly reason: string; readonly text: string }
   | {
       readonly kind: "befehlAbgewiesen";
       readonly partId: string | undefined;
@@ -264,4 +265,6 @@ export type PlannerSession = Omit<Session, "messages"> & {
   inventoryDefectBackups(): ReadonlyArray<string>;
   inventoryDefectRawText(key: string): string | undefined;
   deleteInventoryDefect(key: string): void;
+  /** Änderung des Speichers von außen (anderes Tab; null = alles), REQ-BEST-10. */
+  storageChanged(key: string | null): void;
 };

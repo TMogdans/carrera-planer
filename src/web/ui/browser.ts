@@ -32,6 +32,25 @@ export const browserStorage = (): KeyValueStorage => {
   }
 };
 
+/**
+ * Änderungen an `localStorage` aus anderen Tabs (Spec M3a, REQ-BEST-10): ruft `onChange` mit dem
+ * geänderten Schlüssel (null = alles gelöscht). Ereignisse anderer Speicherbereiche
+ * (`sessionStorage`) zählen nicht. Liefert die Abmeldung.
+ */
+export const onLocalStorageChange = (onChange: (key: string | null) => void): (() => void) => {
+  const listener = (e: StorageEvent) => {
+    let local: Storage | undefined;
+    try {
+      local = window.localStorage;
+    } catch {
+      return;
+    }
+    if (e.storageArea === local) onChange(e.key);
+  };
+  window.addEventListener("storage", listener);
+  return () => window.removeEventListener("storage", listener);
+};
+
 /** Browser-Uhr: UTC-Zeitpunkt und lokale Bestandteile in der Zeitzone des Geräts (REQ-STORE-9). */
 export const browserClock: Clock = () => {
   const d = new Date();

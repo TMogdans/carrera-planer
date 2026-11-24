@@ -35,7 +35,7 @@ import {
   stockPalette,
   totalLength,
 } from "../editor/index.js";
-import { browserClock, browserStorage, isTextInput } from "./browser.js";
+import { browserClock, browserStorage, isTextInput, onLocalStorageChange } from "./browser.js";
 import { Canvas, type EndMark } from "./canvas.js";
 import { StorageDialog } from "./dialog.js";
 import { InventoryDialog } from "./inventory-dialog.js";
@@ -222,6 +222,16 @@ function App({ session }: { readonly session: PlannerSession }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  // Abgleich des Bestands mit anderen Tabs (REQ-BEST-10); beim Abbau wieder abmelden.
+  useEffect(
+    () =>
+      onLocalStorageChange((key) => {
+        session.storageChanged(key);
+        rerender();
+      }),
+    [session],
+  );
 
   const selIndex = elements.findIndex((e) => e.id === state.selection);
   const selEl = elements[selIndex];

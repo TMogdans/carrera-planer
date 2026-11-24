@@ -78,7 +78,10 @@ export function createPlannerSession(deps: {
   });
   let inventory: Inventory = {};
   let mode: Mode = "sandbox";
-  /** Kaputter Bestand ließ sich nicht verschieben: in dieser Sitzung nicht überschreiben. */
+  /**
+   * Kaputter Bestand im Speicher, der nicht verschoben wurde (Start: REQ-BEST-5; Abgleich:
+   * REQ-BEST-10): in dieser Sitzung nicht überschreiben, bis ein Abgleich einen gültigen Wert liest.
+   */
   let keepStored = false;
 
   const attempt = <T>(fn: () => T, fallback: T): T => {
@@ -129,16 +132,16 @@ export function createPlannerSession(deps: {
     }
   };
 
-  attempt(() => {
-    const raw = storage.getItem(inventoryKey());
-    if (raw === null) return;
-    const p = parseInventory(raw);
-    if (!p.ok) {
-      moveDefect(raw, p.reason);
-      return;
-    }
-    inventory = p.inventory;
-    const ignored = logic.ignoredPartIds(catalog, inventory);
+  /**
+   * Gelesenen gültigen Bestand übernehmen (Start, Abgleich). Gemeldet werden nicht zählende
+   * Teil-IDs (REQ-BEST-7), die im bisherigen Bestand der Seite nicht standen; beim Start ist der
+   * bisherige Bestand leer. Ein Schreibschutz endet.
+   */
+  const adopt = (next: Inventory): void => {
+    const known = logic.ignoredPartIds(catalog, inventory);
+    const ignored = logic.ignoredPartIds(catalog, next).filter((id) => !known.includes(id));
+    inventory = next;
+    keepStored = false;
     if (ignored.length > 0) {
       messages.push({
         kind: "bestandIgnoriert",
@@ -146,6 +149,14 @@ export function createPlannerSession(deps: {
         text: `Der gespeicherte Bestand nennt Teile, die der Katalog nicht kennt oder die Baugruppen sind; sie zählen nicht und bleiben gespeichert: ${ignored.map((id) => `„${id}“`).join()}`,
       });
     }
+  };
+
+  attempt(() => {
+    const raw = storage.getItem(inventoryKey());
+    if (raw === null) return;
+    const p = parseInventory(raw);
+    if (p.ok) adopt(p.inventory);
+    else moveDefect(raw, p.reason);
   }, undefined);
 
   attempt(() => {
@@ -221,6 +232,29 @@ export function createPlannerSession(deps: {
     inventoryDefectRawText: (key: string) =>
       attempt(() => storage.getItem(key) ?? undefined, undefined),
     deleteInventoryDefect: (key: string) => attempt(() => storage.removeItem(key), undefined),
+    /**
+     * Abgleich zwischen Tabs (REQ-BEST-10): nur für den Bestandsschlüssel oder null. Der Wert wird
+     * neu aus dem Speicher gelesen; ein fehlender Schlüssel gilt als leerer Bestand. Ein kaputter
+     * Wert wird nicht verschoben (jedes Tab bekommt das Ereignis), der Bestand der Seite bleibt und
+     * die Sitzung schreibt ihn nicht mehr. Der Abgleich selbst schreibt nie.
+     */
+    storageChanged(key: string | null): void {
+      if (key !== null && key !== inventoryKey()) return;
+      attempt(() => {
+        const raw = storage.getItem(inventoryKey());
+        const p: Parsed = raw === null ? { ok: true, inventory: {} } : parseInventory(raw);
+        if (p.ok) {
+          adopt(p.inventory);
+          return;
+        }
+        keepStored = true;
+        messages.push({
+          kind: "bestandAbgleichKaputt",
+          reason: p.reason,
+          text: `Ein anderes Tab hat einen kaputten Bestand gespeichert (${p.reason}). Diese Seite behält ihre Zahlen; Änderungen am Bestand gelten nur bis zum Neuladen, dann wird der kaputte Wert beiseitegelegt.`,
+        });
+      }, undefined);
+    },
   };
 
   // Alles der M2-Sitzung übernehmen, Getter als Getter (Zustand, Name und die gemeinsame

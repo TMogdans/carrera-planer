@@ -38,6 +38,13 @@ export function InventoryDialog({ session, catalog, templates, onClose, onChange
   const [pending, setPending] = useState<SetTemplate | undefined>(undefined);
   const [problems, setProblems] = useState<ReadonlyArray<PlannerMessage>>([]);
   const [note, setNote] = useState("");
+  // Meldungen aus dem Abgleich mit anderen Tabs, die bei offenem Dialog kommen (REQ-BEST-10):
+  // auch hier sichtbar, weil der Dialog die Meldungsleiste verdeckt.
+  const [openedAt] = useState(session.messages.length);
+  const fromTabs = session.messages
+    .slice(openedAt)
+    .filter((m) => m.kind === "bestandAbgleichKaputt" && !problems.includes(m));
+  const shown = [...fromTabs, ...problems];
 
   /** Führt eine Aktion aus; Meldungen, die sie erzeugt, zeigt der Dialog selbst (REQ-BUI-5). */
   const act = (fn: () => void): void => {
@@ -61,9 +68,9 @@ export function InventoryDialog({ session, catalog, templates, onClose, onChange
           </button>
         </div>
         {note !== "" && <p class="note">{note}</p>}
-        {problems.length > 0 && (
+        {shown.length > 0 && (
           <ul class="dialog-problems" role="alert">
-            {problems.map((m, i) => (
+            {shown.map((m, i) => (
               <li key={`${m.kind}${i}`}>{m.text}</li>
             ))}
           </ul>
