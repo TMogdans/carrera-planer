@@ -667,3 +667,25 @@ describe("Nachtrag: Neustart", () => {
     expect(open(api, storage).state.elements).toEqual(ACHT);
   });
 });
+
+describe("Nachtrag: Laden und Import heben die Auswahl auf", () => {
+  test.skip("[REQ-STORE-10] Laden eines gespeicherten Layouts und Import heben die Auswahl auf, auch bei gleicher Element-ID", async () => {
+    const api = await loadSession();
+    const sameIds: Elements = ACHT.map((el) => ({ id: el.id, part: "gerade-114" }));
+    const storage = new MemoryStorage({
+      [api.layoutKey("Gleich")]: JSON.stringify(layoutJson(sameIds)),
+    });
+    const s = withLayout(api, storage, ACHT);
+    s.dispatch({ type: "select", id: "e1" });
+    s.load("Gleich");
+    expect(s.state.elements).toEqual(sameIds);
+    expect(s.state.selection).toBeUndefined();
+
+    s.dispatch({ type: "load", elements: ACHT });
+    s.dispatch({ type: "select", id: "e1" });
+    expect(s.state.selection).toBe("e1");
+    s.importFile("Gleich.json", JSON.stringify(layoutJson(sameIds)));
+    expect(s.state.elements).toEqual(sameIds);
+    expect(s.state.selection).toBeUndefined();
+  });
+});
