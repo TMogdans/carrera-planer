@@ -70,6 +70,12 @@ markierte Überschneidung ist erlaubt, eine unmarkierte ist ein Fehler.
 Versatz und Drehung zwischen Eingang und Ausgang, von uns gemessen. Bis dahin sind sie im Katalog
 als „Maße fehlen“ gekennzeichnet und nicht verwendbar.
 
+**Prägungen.** Manche Teile haben keine eigene Artikelnummer (z. B. das K-Teil der Steilkehre). Auf
+den Teilen ist aber eine Form- oder Teilenummer eingeprägt (z. B. `141903-1B` am K-Teil,
+`142202-1` an der Geraden 342), über die man sie bei Händlern und Kleinanzeigen findet. Der
+Katalog führt sie getrennt von den 8-stelligen Artikelnummern im Feld `praegung`; die
+Einkaufsliste zeigt sie als Suchbegriff. → #28
+
 ## Bedienung
 
 - Teil aus der Leiste antippen → wird am offenen Ende angehängt. Kurve: Richtung umschaltbar.
@@ -107,7 +113,8 @@ bekommt einen Hinweis statt still überschrieben zu werden. Live-Mitbearbeitung 
 |---|---|---|
 | M1 | Geometriekern + Teilekatalog | Tests, keine UI |
 | M2 | Editor im Sandbox-Modus, Layout lokal im Browser | erste Strecken planbar |
-| M3 | Backend, Bestand, Bestandsmodus, Einkaufsliste | Kern der Idee fertig |
+| M3a | Bestand, Set-Vorlagen, Bestandsmodus, Einkaufsliste, Prägungen — im Browser, ohne Server | Kern der Idee nutzbar |
+| M3b | Backend (`@effect/platform`, SQLite), Bestand und Layouts geräteübergreifend, API-Schema | Kern der Idee fertig |
 | M4 | Deploy auf den Raspi | im Heimnetz nutzbar |
 | später | Zufallsstrecke aus dem Bestand (#3), Drag & Drop im Editor (#4), Leaderboard für Rennzeiten, später mit digitalem Rundenzähler (#5), Spurlängen je Spur (Fairness), Tischmaß-Prüfung, „Strecke schließen“-Vorschlag, Einkaufsliste in kaufbaren Packungen, Höhen genauer | – |
 

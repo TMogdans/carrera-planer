@@ -77,7 +77,7 @@ kurze Gerade, und die ist 114 mm. Sie gehört zu Art.-Nr. 20061658 (Packung mit 
 3 × 114 mm); dem Mach 8 liegt davon nur ein 114er bei, keine 100-mm-Gerade. Kurze Gerade + Zeitnahme + Anschluss = 3 × 114 = 342 mm, eine lange Gerade.
 Damit liegt der ganze Bestand auf dem 57-mm-Raster; nur die 45°-Kurven brauchen √2.
 Ausbauset 1 nur über Händler, Ausbauset 3 von CT (dort als „Digital 143" gelabelt, Teile
-kompatibel). Wireless Upgrade Kit: Anschlussstück + 2 Regler, keine weiteren Schienen.
+kompatibel). Wireless Upgrade Kit: Wireless-Anschlussschiene (CT-Einzelartikel 20061673, nicht das normale Anschlussstück) + 2 Regler, keine weiteren Schienen.
 
 **Teile K und L am Karton geklärt (2026-11-23):** L sind die 8 Looping-Teile, 2 Spuren zu je 4.
 K sind 4 kürzere gebogene Teile, etwa halb so lang wie ein Looping-Teil. Mit ihnen werden oben
