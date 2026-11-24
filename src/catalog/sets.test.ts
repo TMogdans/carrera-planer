@@ -141,7 +141,7 @@ const templateProblems = (
 };
 
 describe("Set-Vorlagen", () => {
-  test.skip("[REQ-SET-2] genau die fünf Vorlagen (M3a, dann Geraden 3 × 100 + 3 × 114), in Tabellenreihenfolge, mit Name, Art.-Nr., Sicherheit und Inhalt", () => {
+  test("[REQ-SET-2] genau die fünf Vorlagen (M3a, dann Geraden 3 × 100 + 3 × 114), in Tabellenreihenfolge, mit Name, Art.-Nr., Sicherheit und Inhalt", () => {
     const list = templates();
     expect(list.map((t) => t.articleNumber)).toEqual(EXPECTED.map((e) => e.articleNumber));
     expect(list).toHaveLength(5);

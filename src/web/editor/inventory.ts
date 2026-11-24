@@ -4,6 +4,7 @@
  * REQ-EINK-1 bis -5). Der Katalog ist immer Argument; der Verbrauch kommt ausschließlich aus
  * `consumption` des Kerns (REQ-BARCH-2). Kein Argument wird verändert. Zur Form siehe parts.ts.
  */
+import { SET_TEMPLATES } from "../../catalog/index.js";
 import { type CatalogEntry, consumption } from "../../core/index.js";
 import { apply, paletteEntries } from "./editor.js";
 import { geometryOf } from "./parts.js";
@@ -192,10 +193,15 @@ function hint(text: string): SearchTerm {
 }
 
 /**
- * Suchbegriffe einer Zeile (REQ-EINK-3): Artikelnummern und Prägungen; ohne beides ein Hinweis und
- * die Baugruppen mit Artikelnummer, die das Teil enthalten.
+ * Suchbegriffe einer Zeile (REQ-EINK-3): Artikelnummern und Prägungen; ohne beides ein Hinweis,
+ * die Baugruppen mit Artikelnummer, die das Teil enthalten, und danach die Set-Vorlagen, die das
+ * Teil enthalten, in Vorlagenreihenfolge (Spec gerade-100).
  */
-function searchTerms(catalog: Catalog, entry: CatalogEntry): ReadonlyArray<SearchTerm> {
+function searchTerms(
+  catalog: Catalog,
+  templates: ReadonlyArray<SetTemplate>,
+  entry: CatalogEntry,
+): ReadonlyArray<SearchTerm> {
   const numbers = entry.articleNumbers === "keineEigene" ? [] : entry.articleNumbers;
   const terms: SearchTerm[] = [
     ...numbers.map((value): SearchTerm => ({ kind: "artikelnummer", value, text: value })),
@@ -211,17 +217,24 @@ function searchTerms(catalog: Catalog, entry: CatalogEntry): ReadonlyArray<Searc
       ? [hint(`enthalten in ${e.name}, Art.-Nr. ${e.articleNumbers.join(", ")}`)]
       : [],
   );
-  return [hint("keine Artikelnummer, keine Prägung bekannt"), ...containers];
+  const packs = templates.flatMap((t) =>
+    t.contents.some((c) => c.part === entry.id)
+      ? [hint(`enthalten in ${t.name}, Art.-Nr. ${t.articleNumber}`)]
+      : [],
+  );
+  return [hint("keine Artikelnummer, keine Prägung bekannt"), ...containers, ...packs];
 }
 
 /**
  * Einkaufsliste (REQ-EINK-1/-2): je Teil mit Verbrauch über dem Bestand eine Zeile, in
  * Katalogreihenfolge. Baugruppen kommen im Verbrauch des Kerns nicht vor, nur ihre Bestandteile.
+ * `templates` (Vorgabe `SET_TEMPLATES`) liefert die Vorlagen-Hinweise der Suchbegriffe.
  */
 export function shoppingList(
   catalog: Catalog,
   inventory: Inventory,
   elements: Elements,
+  templates: ReadonlyArray<SetTemplate> = SET_TEMPLATES,
 ): ShoppingList {
   const used = consumption(catalog, elements);
   if (!used.ok) return { ok: false, text: "Einkaufsliste nicht bestimmbar" };
@@ -238,7 +251,7 @@ export function shoppingList(
         needed,
         have,
         missing: needed - have,
-        searchTerms: searchTerms(catalog, entry),
+        searchTerms: searchTerms(catalog, templates, entry),
       };
     });
   const total = rows.reduce((sum, r) => sum + r.missing, 0);

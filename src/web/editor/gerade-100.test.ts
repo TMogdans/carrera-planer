@@ -188,7 +188,7 @@ const nameOf = (id: string): string => CATALOG.find((e) => e.id === id)?.name as
 // ---------------------------------------------------------------------------------------------
 
 describe("Gerade 100 im Kern", () => {
-  test.skip("[REQ-G100-5] Gerade 100 allein → Versatz −100; Gerade 100 + Gerade 114 → −214; Oval aus Geraden 100 geschlossen", async () => {
+  test("[REQ-G100-5] Gerade 100 allein → Versatz −100; Gerade 100 + Gerade 114 → −214; Oval aus Geraden 100 geschlossen", async () => {
     const one = offsetOf([{ id: "a", part: "gerade-100" }]);
     expect({ status: one.status, angle: one.angleSteps, ...offsetText(one.offset) }).toEqual({
       status: "offen",
@@ -216,7 +216,7 @@ describe("Gerade 100 im Kern", () => {
     expect(S.statusOf(CATALOG, OVAL_100)).toEqual({ kind: "geschlossen" });
   });
 
-  test.skip("[REQ-G100-5] aus (0, 0, k) verschiebt Gerade 100 um exakt 100 mm in Richtung k, für alle k", () => {
+  test("[REQ-G100-5] aus (0, 0, k) verschiebt Gerade 100 um exakt 100 mm in Richtung k, für alle k", () => {
     const h = 50n; // 100·(√2/2) = 50·√2
     const expected: ReadonlyArray<readonly [string, string]> = [
       ["100 + 0·√2", "0 + 0·√2"],
@@ -242,7 +242,7 @@ describe("Gerade 100 im Kern", () => {
     }
   });
 
-  test.skip("[REQ-G100-6] Hobby-Layout: 17 mm mit Gerade 114, 4 mm mit Gerade 100 an e2, 31 mm an e30 (exakt, offen, Winkel 0)", async () => {
+  test("[REQ-G100-6] Hobby-Layout: 17 mm mit Gerade 114, 4 mm mit Gerade 100 an e2, 31 mm an e30 (exakt, offen, Winkel 0)", async () => {
     const S = await loadStatus();
     expect(HOBBY).toHaveLength(44);
     expect(HOBBY.filter((e) => "part" in e && e.part === "gerade-114")).toHaveLength(7);
@@ -276,7 +276,7 @@ describe("Gerade 100 im Kern", () => {
     }
   });
 
-  test.skip("[REQ-G100-6] Eigenschaft: Gerade 114 → Gerade 100 ändert den Versatz genau um 14·e(k); √2-Anteil bleibt bei geradem k", () => {
+  test("[REQ-G100-6] Eigenschaft: Gerade 114 → Gerade 100 ändert den Versatz genau um 14·e(k); √2-Anteil bleibt bei geradem k", () => {
     /** Eingangsrichtung von Element i, unabhängig vom Kern aus den Kurvenwinkeln. */
     const entryDir = (elements: Elements, i: number): number => {
       let k = 0;
@@ -321,7 +321,7 @@ describe("Gerade 100 im Kern", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Gerade 100 in Bestand und Leiste", () => {
-  test.skip("[REQ-G100-4] Vorlage „Geraden 3 × 100 + 3 × 114“ bestätigt: je +3 für Gerade 100 und 114; leer + Mach 8 + Vorlage → 114: 4, 100: 3, 342: 4", async () => {
+  test("[REQ-G100-4] Vorlage „Geraden 3 × 100 + 3 × 114“ bestätigt: je +3 für Gerade 100 und 114; leer + Mach 8 + Vorlage → 114: 4, 100: 3, 342: 4", async () => {
     const api = await loadPlannerSession();
     const s = api.createPlannerSession({
       catalog: CATALOG,
@@ -352,7 +352,7 @@ describe("Gerade 100 in Bestand und Leiste", () => {
     });
   });
 
-  test.skip("[REQ-G100-4] Inhalt für die Rückfrage: Gerade 100 × 3, Gerade 114 × 3, zusammen 6 Teile, Art.-Nr. 20061658, Sicherheit hoch (kein „Inhalt ungeprüft“)", () => {
+  test("[REQ-G100-4] Inhalt für die Rückfrage: Gerade 100 × 3, Gerade 114 × 3, zusammen 6 Teile, Art.-Nr. 20061658, Sicherheit hoch (kein „Inhalt ungeprüft“)", () => {
     const t = pack();
     expect(t.name).toBe("Geraden 3 × 100 + 3 × 114");
     expect(t.certainty).toBe("hoch");
@@ -365,7 +365,7 @@ describe("Gerade 100 in Bestand und Leiste", () => {
     );
   });
 
-  test.skip("[REQ-G100-7] Sandbox: Gerade 100 platzierbar, in der Leiste direkt nach Gerade 114, anhängbar", async () => {
+  test("[REQ-G100-7] Sandbox: Gerade 100 platzierbar, in der Leiste direkt nach Gerade 114, anhängbar", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     const entries = E.paletteEntries(CATALOG);
@@ -386,7 +386,7 @@ describe("Gerade 100 in Bestand und Leiste", () => {
     expect(m.state.elements).toEqual(s.elements);
   });
 
-  test.skip("[REQ-G100-7] Bestandsmodus: ohne die Packung keine Gerade 100; mit Packung Bestand 3 direkt nach Gerade 114; vierte Gerade 100 abgewiesen", async () => {
+  test("[REQ-G100-7] Bestandsmodus: ohne die Packung keine Gerade 100; mit Packung Bestand 3 direkt nach Gerade 114; vierte Gerade 100 abgewiesen", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     const add = (inv: Inventory, nr: string) => I.addSet(inv, templateByNumber(nr));
@@ -430,7 +430,7 @@ describe("Gerade 100 in Bestand und Leiste", () => {
     expect(fourth.state).toBe(s);
   });
 
-  test.skip("[REQ-G100-8] Testhilfen erfassen Gerade 100 ohne Änderung: Teillisten und Erzeuger aus CATALOG", () => {
+  test("[REQ-G100-8] Testhilfen erfassen Gerade 100 ohne Änderung: Teillisten und Erzeuger aus CATALOG", () => {
     expect(PLACEABLE_IDS.indexOf("gerade-100")).toBe(PLACEABLE_IDS.indexOf("gerade-114") + 1);
     expect(PLACEABLE_IDS.indexOf("gerade-114")).toBeGreaterThanOrEqual(0);
     expect(UNPLACEABLE_IDS).not.toContain("gerade-100");
@@ -464,7 +464,7 @@ describe("Gerade 100 in der Einkaufsliste", () => {
       missing,
     }));
 
-  test.skip("[REQ-G100-10] Oval mit Geraden 100, leerer Bestand: Gerade 100 fehlt 2, Kurve 1/90° fehlt 4, zusammen 6, Katalogreihenfolge", async () => {
+  test("[REQ-G100-10] Oval mit Geraden 100, leerer Bestand: Gerade 100 fehlt 2, Kurve 1/90° fehlt 4, zusammen 6, Katalogreihenfolge", async () => {
     const I = await loadInventory();
     const list = okList(I.shoppingList(CATALOG, {}, OVAL_100));
     expect(counts(list)).toEqual([
@@ -476,7 +476,7 @@ describe("Gerade 100 in der Einkaufsliste", () => {
     expect(list.rows[0]?.searchTerms).toEqual([NO_NUMBER, PACK]);
   });
 
-  test.skip("[REQ-G100-10] Hobby-Layout mit Gerade 100 an e2, Bestand Mach 8: getrennte Zeilen ohne Packungsrundung, beide mit Hinweis auf 20061658", async () => {
+  test("[REQ-G100-10] Hobby-Layout mit Gerade 100 an e2, Bestand Mach 8: getrennte Zeilen ohne Packungsrundung, beide mit Hinweis auf 20061658", async () => {
     const I = await loadInventory();
     const mach8 = I.addSet({}, templateByNumber("20062492"));
     const list = okList(I.shoppingList(CATALOG, mach8, hobbyWith100At(2)));

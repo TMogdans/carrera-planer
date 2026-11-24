@@ -330,7 +330,7 @@ describe("Suchbegriffe: Hinweise aus Set-Vorlagen (gerade-100)", () => {
   const IN_MACH8 = hint("enthalten in Mach 8, Art.-Nr. 20062492");
   const LOOPING = hint("enthalten in Looping (Baugruppe), Art.-Nr. 20061613");
 
-  test.skip("[REQ-EINK-3] Beispiele mit leerem Bestand und den Vorlagen aus src/catalog: Gerade 100, Gerade 114, Looping-Teil", async () => {
+  test("[REQ-EINK-3] Beispiele mit leerem Bestand und den Vorlagen aus src/catalog: Gerade 100, Gerade 114, Looping-Teil", async () => {
     const I = await loadInventory();
     // drei Argumente wie in der Oberfläche: Vorgabe sind die Vorlagen aus src/catalog
     expect(termsOf(I.shoppingList(CATALOG, {}, one("gerade-100")))).toEqual({
@@ -350,7 +350,7 @@ describe("Suchbegriffe: Hinweise aus Set-Vorlagen (gerade-100)", () => {
     });
   });
 
-  test.skip("[REQ-EINK-3] Teile mit Artikelnummer oder Prägung bekommen keine Vorlagen-Hinweise: Steilkehre-Teil, Kurve 1/90°, Anschlussstück, Gerade 342 wie in M3a", async () => {
+  test("[REQ-EINK-3] Teile mit Artikelnummer oder Prägung bekommen keine Vorlagen-Hinweise: Steilkehre-Teil, Kurve 1/90°, Anschlussstück, Gerade 342 wie in M3a", async () => {
     const I = await loadInventory();
     // alle vier stecken in Mach 8, keins bekommt „enthalten in Mach 8“
     const list = I.shoppingList(CATALOG, {}, [
@@ -370,7 +370,7 @@ describe("Suchbegriffe: Hinweise aus Set-Vorlagen (gerade-100)", () => {
     }
   });
 
-  test.skip("[REQ-EINK-3] Wirkungsnachweis mit veränderter Vorlagenliste: ohne die neue Vorlage, Vorlage mit Gerade 342, Reihenfolge und Text aus der Vorlage", async () => {
+  test("[REQ-EINK-3] Wirkungsnachweis mit veränderter Vorlagenliste: ohne die neue Vorlage, Vorlage mit Gerade 342, Reihenfolge und Text aus der Vorlage", async () => {
     const I = await loadInventory();
     const shop = listWith(I);
     const product = productTemplates();

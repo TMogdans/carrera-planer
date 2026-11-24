@@ -255,7 +255,7 @@ const rasterProblems = (catalog: ReadonlyArray<CatalogEntry>): string[] => {
 };
 
 describe("Katalog", () => {
-  test.skip("[REQ-CAT-1] enthält genau die Einträge der Tabelle Katalog M1 mit gerade-100: 20 Einträge in Tabellenreihenfolge", () => {
+  test("[REQ-CAT-1] enthält genau die Einträge der Tabelle Katalog M1 mit gerade-100: 20 Einträge in Tabellenreihenfolge", () => {
     expect(
       cat()
         .map((e) => e.id)
@@ -266,7 +266,7 @@ describe("Katalog", () => {
     expect(cat().map((e) => e.id)).toEqual(EXPECTED.map((e) => e.id));
   });
 
-  test.skip("[REQ-CAT-1] Geometrie, Art.-Nr. und Sicherheit je Eintrag wie in der Tabelle, gerade-114 ohne eigene Nummer", () => {
+  test("[REQ-CAT-1] Geometrie, Art.-Nr. und Sicherheit je Eintrag wie in der Tabelle, gerade-114 ohne eigene Nummer", () => {
     for (const exp of EXPECTED) {
       const e = byId(exp.id);
       expect({ id: e.id, geometry: sortedParts(e.geometry) }).toEqual({
@@ -288,7 +288,7 @@ describe("Katalog", () => {
     }
   });
 
-  test.skip("[REQ-CAT-1] Platzierbarkeit wie in der Tabelle mit gerade-100: 14 platzierbar; Looping, Steilkehre, Steilkurve, Wireless, K und L nicht", () => {
+  test("[REQ-CAT-1] Platzierbarkeit wie in der Tabelle mit gerade-100: 14 platzierbar; Looping, Steilkehre, Steilkurve, Wireless, K und L nicht", () => {
     for (const e of cat()) {
       expect({ id: e.id, placeable: isPlaceable(e) }).toEqual({
         id: e.id,
@@ -381,7 +381,7 @@ describe("Katalog", () => {
     expect(rasterProblems(cat())).toEqual([]);
   });
 
-  test.skip("[REQ-CAT-5] Ausnahme greift: gerade-100 (100 mm) ist platzierbar, liegt abseits des Rasters und besteht die Prüfung", () => {
+  test("[REQ-CAT-5] Ausnahme greift: gerade-100 (100 mm) ist platzierbar, liegt abseits des Rasters und besteht die Prüfung", () => {
     const g100 = byId("gerade-100");
     expect(g100.geometry).toEqual({ kind: "gerade", length: 100 });
     expect(isPlaceable(g100)).toBe(true);
