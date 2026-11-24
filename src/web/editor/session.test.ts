@@ -620,3 +620,50 @@ describe("Export und Import", () => {
     }
   });
 });
+
+describe("Nachtrag: Neustart", () => {
+  test.skip("[REQ-STORE-7] Kaputter Arbeitsstand wird verschoben, nicht kopiert: zweimal starten ohne Änderung ergibt genau einen Ausweichschlüssel", async () => {
+    const api = await loadSession();
+    const storage = new MemoryStorage();
+    storage.data.set(api.WORKING_KEY, NOT_JSON);
+    const first = open(api, storage);
+    expect(first.state.elements).toEqual([]);
+    expect(lastMessage(first)?.kind).toBe("arbeitsstandVerschoben");
+    // „verschieben“: der Rohtext steht danach nicht mehr unter dem Arbeitsstand-Schlüssel;
+    // dort ist entweder nichts oder eine gültige leere Folge
+    const working = storage.data.get(api.WORKING_KEY);
+    if (working !== undefined) {
+      expect(working).not.toBe(NOT_JSON);
+      expect(JSON.parse(working)).toStrictEqual(layoutJson([]));
+    }
+    // zweiter Start ohne Änderung dazwischen: kein neuer Fund, keine neue Meldung
+    const second = open(api, storage, fixedClock("2026-11-24T07:16:00.000Z"));
+    expect(second.state.elements).toEqual([]);
+    expect(second.messages).toEqual([]);
+    const backups = [...storage.data.keys()].filter((k) =>
+      k.startsWith(`${api.STORAGE_PREFIX}:defekt:`),
+    );
+    expect(backups).toEqual([`${api.STORAGE_PREFIX}:defekt:${ISO}`]);
+    expect(storage.data.get(backups[0] as string)).toBe(NOT_JSON);
+  });
+
+  test.skip("[REQ-EDIT-16] Der Verlauf wird nicht gespeichert: nach dem Start mit gesichertem Arbeitsstand ist er leer, Rückgängig ändert nichts und sichert nicht", async () => {
+    const api = await loadSession();
+    const E = await loadEditor();
+    const storage = new MemoryStorage({ [api.WORKING_KEY]: JSON.stringify(layoutJson(ACHT)) });
+    const s = open(api, storage);
+    expect(s.state.elements).toEqual(ACHT);
+    expect(E.canUndo(s.state)).toBe(false);
+    expect(E.canRedo(s.state)).toBe(false);
+    const writes = () =>
+      storage.log.filter((o) => (o.op === "set" || o.op === "remove") && o.key === api.WORKING_KEY)
+        .length;
+    const before = writes();
+    s.dispatch({ type: "undo" });
+    expect(s.state.elements).toEqual(ACHT);
+    expect(writes()).toBe(before);
+    expect(JSON.parse(storage.data.get(api.WORKING_KEY) as string)).toStrictEqual(layoutJson(ACHT));
+    // Neuladen nach dem Rückgängig zeigt weiter die gesicherte Strecke (kein Datenverlust)
+    expect(open(api, storage).state.elements).toEqual(ACHT);
+  });
+});
