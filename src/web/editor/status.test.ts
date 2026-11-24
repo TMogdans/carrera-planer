@@ -53,7 +53,7 @@ const curves = (n: number, turn: "links" | "rechts", part = "kurve-1-90"): Eleme
   Array.from({ length: n }, (_, i) => ({ id: `k${i}`, part, turn }));
 
 describe("Status", () => {
-  test.skip("[REQ-STAT-1] Status leer/geschlossen/offen/fehlerhaft an den Abnahmefällen", async () => {
+  test("[REQ-STAT-1] Status leer/geschlossen/offen/fehlerhaft an den Abnahmefällen", async () => {
     const S = await loadStatus();
     expect(S.statusOf(CATALOG, [])).toEqual({ kind: "leer" });
     expect(S.statusOf(CATALOG, OVAL)).toEqual({ kind: "geschlossen" });
@@ -64,7 +64,7 @@ describe("Status", () => {
     expect(S.statusOf(CATALOG, [{ id: "x", part: "looping" }])).toEqual({ kind: "fehlerhaft" });
   });
 
-  test.skip("[REQ-STAT-1] Eigenschaft: Status folgt ausschließlich closure des Kerns", async () => {
+  test("[REQ-STAT-1] Eigenschaft: Status folgt ausschließlich closure des Kerns", async () => {
     const S = await loadStatus();
     fc.assert(
       fc.property(fc.oneof(elementsArb, validElementsArb), (elements) => {
@@ -75,7 +75,7 @@ describe("Status", () => {
     );
   });
 
-  test.skip("[REQ-STAT-2] Offen: Lücke auf ganze mm, Winkel × 45° mit Vorzeichen (3 × Kurve links; Oval ohne letzte Gerade)", async () => {
+  test("[REQ-STAT-2] Offen: Lücke auf ganze mm, Winkel × 45° mit Vorzeichen (3 × Kurve links; Oval ohne letzte Gerade)", async () => {
     const S = await loadStatus();
     expect(S.statusOf(CATALOG, curves(3, "links"))).toEqual({
       kind: "offen",
@@ -116,7 +116,7 @@ describe("Status", () => {
     });
   });
 
-  test.skip("[REQ-STAT-2] Eigenschaft: Winkel als Zahl = Kern-Winkel × 45, Bereich −135 … 180", async () => {
+  test("[REQ-STAT-2] Eigenschaft: Winkel als Zahl = Kern-Winkel × 45, Bereich −135 … 180", async () => {
     const S = await loadStatus();
     fc.assert(
       fc.property(validElementsArb, (elements) => {
@@ -131,7 +131,7 @@ describe("Status", () => {
     );
   });
 
-  test.skip("[REQ-STAT-2] Lücke unter 0,5 mm bei Versatz ≠ 0 zeigt „< 1 mm“, exakt null zeigt „0 mm“", async () => {
+  test("[REQ-STAT-2] Lücke unter 0,5 mm bei Versatz ≠ 0 zeigt „< 1 mm“, exakt null zeigt „0 mm“", async () => {
     const S = await loadStatus();
     const zero = coord(rat(0n), rat(0n));
     // dx = 28,5·(99 − 70·√2) ≈ 0,14 mm
@@ -149,7 +149,7 @@ describe("Status", () => {
     expect(S.formatGap({ dx: coord(rat(-3n)), dy: coord(rat(4n)) })).toBe("5 mm");
   });
 
-  test.skip("[REQ-STAT-3] Fehlerliste: Acht mit Gerade 171 → genau ein Eintrag Nr. 6", async () => {
+  test("[REQ-STAT-3] Fehlerliste: Acht mit Gerade 171 → genau ein Eintrag Nr. 6", async () => {
     const S = await loadStatus();
     const entries = S.errorEntries(CATALOG, ACHT_G171);
     expect(entries).toHaveLength(1);
@@ -161,7 +161,7 @@ describe("Status", () => {
     expect(S.errorEntries(CATALOG, [])).toEqual([]);
   });
 
-  test.skip("[REQ-STAT-3] Fehlerliste: deutsche Texte je Fehlerart, Teilname, bei doppelter ID alle Nummern", async () => {
+  test("[REQ-STAT-3] Fehlerliste: deutsche Texte je Fehlerart, Teilname, bei doppelter ID alle Nummern", async () => {
     const S = await loadStatus();
     const elements: Elements = [
       { id: "a", part: "gerade-342" },
@@ -195,7 +195,7 @@ describe("Status", () => {
     for (const e of entries) expect(e.name.length).toBeGreaterThan(0);
   });
 
-  test.skip("[REQ-STAT-3] Eigenschaft: ein Eintrag je Kern-Fehler mit Nummer(n) und Text der Fehlerart", async () => {
+  test("[REQ-STAT-3] Eigenschaft: ein Eintrag je Kern-Fehler mit Nummer(n) und Text der Fehlerart", async () => {
     const S = await loadStatus();
     const key = (numbers: ReadonlyArray<number>, text: string) => `${numbers.join(",")}:${text}`;
     fc.assert(
@@ -229,7 +229,7 @@ describe("Status", () => {
     );
   });
 
-  test.skip("[REQ-STAT-4] Verbrauch der Acht in Katalogreihenfolge mit Namen, zusammen 9", async () => {
+  test("[REQ-STAT-4] Verbrauch der Acht in Katalogreihenfolge mit Namen, zusammen 9", async () => {
     const S = await loadStatus();
     expect(S.consumptionView(CATALOG, ACHT)).toEqual({
       ok: true,
@@ -252,7 +252,7 @@ describe("Status", () => {
     expect(S.consumptionView(CATALOG, [])).toEqual({ ok: true, entries: [], total: 0 });
   });
 
-  test.skip("[REQ-STAT-4] Verbrauch auch bei Fehlern; nur bei „Teil unbekannt“ „Verbrauch nicht bestimmbar“", async () => {
+  test("[REQ-STAT-4] Verbrauch auch bei Fehlern; nur bei „Teil unbekannt“ „Verbrauch nicht bestimmbar“", async () => {
     const S = await loadStatus();
     const g171 = S.consumptionView(CATALOG, ACHT_G171);
     expect(g171.ok && g171.total).toBe(9);
@@ -272,7 +272,7 @@ describe("Status", () => {
     });
   });
 
-  test.skip("[REQ-STAT-4] Eigenschaft: Verbrauch = consumption des Kerns, Katalogreihenfolge, Summe", async () => {
+  test("[REQ-STAT-4] Eigenschaft: Verbrauch = consumption des Kerns, Katalogreihenfolge, Summe", async () => {
     const S = await loadStatus();
     fc.assert(
       fc.property(elementsArb, (elements) => {
@@ -297,7 +297,7 @@ describe("Status", () => {
     );
   });
 
-  test.skip("[REQ-STAT-5] Gesamtlänge: Oval „1,76 m“, Acht „2,30 m“", async () => {
+  test("[REQ-STAT-5] Gesamtlänge: Oval „1,76 m“, Acht „2,30 m“", async () => {
     const S = await loadStatus();
     const oval = S.totalLength(CATALOG, OVAL);
     expect(oval).toBeDefined();
@@ -323,7 +323,7 @@ describe("Status", () => {
     expect(S.formatLength(12345.6)).toBe("12,35 m");
   });
 
-  test.skip("[REQ-STAT-5] Länge unabhängig von Lagefehlern; „–“ bei unbekannter Länge, auch Querung auf spätere Kreuzung; zweite Querung zählt", async () => {
+  test("[REQ-STAT-5] Länge unabhängig von Lagefehlern; „–“ bei unbekannter Länge, auch Querung auf spätere Kreuzung; zweite Querung zählt", async () => {
     const S = await loadStatus();
     // Ankunftsfehler: Länge bleibt bestimmt (Gerade 171 statt 114)
     const g171 = S.totalLength(CATALOG, ACHT_G171);
@@ -357,7 +357,7 @@ describe("Status", () => {
 });
 
 describe("Architektur: Status kommt vom Kern", () => {
-  test.skip("[REQ-WARCH-3] Verfälschter Katalog (Kurve 1/90° mit Radius 285): Status, Länge und Querungs-Ziel folgen dem Kern", async () => {
+  test("[REQ-WARCH-3] Verfälschter Katalog (Kurve 1/90° mit Radius 285): Status, Länge und Querungs-Ziel folgen dem Kern", async () => {
     const S = await loadStatus();
     const forged: ReadonlyArray<CatalogEntry> = CATALOG.map((e) =>
       e.id === "kurve-1-90" ? { ...e, geometry: { kind: "kurve", radius: 285, angle: 90 } } : e,

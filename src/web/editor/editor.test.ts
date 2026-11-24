@@ -65,7 +65,7 @@ const selectAndAct = (E: EditorApi, s: EditorState, id: string, action: Action):
 const choose = (partId: string): Command => ({ type: "choosePart", partId });
 
 describe("Befehle", () => {
-  test.skip("[REQ-EDIT-1] Anhängen am Ende; Kurve mit Leistenrichtung, andere Teile ohne Richtung", async () => {
+  test("[REQ-EDIT-1] Anhängen am Ende; Kurve mit Leistenrichtung, andere Teile ohne Richtung", async () => {
     const E = await loadEditor();
     const s0 = E.initialState();
     expect(s0.elements).toEqual([]);
@@ -89,7 +89,7 @@ describe("Befehle", () => {
     expect("crosses" in last).toBe(false);
   });
 
-  test.skip("[REQ-EDIT-1] Eigenschaft: angehängte Teile in Tipp-Reihenfolge, Richtung nach Leiste, IDs eindeutig und nicht leer", async () => {
+  test("[REQ-EDIT-1] Eigenschaft: angehängte Teile in Tipp-Reihenfolge, Richtung nach Leiste, IDs eindeutig und nicht leer", async () => {
     const E = await loadEditor();
     fc.assert(
       fc.property(
@@ -126,7 +126,7 @@ describe("Befehle", () => {
     );
   });
 
-  test.skip("[REQ-EDIT-2] Nicht platzierbare und unbekannte Einträge kommen nie in die Folge, ohne Verlaufseintrag", async () => {
+  test("[REQ-EDIT-2] Nicht platzierbare und unbekannte Einträge kommen nie in die Folge, ohne Verlaufseintrag", async () => {
     const E = await loadEditor();
     const base = loaded(E, OVAL);
     const rejected = [...UNPLACEABLE_IDS, UNKNOWN_ID];
@@ -153,7 +153,7 @@ describe("Befehle", () => {
     expect(E.canUndo(empty)).toBe(false);
   });
 
-  test.skip("[REQ-EDIT-3] Leistenrichtung umschalten: gilt für künftige Kurven, Folge und Verlauf unverändert", async () => {
+  test("[REQ-EDIT-3] Leistenrichtung umschalten: gilt für künftige Kurven, Folge und Verlauf unverändert", async () => {
     const E = await loadEditor();
     const s0 = E.initialState();
     expect(s0.paletteTurn).toBe("links");
@@ -174,7 +174,7 @@ describe("Befehle", () => {
     expect(next.elements[0]).toMatchObject({ turn: "rechts" });
   });
 
-  test.skip("[REQ-EDIT-4] Richtung umschalten am ausgewählten Kurven-Element; Oval → offen, Rückgängig → geschlossen", async () => {
+  test("[REQ-EDIT-4] Richtung umschalten am ausgewählten Kurven-Element; Oval → offen, Rückgängig → geschlossen", async () => {
     const E = await loadEditor();
     const s = run(E, loaded(E, OVAL), [{ type: "select", id: "o1" }]);
     expect(E.flipAvailable(CATALOG, s)).toBe(true);
@@ -192,7 +192,7 @@ describe("Befehle", () => {
     expect(back.elements[0]).toMatchObject({ turn: "rechts" });
   });
 
-  test.skip("[REQ-EDIT-4] Richtung umschalten ist für Nicht-Kurven, Querungen und ohne Auswahl nicht verfügbar und ändert nichts", async () => {
+  test("[REQ-EDIT-4] Richtung umschalten ist für Nicht-Kurven, Querungen und ohne Auswahl nicht verfügbar und ändert nichts", async () => {
     const E = await loadEditor();
     const base = loaded(E, ACHT);
     const cases: ReadonlyArray<EditorState> = [
@@ -209,7 +209,7 @@ describe("Befehle", () => {
     }
   });
 
-  test.skip("[REQ-EDIT-5] Löschen: Folgeelemente rücken vor, Auswahl wandert auf dieselbe Stelle, sonst das letzte, sonst keine", async () => {
+  test("[REQ-EDIT-5] Löschen: Folgeelemente rücken vor, Auswahl wandert auf dieselbe Stelle, sonst das letzte, sonst keine", async () => {
     const E = await loadEditor();
     const base = loaded(E, OVAL);
     const mid = E.apply(CATALOG, run(E, base, [{ type: "select", id: "o3" }]), {
@@ -243,7 +243,7 @@ describe("Befehle", () => {
     expect(none.selection).toBeUndefined();
   });
 
-  test.skip("[REQ-EDIT-6] Ersetzen: gleiche Stelle, gleiche Element-ID, Richtungsregel, Auswahl bleibt, Aktion endet", async () => {
+  test("[REQ-EDIT-6] Ersetzen: gleiche Stelle, gleiche Element-ID, Richtungsregel, Auswahl bleibt, Aktion endet", async () => {
     const E = await loadEditor();
     const base = loaded(E, OVAL);
     // Kurve → Kurve: alte Richtung bleibt, auch wenn die Leiste anders steht
@@ -286,7 +286,7 @@ describe("Befehle", () => {
     expect(q.selection).toBe("e6");
   });
 
-  test.skip("[REQ-EDIT-7] Davor einfügen: A, B vor X; Auswahl und Aktion bleiben; Richtung wie beim Anhängen", async () => {
+  test("[REQ-EDIT-7] Davor einfügen: A, B vor X; Auswahl und Aktion bleiben; Richtung wie beim Anhängen", async () => {
     const E = await loadEditor();
     const s = selectAndAct(E, loaded(E, OVAL), "o3", "davorEinfuegen");
     const ab = run(E, s, [choose("gerade-114"), choose("anschlussstueck")]);
@@ -315,7 +315,7 @@ describe("Befehle", () => {
     expect(curve.elements[2]).toMatchObject({ part: "kurve-3-45", turn: "rechts" });
   });
 
-  test.skip("[REQ-EDIT-8] Beispiel: Gerade 342 vor Nr. 1 der Acht → kein Fehler, offen, Versatz (−342, 0), Winkel 0", async () => {
+  test("[REQ-EDIT-8] Beispiel: Gerade 342 vor Nr. 1 der Acht → kein Fehler, offen, Versatz (−342, 0), Winkel 0", async () => {
     const E = await loadEditor();
     const s = E.apply(
       CATALOG,
@@ -337,7 +337,7 @@ describe("Befehle", () => {
     }
   });
 
-  test.skip("[REQ-EDIT-8] Eigenschaft: Löschen/Ersetzen/Einfügen an Stelle i lässt Elemente davor und alle anderen unverändert", async () => {
+  test("[REQ-EDIT-8] Eigenschaft: Löschen/Ersetzen/Einfügen an Stelle i lässt Elemente davor und alle anderen unverändert", async () => {
     const E = await loadEditor();
     fc.assert(
       fc.property(
@@ -381,7 +381,7 @@ describe("Befehle", () => {
     );
   });
 
-  test.skip("[REQ-EDIT-9] Querung anhängen: verfügbar genau bei exakter Ankunft an ungequerter Kreuzung (Acht Nr. 1–5 / 1–4 / 1–7)", async () => {
+  test("[REQ-EDIT-9] Querung anhängen: verfügbar genau bei exakter Ankunft an ungequerter Kreuzung (Acht Nr. 1–5 / 1–4 / 1–7)", async () => {
     const E = await loadEditor();
     expect(E.crossingTarget(CATALOG, ACHT.slice(0, 5))).toBe("e1");
     expect(E.crossingTarget(CATALOG, ACHT.slice(0, 4))).toBeUndefined();
@@ -409,7 +409,7 @@ describe("Befehle", () => {
     expect(E.apply(CATALOG, noop, { type: "undo" }).elements).toEqual([]);
   });
 
-  test.skip("[REQ-EDIT-9] Trifft das Ende mehrere ungequerte Kreuzungen, verweist die Querung auf die früheste", async () => {
+  test("[REQ-EDIT-9] Trifft das Ende mehrere ungequerte Kreuzungen, verweist die Querung auf die früheste", async () => {
     const E = await loadEditor();
     // Kreuzung A, Schleife zurück auf die Startpose, Kreuzung B deckungsgleich, Weg zum Anschluss
     const two: Elements = [
@@ -432,7 +432,7 @@ describe("Befehle", () => {
     expect(E.crossingTarget(CATALOG, after.elements)).toBeUndefined();
   });
 
-  test.skip("[REQ-EDIT-9] Ob das Ende trifft, entscheidet der Kern mit dem übergebenen Katalog", async () => {
+  test("[REQ-EDIT-9] Ob das Ende trifft, entscheidet der Kern mit dem übergebenen Katalog", async () => {
     const E = await loadEditor();
     const wide: ReadonlyArray<CatalogEntry> = CATALOG.map((e) =>
       e.id === "kreuzung"
@@ -445,7 +445,7 @@ describe("Befehle", () => {
     expect(E.apply(wide, s, { type: "appendCrossing" }).elements).toEqual(ACHT.slice(0, 5));
   });
 
-  test.skip("[REQ-EDIT-10] Querung nur am Ende: bei aktiver Aktion am Ende angehängt, Auswahl und Aktion unberührt; vorhandene Querung lässt sich löschen", async () => {
+  test("[REQ-EDIT-10] Querung nur am Ende: bei aktiver Aktion am Ende angehängt, Auswahl und Aktion unberührt; vorhandene Querung lässt sich löschen", async () => {
     const E = await loadEditor();
     const base = loaded(E, ACHT.slice(0, 5));
     for (const action of ["ersetzen", "davorEinfuegen"] as const) {
@@ -465,7 +465,7 @@ describe("Befehle", () => {
     expect(del.elements).toEqual(ACHT.filter((e) => e.id !== "e6"));
   });
 
-  test.skip("[REQ-EDIT-11] Kreuzung gelöscht oder ersetzt: Querung bleibt unverändert stehen, Kern meldet ungültigen Verweis", async () => {
+  test("[REQ-EDIT-11] Kreuzung gelöscht oder ersetzt: Querung bleibt unverändert stehen, Kern meldet ungültigen Verweis", async () => {
     const E = await loadEditor();
     const acht = loaded(E, ACHT);
     const del = E.apply(CATALOG, run(E, acht, [{ type: "select", id: "e1" }]), {
@@ -485,7 +485,7 @@ describe("Befehle", () => {
     expect(!r2.ok && r2.errors.map((e) => e.kind)).toEqual(["ungueltigerVerweis"]);
   });
 
-  test.skip("[REQ-EDIT-12] Neu leert die Folge und hebt die Auswahl auf; rückgängig machbar", async () => {
+  test("[REQ-EDIT-12] Neu leert die Folge und hebt die Auswahl auf; rückgängig machbar", async () => {
     const E = await loadEditor();
     const s = run(E, loaded(E, OVAL), [{ type: "select", id: "o2" }]);
     const fresh = E.apply(CATALOG, s, { type: "new" });
@@ -495,7 +495,7 @@ describe("Befehle", () => {
     expect(E.apply(CATALOG, fresh, { type: "undo" }).elements).toEqual(OVAL);
   });
 
-  test.skip("[REQ-EDIT-13] Auswahl über ID, vor/zurück auch über nicht gezeichnete Elemente, aufheben; Aktion nur mit Auswahl", async () => {
+  test("[REQ-EDIT-13] Auswahl über ID, vor/zurück auch über nicht gezeichnete Elemente, aufheben; Aktion nur mit Auswahl", async () => {
     const E = await loadEditor();
     const broken = ACHT.map((el) => (el.id === "e5" ? { id: "e5", part: "gerade-171" } : el));
     const base = loaded(E, broken);
@@ -525,7 +525,7 @@ describe("Befehle", () => {
 });
 
 describe("Leisten-Einteilung", () => {
-  test.skip("[REQ-EDIT-21] M1-Katalog: 13 platzierbar, 4 Maße fehlen, L und K ausgeblendet, in Katalogreihenfolge", async () => {
+  test("[REQ-EDIT-21] M1-Katalog: 13 platzierbar, 4 Maße fehlen, L und K ausgeblendet, in Katalogreihenfolge", async () => {
     const E = await loadEditor();
     const entries = E.paletteEntries(CATALOG);
     expect(entries.map((e) => e.partId)).toEqual(CATALOG.map((e) => e.id));
@@ -544,7 +544,7 @@ describe("Leisten-Einteilung", () => {
     expect(entries).toHaveLength(CATALOG.length);
   });
 
-  test.skip("[REQ-EDIT-21] Wirkungsnachweis: veränderter Katalog ändert die Einteilung; platzierbar heißt genau anhängbar", async () => {
+  test("[REQ-EDIT-21] Wirkungsnachweis: veränderter Katalog ändert die Einteilung; platzierbar heißt genau anhängbar", async () => {
     const E = await loadEditor();
     const changed: ReadonlyArray<CatalogEntry> = [
       ...CATALOG.map(
@@ -581,7 +581,7 @@ describe("Leisten-Einteilung", () => {
 });
 
 describe("Verlauf und Element-IDs", () => {
-  test.skip("[REQ-EDIT-14] Eigenschaft: jeder wirksame Befehl genau ein Eintrag; Rückgängig/Wiederholen exakt; Auswahl nur bei verschwundenem Element aufgehoben", async () => {
+  test("[REQ-EDIT-14] Eigenschaft: jeder wirksame Befehl genau ein Eintrag; Rückgängig/Wiederholen exakt; Auswahl nur bei verschwundenem Element aufgehoben", async () => {
     const E = await loadEditor();
     fc.assert(
       fc.property(fc.array(anyCommandArb, { maxLength: 40 }), (gens) => {
@@ -610,7 +610,7 @@ describe("Verlauf und Element-IDs", () => {
     );
   });
 
-  test.skip("[REQ-EDIT-14] Rückgängig nach Ersetzen: Folge exakt zurück, ausgewähltes Element bleibt ausgewählt", async () => {
+  test("[REQ-EDIT-14] Rückgängig nach Ersetzen: Folge exakt zurück, ausgewähltes Element bleibt ausgewählt", async () => {
     const E = await loadEditor();
     const s = E.apply(
       CATALOG,
@@ -630,7 +630,7 @@ describe("Verlauf und Element-IDs", () => {
     expect(E.apply(CATALOG, sel, { type: "undo" }).selection).toBeUndefined();
   });
 
-  test.skip("[REQ-EDIT-15] Neuer Befehl nach Rückgängig verwirft Wiederholbares; ohne Verlauf nichts verfügbar; wirkungslose Befehle ohne Eintrag", async () => {
+  test("[REQ-EDIT-15] Neuer Befehl nach Rückgängig verwirft Wiederholbares; ohne Verlauf nichts verfügbar; wirkungslose Befehle ohne Eintrag", async () => {
     const E = await loadEditor();
     const s0 = E.initialState();
     expect(E.canUndo(s0)).toBe(false);
@@ -662,7 +662,7 @@ describe("Verlauf und Element-IDs", () => {
     expect(E.canUndo(newOnEmpty)).toBe(false);
   });
 
-  test.skip("[REQ-EDIT-16] Eigenschaft: n wirksame Befehle, n-mal Rückgängig → Ausgangsstand, n-mal Wiederholen → Endstand", async () => {
+  test("[REQ-EDIT-16] Eigenschaft: n wirksame Befehle, n-mal Rückgängig → Ausgangsstand, n-mal Wiederholen → Endstand", async () => {
     const E = await loadEditor();
     fc.assert(
       fc.property(fc.array(editCommandArb, { maxLength: 40 }), (gens) => {
@@ -694,7 +694,7 @@ describe("Verlauf und Element-IDs", () => {
     );
   });
 
-  test.skip("[REQ-EDIT-17] Eigenschaft: jede erreichbare Folge besteht LayoutSchema; neue IDs kommen in keinem Stand des Verlaufs vor, auch nach Laden fremder IDs", async () => {
+  test("[REQ-EDIT-17] Eigenschaft: jede erreichbare Folge besteht LayoutSchema; neue IDs kommen in keinem Stand des Verlaufs vor, auch nach Laden fremder IDs", async () => {
     const E = await loadEditor();
     fc.assert(
       fc.property(fc.array(anyCommandArb, { maxLength: 40 }), (gens) => {
@@ -721,7 +721,7 @@ describe("Verlauf und Element-IDs", () => {
     );
   });
 
-  test.skip("[REQ-EDIT-17] Nach Laden eines Layouts mit fremden IDs kollidieren neue IDs weder mit der Folge noch mit dem Verlauf, auch nach Neu", async () => {
+  test("[REQ-EDIT-17] Nach Laden eines Layouts mit fremden IDs kollidieren neue IDs weder mit der Folge noch mit dem Verlauf, auch nach Neu", async () => {
     const E = await loadEditor();
     // IDs, die eine Implementierung plausibel selbst vergibt (Zähler, Präfix, Länge + 1, …)
     const schemes = ["", "e", "n", "el-", "id-", "x", "el", "e-", "element-", "p"];
