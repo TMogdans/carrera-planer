@@ -132,6 +132,8 @@ export function createSession(deps: {
   };
 
   const dispatch = (command: Command): void => {
+    // „Neu“ beginnt eine Strecke ohne Namen: Export dann mit Zeitstempel (REQ-STORE-9).
+    if (command.type === "new") name = undefined;
     const next = apply(catalog, state, command);
     const changed = next.elements !== state.elements;
     state = next;
