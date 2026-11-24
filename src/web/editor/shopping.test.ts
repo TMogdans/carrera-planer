@@ -13,6 +13,18 @@
  *   shoppingShort(list) → „Bestand reicht“ | „fehlt 1 Teil“ | „fehlen n Teile“ (n ≥ 2)
  *                       | „Einkaufsliste nicht bestimmbar“
  * Orakel für den Verbrauch ist der Kern (`consumption`).
+ *
+ * REQ-EINK-3 in der Fassung der Spec gerade-100 (.specify/specs/gerade-100/spec.md): im dritten
+ * Fall (weder Artikelnummer noch Prägung) folgen nach den Baugruppen-Einträgen Hinweise
+ * „enthalten in <Name der Vorlage>, Art.-Nr. <articleNumber>“ für jede Set-Vorlage, die das Teil
+ * enthält, in Vorlagenreihenfolge. Gewählte Schnittstelle (von spec-to-tests, die Spec sagt nur
+ * „aus src/catalog, für Tests austauschbar wie der Katalog“):
+ *   shoppingList(catalog, inventory, elements, templates = SET_TEMPLATES)
+ * Ein optionales viertes Argument, Vorgabe sind die Vorlagen aus `src/catalog`. So bleibt der
+ * Aufruf der Oberfläche (`src/web/ui/app.tsx`, drei Argumente) gültig und zeigt die Hinweise, und
+ * der Vertragstyp in `src/web/test-support/bestand-fixtures.ts` (geschützt) bleibt unverändert;
+ * die Tests rufen das vierte Argument über `listWith` auf. Tests mit M3a-Erwartungen an
+ * Hinweise übergeben ausdrücklich eine leere Vorlagenliste.
  */
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
@@ -23,11 +35,14 @@ import {
   catalogElementsArb,
   countIn,
   type Inventory,
+  type InventoryApi,
   ignoredOnlyArb,
   loadInventory,
   MACH8,
   plus,
+  productTemplates,
   type SearchTerm,
+  type SetTemplate,
   type ShoppingList,
   type ShoppingRow,
   STOCKABLE_IDS,
@@ -72,6 +87,16 @@ const counts = (list: ShoppingList) =>
     have,
     missing,
   }));
+
+/** shoppingList mit ausdrücklicher Vorlagenliste (viertes Argument, REQ-EINK-3 gerade-100). */
+type ShoppingListWithTemplates = (
+  catalog: ReadonlyArray<CatalogEntry>,
+  inventory: Inventory,
+  elements: Elements,
+  templates?: ReadonlyArray<SetTemplate>,
+) => ShoppingList;
+const listWith = (I: InventoryApi): ShoppingListWithTemplates =>
+  I.shoppingList as unknown as ShoppingListWithTemplates;
 
 const curves = (n: number): Elements =>
   Array.from({ length: n }, (_, i) => ({ id: `k${i}`, part: "kurve-1-90", turn: "links" }));
@@ -171,7 +196,7 @@ describe("Suchbegriffe", () => {
   const termsOf = (list: ShoppingList): Record<string, ReadonlyArray<SearchTerm>> =>
     Object.fromEntries(okList(list).rows.map((r: ShoppingRow) => [r.partId, r.searchTerms]));
 
-  test("[REQ-EINK-3] Beispiele: Steilkehre, Looping, Anschlussstück, Gerade 342 mit leerem Bestand", async () => {
+  test("[REQ-EINK-3] Beispiele: Steilkehre, Anschlussstück, Gerade 342 mit leerem Bestand (unverändert durch gerade-100)", async () => {
     const I = await loadInventory();
     const steilkehre = I.shoppingList(CATALOG, {}, one("steilkehre"));
     expect(counts(steilkehre)).toEqual([
@@ -183,8 +208,9 @@ describe("Suchbegriffe", () => {
       "steilkehre-teil": [praeg("141903-1B")],
     });
 
-    const looping = I.shoppingList(CATALOG, {}, one("looping"));
+    const looping = listWith(I)(CATALOG, {}, one("looping"), []);
     expect(counts(looping)).toEqual([{ partId: "looping-teil", needed: 8, have: 0, missing: 8 }]);
+    // ohne Set-Vorlagen: nur der Baugruppen-Hinweis wie in M3a
     expect(termsOf(looping)).toEqual({
       "looping-teil": [NO_NUMBER, hint("enthalten in Looping (Baugruppe), Art.-Nr. 20061613")],
     });
@@ -234,11 +260,17 @@ describe("Suchbegriffe", () => {
       },
     ];
     const catalog = forged as ReadonlyArray<CatalogEntry>;
-    const list = I.shoppingList(catalog, {}, [
-      { id: "a", part: "steilkehre" },
-      { id: "b", part: "gerade-342" },
-      { id: "c", part: "looping" },
-    ]);
+    // ohne Set-Vorlagen (deren Hinweise prüfen die Tests zu gerade-100 unten)
+    const list = listWith(I)(
+      catalog,
+      {},
+      [
+        { id: "a", part: "steilkehre" },
+        { id: "b", part: "gerade-342" },
+        { id: "c", part: "looping" },
+      ],
+      [],
+    );
     expect(termsOf(list)).toEqual({
       "gerade-342": [art("20061602")],
       "kurve-1-90": [art("20061603"), praeg("K90-A"), praeg("K90-B")],
@@ -268,26 +300,150 @@ describe("Suchbegriffe: Baugruppe mit mehreren Artikelnummern", () => {
       CATALOG.map(
         (e): CatalogEntry => (e.id === "looping" ? { ...e, articleNumbers: numbers } : e),
       );
-    const two = okList(I.shoppingList(withNumbers(["20061613", "20061699"]), {}, one("looping")));
+    // ohne Set-Vorlagen: nur die Baugruppen-Hinweise (Vorlagen-Hinweise siehe gerade-100 unten)
+    const shop = listWith(I);
+    const two = okList(shop(withNumbers(["20061613", "20061699"]), {}, one("looping"), []));
     expect(two.rows[0]?.searchTerms).toEqual([
       NO_NUMBER,
       hint("enthalten in Looping (Baugruppe), Art.-Nr. 20061613, 20061699"),
     ]);
     // Katalogreihenfolge, nicht sortiert
-    const reversed = okList(
-      I.shoppingList(withNumbers(["20061699", "20061613"]), {}, one("looping")),
-    );
+    const reversed = okList(shop(withNumbers(["20061699", "20061613"]), {}, one("looping"), []));
     expect(reversed.rows[0]?.searchTerms).toEqual([
       NO_NUMBER,
       hint("enthalten in Looping (Baugruppe), Art.-Nr. 20061699, 20061613"),
     ]);
     const three = okList(
-      I.shoppingList(withNumbers(["20061613", "20061699", "20061600"]), {}, one("looping")),
+      shop(withNumbers(["20061613", "20061699", "20061600"]), {}, one("looping"), []),
     );
     expect(three.rows[0]?.searchTerms).toEqual([
       NO_NUMBER,
       hint("enthalten in Looping (Baugruppe), Art.-Nr. 20061613, 20061699, 20061600"),
     ]);
+  });
+});
+
+describe("Suchbegriffe: Hinweise aus Set-Vorlagen (gerade-100)", () => {
+  const termsOf = (list: ShoppingList): Record<string, ReadonlyArray<SearchTerm>> =>
+    Object.fromEntries(okList(list).rows.map((r: ShoppingRow) => [r.partId, r.searchTerms]));
+  const PACK = hint("enthalten in Geraden 3 × 100 + 3 × 114, Art.-Nr. 20061658");
+  const IN_MACH8 = hint("enthalten in Mach 8, Art.-Nr. 20062492");
+  const LOOPING = hint("enthalten in Looping (Baugruppe), Art.-Nr. 20061613");
+
+  test.skip("[REQ-EINK-3] Beispiele mit leerem Bestand und den Vorlagen aus src/catalog: Gerade 100, Gerade 114, Looping-Teil", async () => {
+    const I = await loadInventory();
+    // drei Argumente wie in der Oberfläche: Vorgabe sind die Vorlagen aus src/catalog
+    expect(termsOf(I.shoppingList(CATALOG, {}, one("gerade-100")))).toEqual({
+      "gerade-100": [NO_NUMBER, PACK],
+    });
+    expect(termsOf(I.shoppingList(CATALOG, {}, one("gerade-114")))).toEqual({
+      "gerade-114": [NO_NUMBER, IN_MACH8, PACK],
+    });
+    // Looping-Teil: erst die Baugruppe, dann die Vorlage (neu gegenüber M3a)
+    expect(termsOf(I.shoppingList(CATALOG, {}, one("looping")))).toEqual({
+      "looping-teil": [NO_NUMBER, LOOPING, IN_MACH8],
+    });
+    // dieselben Hinweise mit ausdrücklich übergebenen Produktvorlagen
+    const shop = listWith(I);
+    expect(termsOf(shop(CATALOG, {}, one("gerade-114"), productTemplates()))).toEqual({
+      "gerade-114": [NO_NUMBER, IN_MACH8, PACK],
+    });
+  });
+
+  test.skip("[REQ-EINK-3] Teile mit Artikelnummer oder Prägung bekommen keine Vorlagen-Hinweise: Steilkehre-Teil, Kurve 1/90°, Anschlussstück, Gerade 342 wie in M3a", async () => {
+    const I = await loadInventory();
+    // alle vier stecken in Mach 8, keins bekommt „enthalten in Mach 8“
+    const list = I.shoppingList(CATALOG, {}, [
+      { id: "a", part: "steilkehre" },
+      { id: "b", part: "anschlussstueck" },
+      { id: "c", part: "gerade-342" },
+    ]);
+    expect(termsOf(list)).toEqual({
+      "gerade-342": [art("20061602"), praeg("142202-1")],
+      "kurve-1-90": [art("20061603")],
+      anschlussstueck: [art("20061530"), art("20061666")],
+      "steilkehre-teil": [praeg("141903-1B")],
+    });
+    const mach8 = productTemplates().find((t) => t.articleNumber === "20062492") as SetTemplate;
+    for (const part of ["gerade-342", "kurve-1-90", "anschlussstueck", "steilkehre-teil"]) {
+      expect(mach8.contents.map((c) => c.part)).toContain(part);
+    }
+  });
+
+  test.skip("[REQ-EINK-3] Wirkungsnachweis mit veränderter Vorlagenliste: ohne die neue Vorlage, Vorlage mit Gerade 342, Reihenfolge und Text aus der Vorlage", async () => {
+    const I = await loadInventory();
+    const shop = listWith(I);
+    const product = productTemplates();
+    const withoutPack = product.filter((t) => t.articleNumber !== "20061658");
+    expect(withoutPack).toHaveLength(product.length - 1);
+    const both: Elements = [
+      { id: "a", part: "gerade-100" },
+      { id: "b", part: "gerade-114" },
+    ];
+    // ohne die neue Vorlage: Gerade 114 nur Mach 8, Gerade 100 nur der Hinweis ohne Nummer
+    expect(termsOf(shop(CATALOG, {}, both, withoutPack))).toEqual({
+      "gerade-114": [NO_NUMBER, IN_MACH8],
+      "gerade-100": [NO_NUMBER],
+    });
+    // leere Vorlagenliste: keine Vorlagen-Hinweise
+    expect(termsOf(shop(CATALOG, {}, both, []))).toEqual({
+      "gerade-114": [NO_NUMBER],
+      "gerade-100": [NO_NUMBER],
+    });
+
+    // Vorlage mit Gerade 342 (hat eine Artikelnummer): kein Hinweis bei Gerade 342
+    const extra: SetTemplate = {
+      id: "test-paket",
+      name: "Testpaket",
+      articleNumber: "20069998",
+      source: "Test",
+      certainty: "niedrig",
+      contents: [
+        { part: "gerade-342", count: 2 },
+        { part: "gerade-100", count: 1 },
+        { part: "looping-teil", count: 1 },
+      ],
+    };
+    const withExtra = [extra, ...product];
+    expect(
+      termsOf(
+        shop(
+          CATALOG,
+          {},
+          [...both, { id: "c", part: "gerade-342" }, { id: "d", part: "looping" }],
+          withExtra,
+        ),
+      ),
+    ).toEqual({
+      "gerade-342": [art("20061602"), praeg("142202-1")],
+      "gerade-114": [NO_NUMBER, IN_MACH8, PACK],
+      // Vorlagenreihenfolge: das Testpaket steht vorn
+      "gerade-100": [NO_NUMBER, hint("enthalten in Testpaket, Art.-Nr. 20069998"), PACK],
+      // Baugruppen-Hinweis vor den Vorlagen-Hinweisen
+      "looping-teil": [
+        NO_NUMBER,
+        LOOPING,
+        hint("enthalten in Testpaket, Art.-Nr. 20069998"),
+        IN_MACH8,
+      ],
+    });
+
+    // umgekehrte Vorlagenreihenfolge kehrt die Hinweise um
+    expect(termsOf(shop(CATALOG, {}, one("gerade-114"), [...product].reverse()))).toEqual({
+      "gerade-114": [NO_NUMBER, PACK, IN_MACH8],
+    });
+    // Name und Nummer kommen aus der Vorlage, nicht aus festen Texten
+    const renamed = product.map(
+      (t): SetTemplate =>
+        t.articleNumber === "20061658"
+          ? { ...t, name: "Kurze Geraden", articleNumber: "20060001" }
+          : t,
+    );
+    expect(termsOf(shop(CATALOG, {}, one("gerade-100"), renamed))).toEqual({
+      "gerade-100": [NO_NUMBER, hint("enthalten in Kurze Geraden, Art.-Nr. 20060001")],
+    });
+    // Vorlagen-Hinweise ändern Zeilen und Mengen nicht
+    expect(counts(shop(CATALOG, {}, both, withExtra))).toEqual(counts(shop(CATALOG, {}, both, [])));
   });
 });
 

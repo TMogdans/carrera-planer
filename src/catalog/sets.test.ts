@@ -1,6 +1,11 @@
 /**
  * Spec M3a (.specify/specs/m3a-bestand/spec.md): Set-Vorlagen als Daten. Abnahmetests REQ-SET-2
- * und REQ-SET-3.
+ * und REQ-SET-3. REQ-SET-2 in der Fassung der Spec gerade-100 (.specify/specs/gerade-100/spec.md):
+ * nach den vier Vorlagen aus M3a die Vorlage „Geraden 3 × 100 + 3 × 114“ (20061658), fünf
+ * Vorlagen; die Summe Mach 8 + Ausbauset 1 + Ausbauset 3 bleibt 49 Teile.
+ *
+ * Aufteilung bis zur Umsetzung: Tests mit der neuen Erwartung sind `.skip` (implement entfernt nur
+ * das `.skip`); Tests, deren Erwartung vor und nach der Ergänzung gilt, laufen aktiv.
  *
  * Öffentliche API (von spec-to-tests gewählt): `src/catalog/index.ts` exportiert zusätzlich
  *   SET_TEMPLATES: ReadonlyArray<SetTemplate>
@@ -48,7 +53,10 @@ type Expected = {
   readonly sum: number;
 };
 
-/** Tabelle „Set-Vorlagen M3a“ der Spec, in deren Reihenfolge. */
+/**
+ * Tabelle „Set-Vorlagen M3a“ der Spec, in deren Reihenfolge, danach die neue Vorlage aus
+ * „Katalog- und Vorlagen-Änderungen“ (gerade-100).
+ */
 const EXPECTED: ReadonlyArray<Expected> = [
   {
     name: "Mach 8",
@@ -88,7 +96,16 @@ const EXPECTED: ReadonlyArray<Expected> = [
     contents: { "wireless-anschluss": 1 },
     sum: 1,
   },
+  {
+    name: "Geraden 3 × 100 + 3 × 114",
+    articleNumber: "20061658",
+    certainty: "hoch",
+    contents: { "gerade-100": 3, "gerade-114": 3 },
+    sum: 6,
+  },
 ];
+/** Die vier Vorlagen aus M3a (unverändert durch gerade-100). */
+const EXPECTED_M3A = EXPECTED.slice(0, 4);
 
 const asRecord = (t: SetTemplate): Record<string, number> =>
   Object.fromEntries(t.contents.map((c) => [c.part, c.count]));
@@ -124,9 +141,10 @@ const templateProblems = (
 };
 
 describe("Set-Vorlagen", () => {
-  test("[REQ-SET-2] genau die Vorlagen der Tabelle, in Tabellenreihenfolge, mit Name, Art.-Nr., Sicherheit und Inhalt", () => {
+  test.skip("[REQ-SET-2] genau die fünf Vorlagen (M3a, dann Geraden 3 × 100 + 3 × 114), in Tabellenreihenfolge, mit Name, Art.-Nr., Sicherheit und Inhalt", () => {
     const list = templates();
     expect(list.map((t) => t.articleNumber)).toEqual(EXPECTED.map((e) => e.articleNumber));
+    expect(list).toHaveLength(5);
     list.forEach((t, i) => {
       const exp = EXPECTED[i] as Expected;
       expect({ name: t.name, certainty: t.certainty }).toEqual({
@@ -140,9 +158,25 @@ describe("Set-Vorlagen", () => {
     });
   });
 
-  test("[REQ-SET-2] Mach 8 + Ausbauset 1 + Ausbauset 3 ergeben die Summenzeile der Recherche (49 Teile)", () => {
+  test("[REQ-SET-2] die vier Vorlagen aus M3a stehen unverändert an Position 1 bis 4 (gilt vor und nach der Ergänzung)", () => {
+    const list = templates().slice(0, 4);
+    expect(list.map((t) => t.articleNumber)).toEqual(EXPECTED_M3A.map((e) => e.articleNumber));
+    list.forEach((t, i) => {
+      const exp = EXPECTED_M3A[i] as Expected;
+      expect({ name: t.name, certainty: t.certainty, contents: asRecord(t) }).toEqual({
+        name: exp.name,
+        certainty: exp.certainty,
+        contents: exp.contents,
+      });
+    });
+  });
+
+  test("[REQ-SET-2] Mach 8 + Ausbauset 1 + Ausbauset 3 ergeben die Summenzeile der Recherche (49 Teile, ohne Gerade 100)", () => {
     const sum: Record<string, number> = {};
-    for (const t of templates().filter((x) => x.articleNumber !== "20061676")) {
+    const three = ["20062492", "20061600", "20061614"];
+    const chosen = templates().filter((x) => three.includes(x.articleNumber));
+    expect(chosen.map((t) => t.articleNumber)).toEqual(three);
+    for (const t of chosen) {
       for (const c of t.contents) sum[c.part] = (sum[c.part] ?? 0) + c.count;
     }
     expect(sum).toEqual({

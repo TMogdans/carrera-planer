@@ -1,5 +1,12 @@
 /**
  * Spec M1 (.specify/specs/m1-rechenkern/spec.md): Teilekatalog, Abnahmetests REQ-CAT-*.
+ * REQ-CAT-1 und REQ-CAT-5 in der Fassung der Spec gerade-100
+ * (.specify/specs/gerade-100/spec.md, „Geänderte Kriterien“): zusätzlich `gerade-100`,
+ * `gerade-114` ohne eigene Artikelnummer, 20 Einträge, 14 platzierbar; Geradenlängen auf dem
+ * 57-mm-Raster mit genau einer benannten Ausnahme `gerade-100` (100 mm).
+ *
+ * Aufteilung bis zur Umsetzung: Tests mit der neuen Erwartung sind `.skip` (implement entfernt nur
+ * das `.skip`); Tests, deren Erwartung vor und nach der Ergänzung gilt, laufen aktiv.
  *
  * Öffentliche API (von spec-to-tests gewählt, wo die Spec sie offen lässt):
  * - `src/catalog/index.ts` exportiert `CATALOG: ReadonlyArray<CatalogEntry>`.
@@ -48,8 +55,11 @@ const schemaApi = schemaModule as unknown as {
 const cat = (): ReadonlyArray<CatalogEntry> => catalogApi.CATALOG;
 
 /**
- * Tabelle „Katalog M1“ der Spec. Art.-Nr. immer als volle achtstellige Nummer des Einzelartikels
- * (REQ-CAT-2), z. B. „20061602“; Wireless-Anschluss 20061673 (Einzelartikel, nicht das Set).
+ * Tabelle „Katalog M1“ der Spec mit den Änderungen aus „Katalog- und Vorlagen-Änderungen“
+ * (gerade-100): `gerade-100` neu direkt nach `gerade-114`, `gerade-114` ohne eigene
+ * Artikelnummer (20061658 ist die Packung, keine Teilenummer). Art.-Nr. immer als volle
+ * achtstellige Nummer des Einzelartikels (REQ-CAT-2), z. B. „20061602“; Wireless-Anschluss
+ * 20061673 (Einzelartikel, nicht das Set). Reihenfolge = Katalogreihenfolge.
  */
 type Expected = {
   readonly id: string;
@@ -72,8 +82,14 @@ const EXPECTED: ReadonlyArray<Expected> = [
   },
   {
     id: "gerade-114",
-    articleNumbers: ["20061658"],
+    articleNumbers: "keineEigene",
     geometry: { kind: "gerade", length: 114 },
+    certainty: "hoch",
+  },
+  {
+    id: "gerade-100",
+    articleNumbers: "keineEigene",
+    geometry: { kind: "gerade", length: 100 },
     certainty: "hoch",
   },
   {
@@ -183,6 +199,7 @@ const PLACEABLE = new Set([
   "gerade-342",
   "gerade-171",
   "gerade-114",
+  "gerade-100",
   "kurve-1-90",
   "kurve-1-45",
   "kurve-2-45",
@@ -207,16 +224,49 @@ const byId = (id: string): CatalogEntry => {
 const isPlaceable = (e: CatalogEntry): boolean =>
   e.geometry.kind === "gerade" || e.geometry.kind === "kurve" || e.geometry.kind === "kreuzung";
 
+/** Einträge, die die Spec gerade-100 ändert oder neu anlegt. */
+const CHANGED_BY_G100 = new Set(["gerade-100", "gerade-114"]);
+
+/**
+ * Prüfung aus REQ-CAT-5 (Fassung gerade-100). Liefert die gefundenen Probleme (leer = in Ordnung).
+ * Die einzige Ausnahme vom Raster ist der Eintrag `gerade-100` mit genau 100 mm; eine zweite
+ * Gerade abseits des Rasters (auch mit 100 mm unter anderer ID) ist ein Problem.
+ */
+const rasterProblems = (catalog: ReadonlyArray<CatalogEntry>): string[] => {
+  const multipleOf57 = (v: number): boolean => Number.isInteger(v) && v > 0 && v % 57 === 0;
+  const problems: string[] = [];
+  for (const e of catalog.filter(isPlaceable)) {
+    const g = e.geometry;
+    if (g.kind === "gerade") {
+      const exception = e.id === "gerade-100" && g.length === 100;
+      if (!exception && !multipleOf57(g.length)) problems.push(`${e.id}: Länge ${g.length}`);
+    } else if (g.kind === "kurve") {
+      if (!multipleOf57(g.radius)) problems.push(`${e.id}: Radius ${g.radius}`);
+      if (![45, 90].includes(g.angle)) problems.push(`${e.id}: Winkel ${g.angle}`);
+    } else if (g.kind === "kreuzung") {
+      // Halbe Längs- und Querweglänge liegen auf dem darstellbaren Raster (Vielfache von
+      // 28,5 mm = 57/2) genau dann, wenn die ganzen Längen Vielfache von 57 sind.
+      if (!multipleOf57(g.length)) problems.push(`${e.id}: Längsweg ${g.length}`);
+      if (!multipleOf57(g.crossLength)) problems.push(`${e.id}: Querweg ${g.crossLength}`);
+      if (g.crossLength > g.length) problems.push(`${e.id}: Querweg länger als Längsweg`);
+    }
+  }
+  return problems;
+};
+
 describe("Katalog", () => {
-  test("[REQ-CAT-1] enthält genau die Einträge der Tabelle Katalog M1", () => {
+  test.skip("[REQ-CAT-1] enthält genau die Einträge der Tabelle Katalog M1 mit gerade-100: 20 Einträge in Tabellenreihenfolge", () => {
     expect(
       cat()
         .map((e) => e.id)
         .sort(),
     ).toEqual(EXPECTED.map((e) => e.id).sort());
+    expect(cat()).toHaveLength(20);
+    // Reihenfolge der Tabelle: gerade-100 direkt nach gerade-114 (REQ-G100-1)
+    expect(cat().map((e) => e.id)).toEqual(EXPECTED.map((e) => e.id));
   });
 
-  test("[REQ-CAT-1] Geometrie, Art.-Nr. und Sicherheit je Eintrag wie in der Tabelle", () => {
+  test.skip("[REQ-CAT-1] Geometrie, Art.-Nr. und Sicherheit je Eintrag wie in der Tabelle, gerade-114 ohne eigene Nummer", () => {
     for (const exp of EXPECTED) {
       const e = byId(exp.id);
       expect({ id: e.id, geometry: sortedParts(e.geometry) }).toEqual({
@@ -238,13 +288,48 @@ describe("Katalog", () => {
     }
   });
 
-  test("[REQ-CAT-1] Platzierbarkeit wie in der Tabelle: Looping, Steilkehre, Steilkurve, Wireless, K und L nicht", () => {
+  test.skip("[REQ-CAT-1] Platzierbarkeit wie in der Tabelle mit gerade-100: 14 platzierbar; Looping, Steilkehre, Steilkurve, Wireless, K und L nicht", () => {
     for (const e of cat()) {
       expect({ id: e.id, placeable: isPlaceable(e) }).toEqual({
         id: e.id,
         placeable: PLACEABLE.has(e.id),
       });
     }
+    expect(cat().filter(isPlaceable)).toHaveLength(14);
+    expect(PLACEABLE.size).toBe(14);
+  });
+
+  test("[REQ-CAT-1] Einträge, die gerade-100 nicht ändert, wie in der Tabelle (gilt vor und nach der Ergänzung)", () => {
+    const unchanged = EXPECTED.filter((exp) => !CHANGED_BY_G100.has(exp.id));
+    expect(unchanged).toHaveLength(18);
+    const numbers = (n: ReadonlyArray<string> | "keineEigene") =>
+      n === "keineEigene" ? n : [...n].sort();
+    for (const exp of unchanged) {
+      const e = byId(exp.id);
+      expect({
+        id: e.id,
+        geometry: sortedParts(e.geometry),
+        certainty: e.certainty,
+        articleNumbers: numbers(e.articleNumbers),
+        placeable: isPlaceable(e),
+      }).toEqual({
+        id: exp.id,
+        geometry: sortedParts(exp.geometry),
+        certainty: exp.certainty,
+        articleNumbers: numbers(exp.articleNumbers),
+        placeable: PLACEABLE.has(exp.id),
+      });
+    }
+    // gerade-114: Geometrie, Sicherheit und Platzierbarkeit bleiben (nur die Nummer ändert sich)
+    const g114 = byId("gerade-114");
+    expect({
+      geometry: g114.geometry,
+      certainty: g114.certainty,
+      placeable: isPlaceable(g114),
+    }).toEqual({ geometry: { kind: "gerade", length: 114 }, certainty: "hoch", placeable: true });
+    // außer gerade-100 kennt der Katalog keine weiteren Einträge
+    const known = new Set(EXPECTED.map((e) => e.id));
+    expect(cat().filter((e) => !known.has(e.id))).toEqual([]);
   });
 
   test("[REQ-CAT-2] jeder Eintrag hat eindeutige ID, Namen, Art.-Nr., Quelle und Sicherheit", () => {
@@ -291,22 +376,77 @@ describe("Katalog", () => {
     }
   });
 
-  test("[REQ-CAT-5] Geometrien platzierbarer Einträge liegen auf dem 57-mm-Raster", () => {
-    const multipleOf57 = (v: number): boolean => Number.isInteger(v) && v > 0 && v % 57 === 0;
-    for (const e of cat().filter(isPlaceable)) {
-      const g = e.geometry;
-      if (g.kind === "gerade") {
-        expect({ id: e.id, ok: multipleOf57(g.length) }).toEqual({ id: e.id, ok: true });
-      } else if (g.kind === "kurve") {
-        expect({ id: e.id, ok: multipleOf57(g.radius) }).toEqual({ id: e.id, ok: true });
-        expect([45, 90]).toContain(g.angle);
-      } else if (g.kind === "kreuzung") {
-        expect(multipleOf57(g.length)).toBe(true);
-        expect(multipleOf57(g.crossLength)).toBe(true);
-        expect(g.crossLength).toBeLessThanOrEqual(g.length);
-        // Halbe Längs- und Querweglänge liegen auf dem darstellbaren Raster (Vielfache von
-        // 28,5 mm = 57/2) genau dann, wenn die ganzen Längen Vielfache von 57 sind (oben geprüft).
-      }
-    }
+  test("[REQ-CAT-5] Geometrien platzierbarer Einträge liegen auf dem 57-mm-Raster, einzige Ausnahme gerade-100 (gilt vor und nach der Ergänzung)", () => {
+    expect(cat().filter(isPlaceable).length).toBeGreaterThanOrEqual(13);
+    expect(rasterProblems(cat())).toEqual([]);
+  });
+
+  test.skip("[REQ-CAT-5] Ausnahme greift: gerade-100 (100 mm) ist platzierbar, liegt abseits des Rasters und besteht die Prüfung", () => {
+    const g100 = byId("gerade-100");
+    expect(g100.geometry).toEqual({ kind: "gerade", length: 100 });
+    expect(isPlaceable(g100)).toBe(true);
+    expect(rasterProblems(cat())).toEqual([]);
+    // genau eine platzierbare Gerade abseits des Rasters
+    const offRaster = cat()
+      .filter(isPlaceable)
+      .filter((e) => e.geometry.kind === "gerade" && e.geometry.length % 57 !== 0)
+      .map((e) => e.id);
+    expect(offRaster).toEqual(["gerade-100"]);
+  });
+
+  test("[REQ-CAT-5] Wirkungsnachweis mit verändertem Katalog: Gerade 171 mit 170 mm, Kurve mit Radius 170 oder zweite Gerade abseits des Rasters scheitern", () => {
+    const g100: CatalogEntry = {
+      id: "gerade-100",
+      name: "Gerade 100",
+      articleNumbers: "keineEigene",
+      source: "Test",
+      certainty: "hoch",
+      geometry: { kind: "gerade", length: 100 },
+    };
+    // Grundlage: Katalog mit gerade-100 (unabhängig davon, ob der Produktkatalog sie schon hat)
+    const base = [...cat().filter((e) => e.id !== "gerade-100"), g100];
+    expect(rasterProblems(base)).toEqual([]);
+
+    const g170 = base.map(
+      (e): CatalogEntry =>
+        e.id === "gerade-171" ? { ...e, geometry: { kind: "gerade", length: 170 } } : e,
+    );
+    expect(rasterProblems(g170)).toEqual(["gerade-171: Länge 170"]);
+
+    const r170 = base.map(
+      (e): CatalogEntry =>
+        e.id === "kurve-2-45" ? { ...e, geometry: { kind: "kurve", radius: 170, angle: 45 } } : e,
+    );
+    expect(rasterProblems(r170)).toEqual(["kurve-2-45: Radius 170"]);
+
+    // Kopie von gerade-100 unter anderer ID: die Ausnahme gilt nur für gerade-100
+    const copy = [...base, { ...g100, id: "gerade-100-kopie", name: "Gerade 100 Kopie" }];
+    expect(rasterProblems(copy)).toEqual(["gerade-100-kopie: Länge 100"]);
+
+    // gerade-100 mit anderer Länge abseits des Rasters ist keine Ausnahme
+    const g101 = base.map(
+      (e): CatalogEntry =>
+        e.id === "gerade-100" ? { ...e, geometry: { kind: "gerade", length: 101 } } : e,
+    );
+    expect(rasterProblems(g101)).toEqual(["gerade-100: Länge 101"]);
+
+    // Winkel außer 45° und 90°
+    const a30 = base.map(
+      (e): CatalogEntry =>
+        e.id === "kurve-1-45"
+          ? { ...e, geometry: { kind: "kurve", radius: 171, angle: 30 as 45 } }
+          : e,
+    );
+    expect(rasterProblems(a30)).toEqual(["kurve-1-45: Winkel 30"]);
+
+    // Kreuzung: Querweg länger als Längsweg, Längs- oder Querweg abseits des Rasters
+    const cross = (length: number, crossLength: number) =>
+      base.map(
+        (e): CatalogEntry =>
+          e.id === "kreuzung" ? { ...e, geometry: { kind: "kreuzung", length, crossLength } } : e,
+      );
+    expect(rasterProblems(cross(114, 342))).toEqual(["kreuzung: Querweg länger als Längsweg"]);
+    expect(rasterProblems(cross(340, 114))).toEqual(["kreuzung: Längsweg 340"]);
+    expect(rasterProblems(cross(342, 113))).toEqual(["kreuzung: Querweg 113"]);
   });
 });
