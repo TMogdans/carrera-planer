@@ -23,6 +23,9 @@
  *   dieselbe Uhr. Die M2-Sitzung bleibt bestehen, damit die M2-Tests unverändert laufen
  *   (REQ-MODUS-2); wie die Planer-Sitzung sie nutzt (z. B. umhüllt), ist frei.
  *
+ * Abgleich zwischen Tabs (REQ-BEST-10, Überarbeitung 3): `PlannerSession.storageChanged(key)`;
+ * die Oberfläche verdrahtet das `storage`-Ereignis darauf.
+ *
  * Bestätigungen (Set-Vorlage hinzufügen, Bestand leeren) sind UI; die Logik bekommt sie als
  * ausdrückliches Argument `confirmed` (REQ-SET-4, REQ-BEST-9). Das Löschen defekter
  * Bestandssicherungen geschieht wie in M2 auf Aufruf (die Rückfrage ist UI).
@@ -246,6 +249,12 @@ export type InventoryMessage =
     }
   /** Ungültiger gespeicherter Modus (REQ-MODUS-1). */
   | { readonly kind: "modusUngueltig"; readonly value: string; readonly text: string }
+  /**
+   * Abgleich zwischen Tabs fand einen kaputten Bestand (REQ-BEST-10): JSON oder `InventorySchema`
+   * scheitert. reason: Text der Schema-Prüfung bzw. des JSON-Fehlers; text sagt, dass Änderungen
+   * bis zum nächsten Start nur im Speicher der Seite leben (Überarbeitung 3).
+   */
+  | { readonly kind: "bestandAbgleichKaputt"; readonly reason: string; readonly text: string }
   /** Befehl im Modus „Bestand“ abgewiesen (REQ-MODUS-3). */
   | {
       readonly kind: "befehlAbgewiesen";
@@ -277,6 +286,14 @@ export type PlannerSession = Omit<Session, "messages"> & {
   inventoryDefectBackups(): ReadonlyArray<string>;
   inventoryDefectRawText(key: string): string | undefined;
   deleteInventoryDefect(key: string): void;
+  /**
+   * Änderung des Speichers von außen melden (REQ-BEST-10, Überarbeitung 3). key: der geänderte
+   * Schlüssel oder null für „alles geändert“ (im Browser `event.key` des `storage`-Ereignisses).
+   * Nur `carrera-planer:bestand` und null lösen einen Abgleich aus; der Wert wird aus dem
+   * eingereichten Speicher neu gelesen. Der Abgleich schreibt nichts, legt keinen Verlaufseintrag
+   * an und lässt Folge, Verlauf, Auswahl, Aktion, Namen und Modus unverändert.
+   */
+  storageChanged(key: string | null): void;
 };
 
 export type PlannerSessionApi = {
