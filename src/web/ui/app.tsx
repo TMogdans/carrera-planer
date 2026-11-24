@@ -31,7 +31,7 @@ import {
 import { browserClock, browserStorage, isTextInput } from "./browser.js";
 import { Canvas, type EndMark } from "./canvas.js";
 import { StorageDialog } from "./dialog.js";
-import { type Box, fitBox, follow, type View } from "./view.js";
+import { type Box, boundsOf, fitBox, follow, type View } from "./view.js";
 
 const catalog: ReadonlyArray<CatalogEntry> = CATALOG;
 
@@ -121,27 +121,12 @@ function App({ session }: { readonly session: Session }) {
     };
   }, [elements]);
 
-  const box = (): Box => {
-    const xs = [0];
-    const ys = [0];
-    for (const s of derived.shapes) {
-      for (const c of [s.band.left, s.band.right]) {
-        xs.push(c.from.x, c.to.x);
-        ys.push(c.from.y, c.to.y);
-        if (c.kind === "bogen") {
-          // Bogen ≤ 90°: Mittelpunkt ± Radius begrenzt sicher, Box wird höchstens etwas größer.
-          xs.push((c.from.x + c.to.x) / 2);
-          ys.push((c.from.y + c.to.y) / 2);
-        }
-      }
-    }
-    return {
-      minX: Math.min(...xs),
-      minY: Math.min(...ys),
-      maxX: Math.max(...xs),
-      maxY: Math.max(...ys),
-    };
-  };
+  // Box aus Bandrändern inkl. Bogen-Extrempunkten und Startpunkt (Einpassen, REQ-UI-7).
+  const box = (): Box =>
+    boundsOf(
+      derived.shapes.flatMap((s) => [s.band.left, s.band.right]),
+      { x: 0, y: 0 },
+    );
 
   const doFit = () => setView(fitBox(box(), size.width, size.height));
 
@@ -180,16 +165,16 @@ function App({ session }: { readonly session: Session }) {
     rerender();
   };
 
-  // Tastenkürzel (REQ-UI-8), nicht bei Fokus in einem Textfeld und nicht bei offenem Dialog
-  // (dort schließt Esc nur den Dialog).
+  // Tastenkürzel (REQ-UI-8): nicht, solange ein Textfeld den Fokus hat. Bei offenem Dialog
+  // schließt Esc den Dialog; die übrigen Kürzel wirken auch dann (Smoke 15).
   const runRef = useRef(run);
   runRef.current = run;
   const dialogRef = useRef(dialog);
   dialogRef.current = dialog;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (dialogRef.current) {
-        if (e.key === "Escape") setDialog(false);
+      if (e.key === "Escape" && dialogRef.current) {
+        setDialog(false);
         return;
       }
       if (isTextInput(e.target)) return;
@@ -298,7 +283,29 @@ function App({ session }: { readonly session: Session }) {
           <span class="sel-name">
             Nr. {selIndex + 1}: {nameOf(selEl)}
           </span>
-          {state.action !== "keine" ? (
+          <button type="button" onClick={() => run({ type: "deleteSelected" })}>
+            Löschen
+          </button>
+          <button
+            type="button"
+            aria-pressed={state.action === "ersetzen"}
+            onClick={() => run({ type: "setAction", action: "ersetzen" })}
+          >
+            Ersetzen
+          </button>
+          <button
+            type="button"
+            aria-pressed={state.action === "davorEinfuegen"}
+            onClick={() => run({ type: "setAction", action: "davorEinfuegen" })}
+          >
+            Davor einfügen
+          </button>
+          {flipAvailable(catalog, state) && (
+            <button type="button" onClick={() => run({ type: "flipSelected" })}>
+              Richtung umschalten
+            </button>
+          )}
+          {state.action !== "keine" && (
             <>
               <span class="action-hint">
                 {state.action === "ersetzen"
@@ -308,26 +315,6 @@ function App({ session }: { readonly session: Session }) {
               <button type="button" onClick={() => run({ type: "setAction", action: "keine" })}>
                 Abbrechen
               </button>
-            </>
-          ) : (
-            <>
-              <button type="button" onClick={() => run({ type: "deleteSelected" })}>
-                Löschen
-              </button>
-              <button type="button" onClick={() => run({ type: "setAction", action: "ersetzen" })}>
-                Ersetzen
-              </button>
-              <button
-                type="button"
-                onClick={() => run({ type: "setAction", action: "davorEinfuegen" })}
-              >
-                Davor einfügen
-              </button>
-              {flipAvailable(catalog, state) && (
-                <button type="button" onClick={() => run({ type: "flipSelected" })}>
-                  Richtung umschalten
-                </button>
-              )}
             </>
           )}
           <button
