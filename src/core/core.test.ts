@@ -1070,14 +1070,14 @@ describe("Kern: Geschlossen und offen", () => {
 
 describe("Kern: Fehler", () => {
   test("[REQ-CORE-16] unbekannte Teil-ID: Fehler mit Index und Teil-ID, kein gültiges Teilergebnis", () => {
-    const layout = [part("a", "gerade-342"), part("b", "gerade-100"), part("c", "gerade-171")];
+    const layout = [part("a", "gerade-342"), part("b", "gerade-99"), part("c", "gerade-171")];
     expect(runTrace(layout, ORIGIN)).toEqual({
       ok: false,
-      errors: [{ kind: "unbekanntesTeil", index: 1, partId: "gerade-100" }],
+      errors: [{ kind: "unbekanntesTeil", index: 1, partId: "gerade-99" }],
     });
     expect(runClosure(layout, ORIGIN)).toEqual({
       ok: false,
-      errors: [{ kind: "unbekanntesTeil", index: 1, partId: "gerade-100" }],
+      errors: [{ kind: "unbekanntesTeil", index: 1, partId: "gerade-99" }],
     });
   });
 
@@ -1145,7 +1145,7 @@ describe("Kern: Fehler", () => {
       part("k", "kreuzung"),
       crossing("q2", "k"),
       crossing("q3", "q3"),
-      part("x", "gerade-100"),
+      part("x", "gerade-99"),
     ];
     let result: TraceResult | undefined;
     expect(() => {
