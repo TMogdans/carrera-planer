@@ -9,6 +9,8 @@
     "node": ">=22"
   },
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "test": "vitest run --passWithNoTests",
