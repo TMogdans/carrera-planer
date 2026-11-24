@@ -4,7 +4,9 @@
     "enabled": false
   },
   "smoke": {
-    "tiers": [],
+    "tiers": [
+      "T1"
+    ],
     "setup": null
   }
 }
