@@ -667,3 +667,119 @@ describe("Nachtrag: Neustart", () => {
     expect(open(api, storage).state.elements).toEqual(ACHT);
   });
 });
+
+describe("Nachtrag: Laden und Import heben die Auswahl auf", () => {
+  test.skip("[REQ-STORE-10] Laden eines gespeicherten Layouts und Import heben die Auswahl auf, auch bei gleicher Element-ID", async () => {
+    const api = await loadSession();
+    const sameIds: Elements = ACHT.map((el) => ({ id: el.id, part: "gerade-114" }));
+    const storage = new MemoryStorage({
+      [api.layoutKey("Gleich")]: JSON.stringify(layoutJson(sameIds)),
+    });
+    const s = withLayout(api, storage, ACHT);
+    s.dispatch({ type: "select", id: "e1" });
+    s.load("Gleich");
+    expect(s.state.elements).toEqual(sameIds);
+    expect(s.state.selection).toBeUndefined();
+
+    s.dispatch({ type: "load", elements: ACHT });
+    s.dispatch({ type: "select", id: "e1" });
+    expect(s.state.selection).toBe("e1");
+    s.importFile("Gleich.json", JSON.stringify(layoutJson(sameIds)));
+    expect(s.state.elements).toEqual(sameIds);
+    expect(s.state.selection).toBeUndefined();
+  });
+});
+
+describe("Nachtrag: Name und „Neu“", () => {
+  test.skip("[REQ-EDIT-12] „Neu“ setzt den aktuellen Namen zurück, gleich ob er aus Speichern unter, Laden oder Import stammt; Export danach mit Zeitstempel-Namen", async () => {
+    const api = await loadSession();
+    const clock = fixedClock("2026-11-24T07:15:00.000Z", {
+      year: 2026,
+      month: 11,
+      day: 24,
+      hour: 8,
+      minute: 15,
+    });
+    const fresh = () => {
+      const storage = new MemoryStorage({
+        [api.layoutKey("Oval")]: JSON.stringify(layoutJson(OVAL)),
+      });
+      const s = api.createSession({ catalog: CATALOG, storage, clock });
+      s.dispatch({ type: "load", elements: ACHT });
+      return s;
+    };
+    const named: ReadonlyArray<readonly [string, (s: Session) => void, string]> = [
+      ["Speichern unter", (s) => s.saveAs("Acht"), "Acht"],
+      ["Laden", (s) => s.load("Oval"), "Oval"],
+      ["Import", (s) => s.importFile("Bogen.json", JSON.stringify(layoutJson(OVAL))), "Bogen"],
+    ];
+    for (const [label, giveName, expected] of named) {
+      const s = fresh();
+      giveName(s);
+      expect(s.name, label).toBe(expected);
+      expect(s.exportFile().fileName).toBe(`${expected}.json`);
+      s.dispatch({ type: "new" });
+      expect(s.name, label).toBeUndefined();
+      expect(s.exportFile().fileName, label).toBe("strecke-2026-11-24-0815.json");
+      // auch nach weiterem Bauen bleibt kein Name gesetzt
+      for (let i = 0; i < 4; i++) s.dispatch({ type: "choosePart", partId: "kurve-1-90" });
+      expect(s.name, label).toBeUndefined();
+      expect(s.exportFile().fileName, label).toBe("strecke-2026-11-24-0815.json");
+    }
+    // „Neu“ auf schon leerer Folge (wirkungslos für die Folge) setzt den Namen trotzdem zurück
+    const empty = api.createSession({ catalog: CATALOG, storage: new MemoryStorage(), clock });
+    empty.importFile("Leer.json", JSON.stringify(layoutJson([])));
+    expect(empty.name).toBe("Leer");
+    empty.dispatch({ type: "new" });
+    expect(empty.name).toBeUndefined();
+  });
+
+  test.skip("[REQ-STORE-9] Rückgängig und Wiederholen ändern den aktuellen Namen nie, auch nicht bei „Neu“ oder Import (Smoke-Fall 6 als Logik)", async () => {
+    const api = await loadSession();
+    const storage = new MemoryStorage();
+    const s = withLayout(api, storage, OVAL); // voriger Arbeitsstand des Handys, ohne Namen
+    expect(s.name).toBeUndefined();
+    s.importFile("Acht.json", JSON.stringify(layoutJson(ACHT)));
+    expect(s.name).toBe("Acht");
+    // Rückgängig des Imports: voriger Arbeitsstand, Name aus dem Import bleibt gesetzt
+    s.dispatch({ type: "undo" });
+    expect(s.state.elements).toEqual(OVAL);
+    expect(s.name).toBe("Acht");
+    s.dispatch({ type: "redo" });
+    expect(s.state.elements).toEqual(ACHT);
+    expect(s.name).toBe("Acht");
+    s.dispatch({ type: "undo" });
+    expect(s.name).toBe("Acht");
+    // erst „Neu“ setzt ihn zurück
+    s.dispatch({ type: "new" });
+    expect(s.name).toBeUndefined();
+    expect(s.exportFile().fileName).toBe("strecke-2026-11-24-0815.json");
+    // Rückgängig von „Neu“ stellt die Folge her, aber nicht den Namen
+    s.dispatch({ type: "undo" });
+    expect(s.state.elements).toEqual(OVAL);
+    expect(s.name).toBeUndefined();
+    // Wiederholen von „Neu“ setzt einen inzwischen vergebenen Namen nicht zurück
+    expect(s.saveAs("Oval")).toEqual({ ok: true });
+    expect(s.name).toBe("Oval");
+    s.dispatch({ type: "redo" });
+    expect(s.state.elements).toEqual([]);
+    expect(s.name).toBe("Oval");
+    // Smoke 6, Ende: Oval tippen ohne Namen, exportieren, importieren → Name aus dem Dateinamen
+    s.dispatch({ type: "new" });
+    for (const p of [
+      "kurve-1-90",
+      "kurve-1-90",
+      "gerade-342",
+      "kurve-1-90",
+      "kurve-1-90",
+      "gerade-342",
+    ])
+      s.dispatch({ type: "choosePart", partId: p });
+    const file = s.exportFile();
+    expect(file.fileName).toBe("strecke-2026-11-24-0815.json");
+    const other = open(api, new MemoryStorage());
+    other.importFile(file.fileName, file.text);
+    expect(other.state.elements).toEqual(s.state.elements);
+    expect(other.name).toBe("strecke-2026-11-24-0815");
+  });
+});
