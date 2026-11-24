@@ -4,7 +4,7 @@
  * Bestätigungen (Überschreiben, Löschen) fragt die Oberfläche; die Logik verlangt sie ausdrücklich.
  */
 import { useState } from "preact/hooks";
-import type { Session } from "../editor/index.js";
+import type { EditorMessage, SaveResult, Session } from "../editor/index.js";
 import { download } from "./browser.js";
 
 type Props = {
@@ -17,26 +17,42 @@ type Props = {
 export function StorageDialog({ session, onClose, onChange, afterLoad }: Props) {
   const [name, setName] = useState(session.name ?? "");
   const [note, setNote] = useState("");
-  const [, setTick] = useState(0);
+  // Speicherabfragen nur beim Öffnen und nach Aktionen, nicht bei jedem Rendern (REQ-STORE-8).
+  const readLists = () => ({ names: session.savedNames(), defects: session.defectBackups() });
+  const [lists, setLists] = useState(readLists);
+  // Meldungen, die eine Aktion im Dialog ausgelöst hat, zeigt der Dialog selbst (REQ-UI-9).
+  const [problems, setProblems] = useState<ReadonlyArray<EditorMessage>>([]);
   const refresh = () => {
-    setTick((t) => t + 1);
+    setLists(readLists());
     onChange();
+  };
+  /** Führt eine Aktion aus und liefert die Meldungen, die sie erzeugt hat. */
+  const act = (fn: () => void): ReadonlyArray<EditorMessage> => {
+    const before = session.messages.length;
+    fn();
+    const added = session.messages.slice(before);
+    setProblems(added);
+    return added;
   };
 
   const save = () => {
-    let r = session.saveAs(name);
+    let r: SaveResult = { ok: false, reason: "nameLeer" };
+    act(() => {
+      r = session.saveAs(name);
+    });
     if (!r.ok && r.reason === "existiert") {
       if (!window.confirm(`„${name.trim()}“ gibt es schon. Überschreiben?`)) return;
-      r = session.saveAs(name, { overwrite: true });
+      act(() => {
+        r = session.saveAs(name, { overwrite: true });
+      });
     }
     if (r.ok) setNote(`Gespeichert als „${name.trim()}“.`);
     else if (r.reason === "nameLeer") setNote("Bitte einen Namen eingeben.");
-    else setNote("Speichern nicht möglich (siehe Meldung).");
+    else setNote("Speichern nicht möglich.");
     refresh();
   };
 
-  const names = session.savedNames();
-  const defects = session.defectBackups();
+  const { names, defects } = lists;
 
   return (
     <div class="dialog-backdrop">
@@ -64,6 +80,13 @@ export function StorageDialog({ session, onClose, onChange, afterLoad }: Props) 
           <button type="submit">Speichern</button>
         </form>
         {note !== "" && <p class="note">{note}</p>}
+        {problems.length > 0 && (
+          <ul class="dialog-problems" role="alert">
+            {problems.map((m, i) => (
+              <li key={`${m.kind}${i}`}>{m.text}</li>
+            ))}
+          </ul>
+        )}
 
         <h3>Gespeicherte Strecken</h3>
         {names.length === 0 ? (
@@ -76,10 +99,14 @@ export function StorageDialog({ session, onClose, onChange, afterLoad }: Props) 
                 <button
                   type="button"
                   onClick={() => {
-                    session.load(n);
-                    setName(session.name ?? name);
+                    const added = act(() => session.load(n));
+                    const failed = added.some((m) => m.kind === "ladenFehlgeschlagen");
+                    setNote(failed ? "" : `„${n}“ geladen.`);
+                    if (!failed) {
+                      setName(session.name ?? name);
+                      afterLoad();
+                    }
                     refresh();
-                    afterLoad();
                   }}
                 >
                   Laden
@@ -88,7 +115,7 @@ export function StorageDialog({ session, onClose, onChange, afterLoad }: Props) 
                   type="button"
                   onClick={() => {
                     if (window.confirm(`„${n}“ löschen?`)) {
-                      session.deleteSaved(n);
+                      act(() => session.deleteSaved(n));
                       refresh();
                     }
                   }}
@@ -110,7 +137,10 @@ export function StorageDialog({ session, onClose, onChange, afterLoad }: Props) 
                   <button
                     type="button"
                     onClick={() => {
-                      const raw = session.defectRawText(k);
+                      let raw: string | undefined;
+                      act(() => {
+                        raw = session.defectRawText(k);
+                      });
                       if (raw !== undefined) {
                         download(`${k.replaceAll(":", "_")}.txt`, raw, "text/plain");
                       }
@@ -123,7 +153,7 @@ export function StorageDialog({ session, onClose, onChange, afterLoad }: Props) 
                     type="button"
                     onClick={() => {
                       if (window.confirm(`Defekte Sicherung „${k}“ löschen?`)) {
-                        session.deleteDefect(k);
+                        act(() => session.deleteDefect(k));
                         refresh();
                       }
                     }}
@@ -159,11 +189,15 @@ export function StorageDialog({ session, onClose, onChange, afterLoad }: Props) 
                 input.value = "";
                 if (file === undefined) return;
                 const text = await file.text();
-                const before = session.messages.length;
-                session.importFile(file.name, text);
-                if (session.messages.length === before) {
+                // Erfolg heißt: keine Import-Meldung. Eine Meldung der Autosicherung (Speicher
+                // gesperrt) ist kein gescheiterter Import (REQ-STORE-10/-11).
+                const added = act(() => session.importFile(file.name, text));
+                if (!added.some((m) => m.kind === "importFehlgeschlagen")) {
                   setName(session.name ?? "");
+                  setNote(`„${file.name}“ importiert.`);
                   afterLoad();
+                } else {
+                  setNote("");
                 }
                 refresh();
               }}

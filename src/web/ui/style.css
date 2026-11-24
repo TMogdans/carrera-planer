@@ -108,6 +108,19 @@ button:disabled {
   flex-direction: column;
   gap: 4px;
   padding: 4px 6px;
+  /* Begrenzt, damit Fläche, Leiste und Status bedienbar bleiben; scrollt in sich. */
+  max-height: 22dvh;
+  overflow-y: auto;
+}
+
+.dialog-problems {
+  margin: 6px 0 0;
+  padding: 6px 10px 6px 24px;
+  border-radius: 8px;
+  background: #fde8e8;
+  border: 1px solid #f5b5b5;
+  overflow-wrap: anywhere;
+  font-size: 14px;
 }
 
 .message {

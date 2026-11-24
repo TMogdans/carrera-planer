@@ -180,11 +180,18 @@ function App({ session }: { readonly session: Session }) {
     rerender();
   };
 
-  // Tastenkürzel (REQ-UI-8), nicht bei Fokus in einem Textfeld.
+  // Tastenkürzel (REQ-UI-8), nicht bei Fokus in einem Textfeld und nicht bei offenem Dialog
+  // (dort schließt Esc nur den Dialog).
   const runRef = useRef(run);
   runRef.current = run;
+  const dialogRef = useRef(dialog);
+  dialogRef.current = dialog;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (dialogRef.current) {
+        if (e.key === "Escape") setDialog(false);
+        return;
+      }
       if (isTextInput(e.target)) return;
       const mod = e.ctrlKey || e.metaKey;
       const key = e.key.toLowerCase();
@@ -207,7 +214,14 @@ function App({ session }: { readonly session: Session }) {
   const nameOf = (el: (typeof elements)[number]): string =>
     "crosses" in el ? "Querung" : (catalog.find((c) => c.id === el.part)?.name ?? el.part);
   const palette = paletteEntries(catalog);
-  const visibleMessages = session.messages.filter((m) => !dismissed.has(m));
+  // Gleichlautende Meldungen werden zusammengefasst (Anzahl statt Stapel, REQ-STORE-8/REQ-UI-9);
+  // Schließen schließt alle gleichlautenden bis dahin.
+  const groups = new Map<string, EditorMessage[]>();
+  for (const m of session.messages) {
+    if (dismissed.has(m)) continue;
+    const key = `${m.kind}\n${m.text}`;
+    groups.set(key, [...(groups.get(key) ?? []), m]);
+  }
   const status = derived.status;
 
   return (
@@ -241,23 +255,27 @@ function App({ session }: { readonly session: Session }) {
         <span class="title">{session.name ?? "Carrera-Planer"}</span>
       </header>
 
-      {visibleMessages.length > 0 && (
+      {groups.size > 0 && (
         <div class="messages" role="alert">
-          {visibleMessages.map((m, i) => (
-            <div class={`message message-${m.kind}`} key={`${m.kind}${i}`}>
-              <span>
-                {m.kind === "speicherFehler" ? "Speicher nicht verfügbar: " : ""}
-                {m.text}
-              </span>
-              <button
-                type="button"
-                aria-label="Meldung schließen"
-                onClick={() => setDismissed(new Set([...dismissed, m]))}
-              >
-                ✕
-              </button>
-            </div>
-          ))}
+          {[...groups].map(([key, members]) => {
+            const m = members[0] as EditorMessage;
+            return (
+              <div class={`message message-${m.kind}`} key={key}>
+                <span>
+                  {m.kind === "speicherFehler" ? "Speicher nicht verfügbar: " : ""}
+                  {m.text}
+                  {members.length > 1 && <strong class="count"> ({members.length}×)</strong>}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Meldung schließen"
+                  onClick={() => setDismissed(new Set([...dismissed, ...members]))}
+                >
+                  ✕
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
