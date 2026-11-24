@@ -174,6 +174,15 @@ export function apply(catalog: Catalog, state: EditorState, command: Command): E
   }
 }
 
+/**
+ * Derselbe Zustand ohne Verlauf. Für die Wiederherstellung des gesicherten Arbeitsstands beim
+ * Start: Der Verlauf wird nicht gespeichert (REQ-EDIT-16), die geladenen IDs bleiben vergeben.
+ */
+export function forgetHistory(state: EditorState): EditorState {
+  const s: Internal = { ...(state as Internal), past: [], future: [] };
+  return s;
+}
+
 export function canUndo(state: EditorState): boolean {
   return (state as Internal).past.length > 0;
 }

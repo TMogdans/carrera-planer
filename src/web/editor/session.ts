@@ -12,7 +12,7 @@
  */
 import { ParseResult, Schema } from "effect";
 import { type Layout, LayoutSchema } from "../../schema/index.js";
-import { apply, initialState } from "./editor.js";
+import { apply, forgetHistory, initialState } from "./editor.js";
 import type {
   Catalog,
   Clock,
@@ -182,7 +182,7 @@ export function createSession(deps: {
     const raw = storage.getItem(layoutPrefix());
     if (raw === null) return;
     const p = parse(raw);
-    if (p.ok) state = apply(catalog, state, { type: "load", elements: p.elements });
+    if (p.ok) state = forgetHistory(apply(catalog, state, { type: "load", elements: p.elements }));
     else moveDefect(raw, p.reason);
   }, undefined);
 
