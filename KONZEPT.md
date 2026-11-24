@@ -44,12 +44,14 @@ Stelle ohne Markierung.
 
 **Raster.** Fast alle Längen sind Vielfache von 114 mm (Schienenbreite = ⅓ Standardgerade). Die
 Kurve 1/90° mit R1 = 171 mm und die halbe Gerade bringen halbe Schritte hinein; das gemeinsame
-Raster ist deshalb 57 mm. 45°-Kurven verlassen jedes Raster.
+Raster ist deshalb 57 mm. Ausnahmen: die Gerade 100 (Packung 20061658) liegt nicht darauf, und
+45°-Kurven verlassen jedes Raster.
 
 **Exakte Rechnung statt Toleranz.** Alle Richtungen sind Vielfache von 45°. Sinus und Cosinus sind
 damit immer 0, ±1 oder ±√2/2. Jede Koordinate lässt sich exakt als `a + b·√2` darstellen, mit
-rationalen a, b und einem kleinen festen Nenner in Einheiten von 57 mm. Intern sind das ganze
-Zahlen. „Geschlossen“ heißt: Endpunkt gleich Startpunkt und Endrichtung gleich Startrichtung —
+rationalen a, b und einem kleinen festen Nenner (intern Viertel-Millimeter). Intern sind das
+ganze Zahlen; das 57-mm-Raster wird dafür nicht gebraucht. „Geschlossen“ heißt: Endpunkt gleich
+Startpunkt und Endrichtung gleich Startrichtung —
 ein exakter Vergleich ohne Millimeter-Toleranz.
 
 **Geschlossen ist nicht gleich baubar.** Der Editor meldet zusätzlich:

@@ -33,8 +33,8 @@ Alle GO!!!-Strecken- und Zubehörartikel von carrera-toys.com (154 Seiten, Stand
 |---|---|---|---|
 | Gerade lang | 61602 | 342 × 114 | hoch |
 | Gerade halb | 61656 | 171 × 114 | hoch |
-| Gerade mittel | 61658 | 114 × 114 | hoch |
-| Gerade kurz | 61658 | 100 × 114 | hoch |
+| Gerade mittel | – (nur in Packung 20061658) | 114 × 114 | hoch |
+| Gerade kurz | – (nur in Packung 20061658) | 100 × 114 | hoch |
 | Kurve 1/90° | 61603 | 228 × 228 außen, R 171 | hoch (nachgemessen) |
 | Kurve 1/45° | 61611 | Länge 161 | hoch |
 | Kurve 2/45° | 61617 | 242 × 179 | hoch |
@@ -75,7 +75,9 @@ Kopierfehler auf CT, nicht übernehmen: 61645 nennt „30°" (gemeint 45°), 616
 Belege: Mach 8 aus der Zeichnung der Anleitung, am Karton bestätigt (2026-11-23): genau eine
 kurze Gerade, und die ist 114 mm. Sie gehört zu Art.-Nr. 20061658 (Packung mit 3 × 100 und
 3 × 114 mm); dem Mach 8 liegt davon nur ein 114er bei, keine 100-mm-Gerade. Kurze Gerade + Zeitnahme + Anschluss = 3 × 114 = 342 mm, eine lange Gerade.
-Damit liegt der ganze Bestand auf dem 57-mm-Raster; nur die 45°-Kurven brauchen √2.
+Damit liegt der ganze Bestand auf dem 57-mm-Raster; nur die 45°-Kurven brauchen √2. Die Gerade 100
+liegt nicht darauf; der Kern rechnet in Viertel-Millimetern und braucht das Raster nicht
+(Katalog: Packung 20061658 als Set-Vorlage, beide Geraden ohne eigene Nummer, siehe #34).
 Ausbauset 1 nur über Händler, Ausbauset 3 von CT (dort als „Digital 143" gelabelt, Teile
 kompatibel). Wireless Upgrade Kit: Wireless-Anschlussschiene (CT-Einzelartikel 20061673, nicht das normale Anschlussstück) + 2 Regler, keine weiteren Schienen.
 

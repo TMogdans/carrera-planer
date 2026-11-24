@@ -5,7 +5,7 @@
 
 ## Geometrie
 - Richtungen sind Vielfache von 45°. Koordinaten werden **exakt** als ganze Zahlen dargestellt
-  (`a + b·√2`, fester Nenner in Einheiten von 57 mm). Keine Gleitkomma-Geometrie im Kern.
+  (`a + b·√2` mit festem Nenner, intern Viertel-Millimeter). Keine Gleitkomma-Geometrie im Kern.
 - „Geschlossen" ist ein **exakter Vergleich** (Endpunkt = Startpunkt, Endrichtung = Startrichtung).
   Es gibt **keine Toleranz** und keinen Epsilon-Vergleich.
 - Geschlossen ist nicht gleich baubar: Überschneidung und Lücke werden getrennt gemeldet.
