@@ -1,7 +1,8 @@
 # Spec: M3a — Bestand, Bestandsmodus, Einkaufsliste, Prägung (im Browser, ohne Server)
 
-Status: abgenommen am 2026-11-24, Überarbeitung 2 (Klarstellungen aus spec-to-tests, abgenommen
-2026-11-24); Überarbeitung 1 trug die Entscheidungen zu den offenen Fragen ein und machte den
+Status: Überarbeitung 3 (Tab-Abgleich nach Critic-Befund: REQ-BEST-10, Smoke-Fall 16, „Bekannte
+Grenzen“ ergänzt); Abnahme per Review des Spec-PR. Stand davor: abgenommen am 2026-11-24,
+Überarbeitung 2 (Klarstellungen aus spec-to-tests); Überarbeitung 1 trug die Entscheidungen zu den offenen Fragen ein und machte den
 Smoke zur Station für T3. Die Kriterien verweisen mit „(Frage n)“ auf den Abschnitt
 „Entscheidungen (abgenommen 2026-11-24)“.
 Grundlage: [KONZEPT.md](../../../KONZEPT.md) (abgenommen 2026-11-23; Abschnitte „Modi“,
@@ -168,6 +169,39 @@ sind, ist in #28 offen.
   Schreib- und Löschzugriff mit Schlüssel protokolliert.
 - **REQ-BEST-9** [When] „Bestand leeren“ setzt nach ausdrücklicher Bestätigung den ganzen
   Bestand auf leer, einschließlich der Einträge aus REQ-BEST-7; ohne Bestätigung ändert es nichts.
+- **REQ-BEST-10** [When] **Abgleich zwischen Tabs.** Die Sitzung hat einen Weg, eine Änderung
+  des Speichers von außen zu melden (Schlüssel oder `null` für „alles geändert“); die Oberfläche
+  verdrahtet das `storage`-Ereignis des Browsers (`window`, Speicherbereich `localStorage`)
+  darauf. Wird `carrera-planer:bestand` oder `null` gemeldet, liest die Logik den Schlüssel aus der
+  eingereichten Speicher-Schnittstelle neu (nicht aus dem Ereignis) und ersetzt den Bestand der
+  Seite vollständig:
+  - **gültig:** Der gelesene Bestand gilt, einschließlich der Einträge nach REQ-BEST-7. Eine
+    Meldung nach REQ-BEST-7 gibt es nur für unbekannte Teil-IDs, die vorher nicht im Bestand der
+    Seite standen. Ein Zustand „in dieser Sitzung nicht überschreiben“ (REQ-BEST-5) endet damit.
+  - **Schlüssel fehlt** (z. B. in einem anderen Tab gelöscht): Der Bestand ist leer, ohne Meldung
+    (wie REQ-BEST-3).
+  - **kaputt** (JSON oder `InventorySchema` scheitert): Der Bestand der Seite bleibt, wie er war.
+    Der kaputte Wert wird **nicht** verschoben und in dieser Sitzung nicht überschrieben;
+    Änderungen leben bis zum nächsten Start nur im Speicher der Seite. Die Logik liefert eine
+    Meldung mit Grund, die das sagt. Verschoben wird nach REQ-BEST-5 erst beim nächsten Start.
+    Grund: jedes offene Tab bekommt das Ereignis, und mehrere Tabs würden denselben Fund mehrfach
+    verschieben.
+
+  Der Abgleich selbst schreibt nichts in den Speicher und legt keinen Verlaufseintrag an.
+  Elementfolge, Verlauf, Auswahl, Aktion und Modus bleiben unverändert; Rest, Sperre
+  (REQ-MODUS-3), Leisten-Einteilung (REQ-MODUS-5) und Einkaufsliste werden aus dem neuen Bestand
+  berechnet. Ein daraus entstehender Überzug wird angezeigt, nicht verhindert (wie REQ-MODUS-4).
+  Andere Schlüssel (Layouts, Arbeitsstand, `carrera-planer:modus`) lösen keinen Abgleich aus.
+  **Meldung bei gültigem Abgleich: keine** (Vorschlag, Abnahme im Spec-PR). Grund: Die Änderung
+  kommt vom Nutzer selbst in einem anderen Tab, der neue Bestand ist sofort sichtbar, und
+  Meldungen bleiben laut REQ-BUI-5 stehen, bis man sie schließt; bei jedem Zähler-Klick im
+  anderen Tab entstünde eine. Die Gefahr war das stille Überschreiben, nicht das Nachladen.
+  Wirkungsnachweis: zwei Sitzungen über **eine** Speicher-Attrappe. Sitzung A fügt Mach 8 hinzu,
+  B bekommt die Meldung „`carrera-planer:bestand` geändert“ und erhöht danach Gerade 342 um 1 →
+  im Speicher stehen alle 27 Mach-8-Teile, Gerade 342 mit 5. Das Protokoll der Attrappe zeigt
+  zwischen Meldung und Zähleränderung keinen Schreibzugriff von B. Ein kaputter Wert mit Meldung
+  an B → B behält seinen Bestand, eine Änderung in B schreibt nicht, der kaputte Wert steht
+  unverändert im Speicher, kein Ausweichschlüssel entsteht.
 
 ### Set-Vorlagen (`src/schema`, `src/catalog`, `src/web/editor`)
 
@@ -375,6 +409,30 @@ sind, ist in #28 offen.
   gespeicherter Bestand mit der Teil-ID `__proto__` verliert diesen Eintrag deshalb beim Laden,
   entgegen REQ-BEST-7. Über die Oberfläche ist das nicht erreichbar (keine Katalog-ID heißt so,
   REQ-BEST-2 weist unbekannte IDs ab); nur von Hand im Speicher. Kein Kriterium prüft es.
+- **Leiste strenger als die Logik.** Bei nicht bestimmbarem Verbrauch sperrt die Leiste alle
+  platzierbaren Einträge (REQ-MODUS-5), die Logik ließe nach REQ-MODUS-3 manches Ersetzen zu (z. B.
+  das unbekannte Teil durch ein vorhandenes ersetzen). Ebenso ist ein Eintrag mit Rest 0 gesperrt,
+  obwohl das Ersetzen eines Elements durch das gleiche Teil den Verbrauch nicht erhöht. Beides
+  ist die sichere Richtung: es verhindert nichts Falsches, nur einen Umweg (löschen, dann
+  anhängen).
+- **Zweiter Ausweichschlüssel.** Gelingt das Verschieben eines kaputten Bestands (REQ-BEST-5),
+  scheitert danach aber das Schreiben des leeren Bestands, steht der kaputte Wert weiter unter
+  `carrera-planer:bestand`, und der nächste Start legt einen zweiten Ausweichschlüssel mit
+  demselben Rohtext an. Nichts geht verloren, es entsteht nur eine Kopie.
+- **Anzahl 0 im Speicher.** Ob ein bestandsfähiger Eintrag mit Anzahl 0 als `0` mitgespeichert
+  oder weggelassen wird, ist offen; REQ-BEST-4 behandelt beides als gleich.
+- **Nur das Lesen scheitert beim Start.** Wirft der Speicher beim Start nur beim Lesen
+  (REQ-BEST-6), startet die Seite mit leerem Bestand und Meldung; die nächste Bestandsänderung
+  überschreibt dann den gespeicherten Bestand, den die Seite nie gesehen hat.
+- **Strenge Zahleneingabe.** Das Zahlenfeld nimmt nur die exakte Ziffernform an (`0` oder Ziffern
+  ohne führende Null); „08“, „+8“ und „8.0“ werden nach REQ-BEST-2 abgewiesen.
+- **Layouts haben dasselbe Zwei-Tab-Muster.** Arbeitsstand und benannte Layouts aus M2 werden
+  nicht zwischen Tabs abgeglichen: ein veraltetes Tab überschreibt den Arbeitsstand eines anderen
+  beim nächsten Befehl. Bewusst nicht behoben (M2 ist abgenommen; Layouts tragen die Strecke eines
+  Tabs, kein gemeinsames Inventar). Auch `carrera-planer:modus` wird nicht abgeglichen.
+- **Gleichzeitige Änderungen.** Das `storage`-Ereignis kommt asynchron. Ändern zwei Tabs den
+  Bestand, bevor das Ereignis des anderen angekommen ist, gewinnt der letzte Schreiber. REQ-BEST-10
+  schließt das veraltete Tab, nicht diesen Wettlauf.
 
 ## Entscheidungen (abgenommen 2026-11-24)
 
@@ -486,6 +544,16 @@ Gegenfälle, die geschlossen bleiben müssen:
 14. Steilkehre und Looping bleiben in beiden Modi nicht platzierbar („Maße fehlen“); L und K
     tauchen in der Leiste nicht auf.
 15. Netzwerk-Reiter: keine Anfragen an fremde Adressen (REQ-BUI-6).
+16. **Zwei Tabs** (REQ-BEST-10), am Laptop im selben Browser, Bestand vorher leeren. Tab A und
+    Tab B öffnen, in beiden den Bestandsdialog. In A „Mach 8“ hinzufügen → B zeigt ohne Neuladen
+    Gerade 342 4 und die übrigen Mach-8-Zahlen, ohne Meldung. In B Gerade 342 „+“ → 5. A neu laden
+    → alle 27 Mach-8-Teile da, Gerade 342 5. Im Modus „Bestand“ in B: Oval bauen, dann in A Kurve
+    1/90° auf 3 setzen → B zeigt in der Leiste Kurve 1/90° gesperrt mit Rest −1 und „fehlt 1 Teil“,
+    die Strecke bleibt. In A in der Konsole `localStorage.setItem("carrera-planer:bestand", "kaputt")`
+    ausführen (die Konsole löst das Ereignis sicher aus) → in A selbst passiert nichts (das Ereignis kommt nur in anderen Tabs an); B zeigt eine
+    Meldung mit Grund, behält seine Zahlen, und nach einem „+“ in B steht `kaputt` weiter im
+    Speicher, kein `…:bestand:defekt:…`-Schlüssel ist neu. B neu laden → Verschieben nach
+    REQ-BEST-5.
 
 ### Nach dem Deploy
 
