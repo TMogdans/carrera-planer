@@ -112,7 +112,7 @@ const usage = (elements: Elements): Inventory => {
 };
 
 describe("Sandbox", () => {
-  test.skip("[REQ-MODUS-2] Eigenschaft: in der Sandbox ergibt jeder Befehl bei beliebigem Bestand denselben Zustand wie M2 apply", async () => {
+  test("[REQ-MODUS-2] Eigenschaft: in der Sandbox ergibt jeder Befehl bei beliebigem Bestand denselben Zustand wie M2 apply", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     fc.assert(
@@ -138,7 +138,7 @@ describe("Sandbox", () => {
     );
   });
 
-  test.skip("[REQ-MODUS-2] Sandbox mit leerem Bestand: jedes platzierbare Teil ist anhängbar, über jeden Bestand hinaus", async () => {
+  test("[REQ-MODUS-2] Sandbox mit leerem Bestand: jedes platzierbare Teil ist anhängbar, über jeden Bestand hinaus", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     const many = Array.from({ length: 9 }, () => choose("kurve-1-90"));
@@ -151,7 +151,7 @@ describe("Sandbox", () => {
 });
 
 describe("Bestandsprüfung der Befehle", () => {
-  test.skip("[REQ-MODUS-3] Bestand Mach 8, leere Folge: fünfmal Gerade 342 → vier angehängt, der fünfte abgewiesen mit Teilnamen", async () => {
+  test("[REQ-MODUS-3] Bestand Mach 8, leere Folge: fünfmal Gerade 342 → vier angehängt, der fünfte abgewiesen mit Teilnamen", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     const { state, results } = runIn(
@@ -180,7 +180,7 @@ describe("Bestandsprüfung der Befehle", () => {
     );
   });
 
-  test.skip("[REQ-MODUS-3] siebenmal Kurve 1/90° → sechs angehängt", async () => {
+  test("[REQ-MODUS-3] siebenmal Kurve 1/90° → sechs angehängt", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     const { state, results } = runIn(
@@ -195,7 +195,7 @@ describe("Bestandsprüfung der Befehle", () => {
     expect(results[6]?.rejection?.name).toBe("Kurve 1/90°");
   });
 
-  test.skip("[REQ-MODUS-3] Oval mit Mach 8: Gerade → Engstelle wirkt, die zweite Engstelle und Kurve 1/45° werden abgewiesen", async () => {
+  test("[REQ-MODUS-3] Oval mit Mach 8: Gerade → Engstelle wirkt, die zweite Engstelle und Kurve 1/45° werden abgewiesen", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     const oval = loaded(E, OVAL);
@@ -222,7 +222,7 @@ describe("Bestandsprüfung der Befehle", () => {
     expect(third.rejection?.text).toContain("Kurve 1/45°");
   });
 
-  test.skip("[REQ-MODUS-3] „davor einfügen“ wird wie Anhängen geprüft; Ersetzen durch ein vorhandenes Teil wirkt", async () => {
+  test("[REQ-MODUS-3] „davor einfügen“ wird wie Anhängen geprüft; Ersetzen durch ein vorhandenes Teil wirkt", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     const four = run(
@@ -249,7 +249,7 @@ describe("Bestandsprüfung der Befehle", () => {
     expect(partsOf(r.state.elements)[0]).toBe("spurwechselkurve");
   });
 
-  test.skip("[REQ-MODUS-3] keine Ersatzteile gleicher Geometrie: Spurwechselkurve deckt keine fehlende Kurve 1/90°", async () => {
+  test("[REQ-MODUS-3] keine Ersatzteile gleicher Geometrie: Spurwechselkurve deckt keine fehlende Kurve 1/90°", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     const inv: Inventory = { "kurve-1-90": 1, spurwechselkurve: 5 };
@@ -261,7 +261,7 @@ describe("Bestandsprüfung der Befehle", () => {
     expect(results[1]?.rejection?.partId).toBe("kurve-1-90");
   });
 
-  test.skip("[REQ-MODUS-3] „Richtung umschalten“, „Querung anhängen“ und „Löschen“ werden nie abgewiesen, auch überzogen", async () => {
+  test("[REQ-MODUS-3] „Richtung umschalten“, „Querung anhängen“ und „Löschen“ werden nie abgewiesen, auch überzogen", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     const firstHalf = loaded(E, ACHT.slice(0, 5)); // Kreuzung … Gerade 114, Querung möglich
@@ -284,7 +284,7 @@ describe("Bestandsprüfung der Befehle", () => {
     }
   });
 
-  test.skip("[REQ-MODUS-3] Verbrauch nach dem Befehl nicht bestimmbar: Hinzufügen und Ersetzen werden abgewiesen, Löschen wirkt", async () => {
+  test("[REQ-MODUS-3] Verbrauch nach dem Befehl nicht bestimmbar: Hinzufügen und Ersetzen werden abgewiesen, Löschen wirkt", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     const inv: Inventory = { "gerade-342": 10, "gerade-114": 10, "kurve-1-90": 10 };
@@ -319,7 +319,7 @@ describe("Bestandsprüfung der Befehle", () => {
     ).toHaveLength(3);
   });
 
-  test.skip("[REQ-MODUS-3] Verbrauch vor dem Befehl nicht bestimmbar: zählt je Teil als 0; Beispiel [unbekanntes Teil] → Gerade 342 bei Bestand 0 abgewiesen, bei 1 wirkt", async () => {
+  test("[REQ-MODUS-3] Verbrauch vor dem Befehl nicht bestimmbar: zählt je Teil als 0; Beispiel [unbekanntes Teil] → Gerade 342 bei Bestand 0 abgewiesen, bei 1 wirkt", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     const s = loaded(E, [{ id: "u", part: UNKNOWN_ID }]);
@@ -344,7 +344,7 @@ describe("Bestandsprüfung der Befehle", () => {
     }
   });
 
-  test.skip("[REQ-MODUS-3] Verbrauch vor dem Befehl nicht bestimmbar: die Sperre prüft jedes Teil der neuen Folge, nicht nur das neue", async () => {
+  test("[REQ-MODUS-3] Verbrauch vor dem Befehl nicht bestimmbar: die Sperre prüft jedes Teil der neuen Folge, nicht nur das neue", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     // [unbekannt, Gerade 342, Gerade 342]: das unbekannte Element durch Gerade 342 ersetzen
@@ -394,7 +394,7 @@ describe("Bestandsprüfung der Befehle", () => {
     expect(partsOf(curveOk.state.elements)).toEqual(["gerade-342", "kurve-1-90"]);
   });
 
-  test.skip("[REQ-MODUS-3] Eigenschaft: vorher nicht bestimmbar, nachher bestimmbar → abgewiesen genau dann, wenn ein Teil mit Verbrauch über dem Bestand liegt", async () => {
+  test("[REQ-MODUS-3] Eigenschaft: vorher nicht bestimmbar, nachher bestimmbar → abgewiesen genau dann, wenn ein Teil mit Verbrauch über dem Bestand liegt", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     const placeable = E.paletteEntries(CATALOG)
@@ -432,7 +432,7 @@ describe("Bestandsprüfung der Befehle", () => {
     );
   });
 
-  test.skip("[REQ-MODUS-3] Befehle ohne Folgeänderung (Auswahl, Aktion, Leistenrichtung) wirken wie in M2", async () => {
+  test("[REQ-MODUS-3] Befehle ohne Folgeänderung (Auswahl, Aktion, Leistenrichtung) wirken wie in M2", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     const s = loaded(E, OVAL);
@@ -459,7 +459,7 @@ describe("Bestandsprüfung der Befehle", () => {
 });
 
 describe("Laden, Neu, Rückgängig im Bestandsmodus", () => {
-  test.skip("[REQ-MODUS-4] Bestand Ausbauset 3, Oval geladen (Kurve überzogen um 4): Kurve anhängen abgewiesen, Gerade 342 wirkt, Kurve löschen wirkt", async () => {
+  test("[REQ-MODUS-4] Bestand Ausbauset 3, Oval geladen (Kurve überzogen um 4): Kurve anhängen abgewiesen, Gerade 342 wirkt, Kurve löschen wirkt", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     const load = I.applyInMode(CATALOG, AUSBAU3, "bestand", E.initialState(), {
@@ -484,7 +484,7 @@ describe("Laden, Neu, Rückgängig im Bestandsmodus", () => {
     expect(del.state.elements).toEqual(OVAL.slice(1));
   });
 
-  test.skip("[REQ-MODUS-4] Neu, Rückgängig und Wiederholen werden nie wegen des Bestands abgewiesen, auch wenn der Verbrauch steigt", async () => {
+  test("[REQ-MODUS-4] Neu, Rückgängig und Wiederholen werden nie wegen des Bestands abgewiesen, auch wenn der Verbrauch steigt", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     // in der Sandbox fünf Geraden, eine gelöscht
@@ -521,7 +521,7 @@ describe("Leiste im Bestandsmodus", () => {
     entries.map(({ partId, kind, stock, rest, locked }) => ({ partId, kind, stock, rest, locked }));
   const nameOf = (id: string): string => CATALOG.find((e) => e.id === id)?.name as string;
 
-  test.skip("[REQ-MODUS-5] Beispiel Bestand Mach 8, Folge Oval: Einträge, Bestand, Rest, gesperrt", async () => {
+  test("[REQ-MODUS-5] Beispiel Bestand Mach 8, Folge Oval: Einträge, Bestand, Rest, gesperrt", async () => {
     const I = await loadInventory();
     const entries = I.stockPalette(CATALOG, MACH8, OVAL);
     const p = (partId: string, stock: number, rest: number): Row => ({
@@ -553,7 +553,7 @@ describe("Leiste im Bestandsmodus", () => {
     for (const e of entries) expect(e.name).toBe(nameOf(e.partId));
   });
 
-  test.skip("[REQ-MODUS-5] Bestand Ausbauset 3: beide Baugruppen entfallen; nicht platzierbare Teile sind nie gesperrt", async () => {
+  test("[REQ-MODUS-5] Bestand Ausbauset 3: beide Baugruppen entfallen; nicht platzierbare Teile sind nie gesperrt", async () => {
     const I = await loadInventory();
     expect(rows(I.stockPalette(CATALOG, AUSBAU3, []))).toEqual([
       { partId: "gerade-342", kind: "platzierbar", stock: 8, rest: 8, locked: false },
@@ -572,7 +572,7 @@ describe("Leiste im Bestandsmodus", () => {
     expect(I.stockPalette(CATALOG, {}, [])).toEqual([]);
   });
 
-  test.skip("[REQ-MODUS-5] Rest ≤ 0 sperrt platzierbare Einträge, auch negativ; Baugruppen nach Bestand ihrer Bestandteile", async () => {
+  test("[REQ-MODUS-5] Rest ≤ 0 sperrt platzierbare Einträge, auch negativ; Baugruppen nach Bestand ihrer Bestandteile", async () => {
     const I = await loadInventory();
     const fourStraights: Elements = Array.from({ length: 4 }, (_, i) => ({
       id: `g${i}`,
@@ -612,7 +612,7 @@ describe("Leiste im Bestandsmodus", () => {
     });
   });
 
-  test.skip("[REQ-MODUS-5] Verbrauch nicht bestimmbar: alle platzierbaren gesperrt, Rest unbestimmt", async () => {
+  test("[REQ-MODUS-5] Verbrauch nicht bestimmbar: alle platzierbaren gesperrt, Rest unbestimmt", async () => {
     const I = await loadInventory();
     const entries = I.stockPalette(CATALOG, MACH8, [...OVAL, { id: "u", part: UNKNOWN_ID }]);
     expect(entries.map((e) => e.partId)).toEqual(
@@ -628,14 +628,14 @@ describe("Leiste im Bestandsmodus", () => {
     expect(entries.find((e) => e.partId === "kurve-1-90")?.stock).toBe(6);
   });
 
-  test.skip("[REQ-MODUS-5] nicht zählende Bestandseinträge (REQ-BEST-7) erscheinen nicht und zählen nicht", async () => {
+  test("[REQ-MODUS-5] nicht zählende Bestandseinträge (REQ-BEST-7) erscheinen nicht und zählen nicht", async () => {
     const I = await loadInventory();
     const inv: Inventory = { ...MACH8, steilkehre: 5, looping: 3, [UNKNOWN_ID]: 9 };
     expect(I.stockPalette(CATALOG, inv, OVAL)).toEqual(I.stockPalette(CATALOG, MACH8, OVAL));
     expect(I.stockPalette(CATALOG, { steilkehre: 5, [UNKNOWN_ID]: 9 }, [])).toEqual([]);
   });
 
-  test.skip("[REQ-MODUS-5] gesperrt heißt genau: Antippen würde im Modus „Bestand“ abgewiesen", async () => {
+  test("[REQ-MODUS-5] gesperrt heißt genau: Antippen würde im Modus „Bestand“ abgewiesen", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     const cases: ReadonlyArray<readonly [Inventory, Elements]> = [
@@ -691,7 +691,7 @@ describe("Invariante des Bestandsmodus", () => {
     return true;
   };
 
-  test.skip("[REQ-MODUS-6] Eigenschaft: aus einer nicht überzogenen Folge entsteht im Bestandsmodus nie eine überzogene; Gegenprobe Sandbox", async () => {
+  test("[REQ-MODUS-6] Eigenschaft: aus einer nicht überzogenen Folge entsteht im Bestandsmodus nie eine überzogene; Gegenprobe Sandbox", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     fc.assert(

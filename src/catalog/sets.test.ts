@@ -124,7 +124,7 @@ const templateProblems = (
 };
 
 describe("Set-Vorlagen", () => {
-  test.skip("[REQ-SET-2] genau die Vorlagen der Tabelle, in Tabellenreihenfolge, mit Name, Art.-Nr., Sicherheit und Inhalt", () => {
+  test("[REQ-SET-2] genau die Vorlagen der Tabelle, in Tabellenreihenfolge, mit Name, Art.-Nr., Sicherheit und Inhalt", () => {
     const list = templates();
     expect(list.map((t) => t.articleNumber)).toEqual(EXPECTED.map((e) => e.articleNumber));
     list.forEach((t, i) => {
@@ -140,7 +140,7 @@ describe("Set-Vorlagen", () => {
     });
   });
 
-  test.skip("[REQ-SET-2] Mach 8 + Ausbauset 1 + Ausbauset 3 ergeben die Summenzeile der Recherche (49 Teile)", () => {
+  test("[REQ-SET-2] Mach 8 + Ausbauset 1 + Ausbauset 3 ergeben die Summenzeile der Recherche (49 Teile)", () => {
     const sum: Record<string, number> = {};
     for (const t of templates().filter((x) => x.articleNumber !== "20061676")) {
       for (const c of t.contents) sum[c.part] = (sum[c.part] ?? 0) + c.count;
@@ -162,11 +162,11 @@ describe("Set-Vorlagen", () => {
     expect(Object.values(sum).reduce((s, n) => s + n, 0)).toBe(49);
   });
 
-  test.skip("[REQ-SET-3] jede Vorlage besteht SetTemplateSchema, verweist nur auf bestandsfähige Einträge, eindeutig", () => {
+  test("[REQ-SET-3] jede Vorlage besteht SetTemplateSchema, verweist nur auf bestandsfähige Einträge, eindeutig", () => {
     expect(templateProblems(catalogApi.CATALOG, templates())).toEqual([]);
   });
 
-  test.skip("[REQ-SET-3] Wirkungsnachweis: ohne kurve-1-45 im Katalog oder mit looping als Inhalt schlägt die Prüfung fehl", () => {
+  test("[REQ-SET-3] Wirkungsnachweis: ohne kurve-1-45 im Katalog oder mit looping als Inhalt schlägt die Prüfung fehl", () => {
     const withoutCurve = catalogApi.CATALOG.filter((e) => e.id !== "kurve-1-45");
     expect(templateProblems(withoutCurve, templates())).toContain(
       `${(templates()[2] as SetTemplate).id}: kurve-1-45 unbekannt`,

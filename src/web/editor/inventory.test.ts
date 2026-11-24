@@ -49,7 +49,7 @@ const rejected = (change: InventoryChange): string => {
 const frozen = (inv: Inventory): Inventory => Object.freeze({ ...inv });
 
 describe("Bestandsfähig", () => {
-  test.skip("[REQ-BEST-2] bestandsfähig sind alle Katalogeinträge außer Baugruppen, auch nicht platzierbare", async () => {
+  test("[REQ-BEST-2] bestandsfähig sind alle Katalogeinträge außer Baugruppen, auch nicht platzierbare", async () => {
     const I = await loadInventory();
     const stockable = CATALOG.filter((e) => I.isStockable(CATALOG, e.id)).map((e) => e.id);
     expect(stockable).toEqual(
@@ -62,7 +62,7 @@ describe("Bestandsfähig", () => {
     expect(I.isStockable(CATALOG, "")).toBe(false);
   });
 
-  test.skip("[REQ-BEST-2] Wirkungsnachweis: bestandsfähig folgt dem übergebenen Katalog", async () => {
+  test("[REQ-BEST-2] Wirkungsnachweis: bestandsfähig folgt dem übergebenen Katalog", async () => {
     const I = await loadInventory();
     const changed: ReadonlyArray<CatalogEntry> = CATALOG.map(
       (e): CatalogEntry =>
@@ -86,7 +86,7 @@ describe("Bestandsfähig", () => {
 });
 
 describe("Bestand ändern", () => {
-  test.skip("[REQ-BEST-2] Beispiel: leerer Bestand, Kurve 1/90° auf 8, dann −1 → 7; Steilkehre auf 1 → abgewiesen", async () => {
+  test("[REQ-BEST-2] Beispiel: leerer Bestand, Kurve 1/90° auf 8, dann −1 → 7; Steilkehre auf 1 → abgewiesen", async () => {
     const I = await loadInventory();
     const a = I.setCount(CATALOG, frozen({}), "kurve-1-90", "8");
     expect(a).toEqual({ ok: true, inventory: expect.anything() });
@@ -98,7 +98,7 @@ describe("Bestand ändern", () => {
     expect(text.length).toBeGreaterThan(0);
   });
 
-  test.skip("[REQ-BEST-2] Setzen ergibt genau den Wert, für jedes bestandsfähige Teil; andere Anzahlen bleiben", async () => {
+  test("[REQ-BEST-2] Setzen ergibt genau den Wert, für jedes bestandsfähige Teil; andere Anzahlen bleiben", async () => {
     const I = await loadInventory();
     const base: Inventory = { ...MACH8, "gibt-es-nicht": 3 };
     for (const id of STOCKABLE_IDS) {
@@ -116,7 +116,7 @@ describe("Bestand ändern", () => {
     }
   });
 
-  test.skip("[REQ-BEST-2] +1 erhöht um eins, −1 senkt um eins, von jeder Anzahl aus", async () => {
+  test("[REQ-BEST-2] +1 erhöht um eins, −1 senkt um eins, von jeder Anzahl aus", async () => {
     const I = await loadInventory();
     fc.assert(
       fc.property(stockInventoryArb, fc.constantFrom(...STOCKABLE_IDS), (inv, id) => {
@@ -138,7 +138,7 @@ describe("Bestand ändern", () => {
     );
   });
 
-  test.skip("[REQ-BEST-2] −1 bei Anzahl 0 ist nicht verfügbar, ändert nichts und liefert keine Meldung", async () => {
+  test("[REQ-BEST-2] −1 bei Anzahl 0 ist nicht verfügbar, ändert nichts und liefert keine Meldung", async () => {
     const I = await loadInventory();
     const cases: Inventory[] = [
       {},
@@ -168,7 +168,7 @@ describe("Bestand ändern", () => {
     expect(I.decrementAvailable(CATALOG, { [UNKNOWN_ID]: 2 }, UNKNOWN_ID)).toBe(false);
   });
 
-  test.skip("[REQ-BEST-2] Eingaben, die keine ganze Zahl ≥ 0 sind, werden mit Meldung abgewiesen; der Bestand bleibt", async () => {
+  test("[REQ-BEST-2] Eingaben, die keine ganze Zahl ≥ 0 sind, werden mit Meldung abgewiesen; der Bestand bleibt", async () => {
     const I = await loadInventory();
     const base: Inventory = { "kurve-1-90": 8, "gerade-342": 4 };
     const invalid = [
@@ -194,7 +194,7 @@ describe("Bestand ändern", () => {
     }
   });
 
-  test.skip("[REQ-BEST-2] unbekannte Teil-ID und Baugruppen werden bei Setzen, +1 und −1 abgewiesen", async () => {
+  test("[REQ-BEST-2] unbekannte Teil-ID und Baugruppen werden bei Setzen, +1 und −1 abgewiesen", async () => {
     const I = await loadInventory();
     const base: Inventory = { "kurve-1-90": 8, steilkehre: 2, [UNKNOWN_ID]: 3 };
     for (const id of [UNKNOWN_ID, "", ...ASSEMBLY_IDS]) {
@@ -211,7 +211,7 @@ describe("Bestand ändern", () => {
 });
 
 describe("Nicht zählende Einträge", () => {
-  test.skip("[REQ-BEST-7] unbekannte und Baugruppen-IDs werden erkannt und bei Änderungen unverändert mitgeführt", async () => {
+  test("[REQ-BEST-7] unbekannte und Baugruppen-IDs werden erkannt und bei Änderungen unverändert mitgeführt", async () => {
     const I = await loadInventory();
     const base: Inventory = { "kurve-1-90": 8, [UNKNOWN_ID]: 3, steilkehre: 1, looping: 2 };
     expect(I.ignoredPartIds(CATALOG, base)).toEqual([UNKNOWN_ID, "looping", "steilkehre"]);
@@ -224,7 +224,7 @@ describe("Nicht zählende Einträge", () => {
     expect(I.addSet(frozen(base), T_AUSBAU1)).toEqual(plus(base, AUSBAU1));
   });
 
-  test.skip("[REQ-BEST-7] nicht zählende Einträge mit Anzahl 0 werden nicht gemeldet", async () => {
+  test("[REQ-BEST-7] nicht zählende Einträge mit Anzahl 0 werden nicht gemeldet", async () => {
     const I = await loadInventory();
     const zeros: Inventory = { "kurve-1-90": 8, [UNKNOWN_ID]: 0, looping: 0 };
     expect(I.ignoredPartIds(CATALOG, zeros)).toEqual([]);
@@ -235,7 +235,7 @@ describe("Nicht zählende Einträge", () => {
 });
 
 describe("Set-Vorlagen addieren", () => {
-  test.skip("[REQ-SET-4] leerer Bestand + Mach 8 + Ausbauset 1 + Ausbauset 3 = Summenzeile; noch einmal Mach 8 → 18 / 16", async () => {
+  test("[REQ-SET-4] leerer Bestand + Mach 8 + Ausbauset 1 + Ausbauset 3 = Summenzeile; noch einmal Mach 8 → 18 / 16", async () => {
     const I = await loadInventory();
     let inv: Inventory = frozen({});
     for (const t of [T_MACH8, T_AUSBAU1, T_AUSBAU3]) inv = frozen(I.addSet(inv, t));
@@ -248,7 +248,7 @@ describe("Set-Vorlagen addieren", () => {
     expect(normalized(I.addSet({}, T_WIRELESS))).toEqual({ "wireless-anschluss": 1 });
   });
 
-  test.skip("[REQ-SET-4] andere Anzahlen und nicht zählende Einträge bleiben unverändert", async () => {
+  test("[REQ-SET-4] andere Anzahlen und nicht zählende Einträge bleiben unverändert", async () => {
     const I = await loadInventory();
     const base: Inventory = { "kurve-1-90": 3, "gerade-171": 5, [UNKNOWN_ID]: 3, looping: 1 };
     expect(I.addSet(frozen(base), T_AUSBAU3)).toEqual({
@@ -259,7 +259,7 @@ describe("Set-Vorlagen addieren", () => {
     });
   });
 
-  test.skip("[REQ-SET-5] Eigenschaft: Reihenfolge egal, Summe steigt genau um die Summe der Inhalte", async () => {
+  test("[REQ-SET-5] Eigenschaft: Reihenfolge egal, Summe steigt genau um die Summe der Inhalte", async () => {
     const I = await loadInventory();
     const templatesArb = fc.array(fc.oneof(fc.constantFrom(...TEMPLATES), templateArb), {
       maxLength: 6,

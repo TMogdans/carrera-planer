@@ -1,11 +1,13 @@
 /**
  * Oberfläche M2 (Spec M2, REQ-UI-1 bis -11): Zeichenfläche, Teileleiste, Auswahlleiste,
- * Statusleiste, Werkzeugleiste, Speichern/Laden-Dialog und Meldungen. Alle Regeln liegen in der
- * Editor-Logik (src/web/editor); hier wird nur dargestellt und bedient.
+ * Statusleiste, Werkzeugleiste, Speichern/Laden-Dialog und Meldungen. Ab M3a (Spec M3a,
+ * REQ-BUI-1 bis -6) dazu Modus-Schalter, Bestandsdialog, Leiste mit Restzähler im Modus „Bestand“
+ * und die Einkaufsliste. Alle Regeln liegen in der Editor-Logik (src/web/editor); hier wird nur
+ * dargestellt und bedient.
  */
 import { render } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import { CATALOG } from "../../catalog/index.js";
+import { CATALOG, SET_TEMPLATES } from "../../catalog/index.js";
 import { type CatalogEntry, trace } from "../../core/index.js";
 import {
   type Command,
@@ -13,24 +15,31 @@ import {
   canUndo,
   consumptionView,
   coordToNumber,
-  createSession,
+  createPlannerSession,
   crossingTarget,
   drawing,
   drawnSection,
-  type EditorMessage,
   errorEntries,
   flipAvailable,
   formatLength,
+  type Mode,
   origin,
+  type PlannerMessage,
+  type PlannerSession,
   paletteEntries,
   type ScreenPoint,
-  type Session,
+  type StockPaletteEntry,
+  shoppingList,
+  shoppingShort,
   statusOf,
+  stockPalette,
   totalLength,
 } from "../editor/index.js";
 import { browserClock, browserStorage, isTextInput } from "./browser.js";
 import { Canvas, type EndMark } from "./canvas.js";
 import { StorageDialog } from "./dialog.js";
+import { InventoryDialog } from "./inventory-dialog.js";
+import { ShoppingDialog } from "./shopping-dialog.js";
 import { type Box, boundsOf, fitBox, follow, type View } from "./view.js";
 
 const catalog: ReadonlyArray<CatalogEntry> = CATALOG;
@@ -65,18 +74,31 @@ function PartIcon({ entry }: { readonly entry: CatalogEntry }) {
   );
 }
 
-function App({ session }: { readonly session: Session }) {
+/** Rest mit echtem Minuszeichen (auch negativ, REQ-BUI-3); unbestimmt „?“. */
+const restText = (rest: number | undefined): string =>
+  rest === undefined ? "?" : String(rest).replace("-", "−");
+
+const MODES: ReadonlyArray<readonly [Mode, string]> = [
+  ["sandbox", "Sandbox"],
+  ["bestand", "Bestand"],
+];
+
+type DialogKind = "keiner" | "speichern" | "bestand" | "einkauf";
+
+function App({ session }: { readonly session: PlannerSession }) {
   const [, setTick] = useState(0);
   const rerender = () => setTick((t) => t + 1);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [view, setView] = useState<View>({ scale: 0.4, tx: 200, ty: 300 });
-  const [dialog, setDialog] = useState(false);
-  const [dismissed, setDismissed] = useState<ReadonlySet<EditorMessage>>(new Set());
+  const [dialog, setDialog] = useState<DialogKind>("keiner");
+  const [dismissed, setDismissed] = useState<ReadonlySet<PlannerMessage>>(new Set());
   const [showUsage, setShowUsage] = useState(false);
   const fitted = useRef(false);
 
   const state = session.state;
   const elements = state.elements;
+  const inventory = session.inventory;
+  const mode = session.mode;
 
   const derived = useMemo(() => {
     const shapes = drawing(catalog, elements);
@@ -120,6 +142,13 @@ function App({ session }: { readonly session: Session }) {
       hotPorts,
     };
   }, [elements]);
+
+  // Einkaufsliste in beiden Modi (REQ-EINK-5), Leiste mit Rest nur im Modus „Bestand“.
+  const shopping = useMemo(() => shoppingList(catalog, inventory, elements), [elements, inventory]);
+  const stock = useMemo(
+    () => (mode === "bestand" ? stockPalette(catalog, inventory, elements) : undefined),
+    [mode, elements, inventory],
+  );
 
   // Box aus Bandrändern inkl. Bogen-Extrempunkten und Startpunkt (Einpassen, REQ-UI-7).
   const box = (): Box =>
@@ -173,8 +202,8 @@ function App({ session }: { readonly session: Session }) {
   dialogRef.current = dialog;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && dialogRef.current) {
-        setDialog(false);
+      if (e.key === "Escape" && dialogRef.current !== "keiner") {
+        setDialog("keiner");
         return;
       }
       if (isTextInput(e.target)) return;
@@ -198,10 +227,13 @@ function App({ session }: { readonly session: Session }) {
   const selEl = elements[selIndex];
   const nameOf = (el: (typeof elements)[number]): string =>
     "crosses" in el ? "Querung" : (catalog.find((c) => c.id === el.part)?.name ?? el.part);
-  const palette = paletteEntries(catalog);
+  // Leiste: im Modus „Bestand“ die Einteilung mit Bestand und Rest (REQ-MODUS-5), sonst M2.
+  const palette: ReadonlyArray<
+    Pick<StockPaletteEntry, "partId" | "name" | "kind"> & Partial<StockPaletteEntry>
+  > = stock ?? paletteEntries(catalog);
   // Gleichlautende Meldungen werden zusammengefasst (Anzahl statt Stapel, REQ-STORE-8/REQ-UI-9);
   // Schließen schließt alle gleichlautenden bis dahin.
-  const groups = new Map<string, EditorMessage[]>();
+  const groups = new Map<string, PlannerMessage[]>();
   for (const m of session.messages) {
     if (dismissed.has(m)) continue;
     const key = `${m.kind}\n${m.text}`;
@@ -212,38 +244,59 @@ function App({ session }: { readonly session: Session }) {
   return (
     <div class="app">
       <header class="toolbar">
-        <button
-          type="button"
-          disabled={!canUndo(state)}
-          onClick={() => run({ type: "undo" })}
-          title="Rückgängig (Strg/Cmd+Z)"
-        >
-          ↶<span class="label">Rückgängig</span>
-        </button>
-        <button
-          type="button"
-          disabled={!canRedo(state)}
-          onClick={() => run({ type: "redo" })}
-          title="Wiederholen (Strg/Cmd+Umschalt+Z)"
-        >
-          ↷<span class="label">Wiederholen</span>
-        </button>
-        <button type="button" onClick={doFit} title="Einpassen">
-          ⤢<span class="label">Einpassen</span>
-        </button>
-        <button type="button" onClick={() => run({ type: "new" })} title="Neu">
-          ＋<span class="label">Neu</span>
-        </button>
-        <button type="button" onClick={() => setDialog(true)} title="Speichern/Laden">
-          💾<span class="label">Speichern/Laden</span>
-        </button>
-        <span class="title">{session.name ?? "Carrera-Planer"}</span>
+        <div class="toolbar-buttons">
+          <button
+            type="button"
+            disabled={!canUndo(state)}
+            onClick={() => run({ type: "undo" })}
+            title="Rückgängig (Strg/Cmd+Z)"
+          >
+            ↶<span class="label">Rückgängig</span>
+          </button>
+          <button
+            type="button"
+            disabled={!canRedo(state)}
+            onClick={() => run({ type: "redo" })}
+            title="Wiederholen (Strg/Cmd+Umschalt+Z)"
+          >
+            ↷<span class="label">Wiederholen</span>
+          </button>
+          <button type="button" onClick={doFit} title="Einpassen">
+            ⤢<span class="label">Einpassen</span>
+          </button>
+          <button type="button" onClick={() => run({ type: "new" })} title="Neu">
+            ＋<span class="label">Neu</span>
+          </button>
+          <button type="button" onClick={() => setDialog("speichern")} title="Speichern/Laden">
+            💾<span class="label">Speichern/Laden</span>
+          </button>
+          <button type="button" onClick={() => setDialog("bestand")} title="Bestand">
+            📦<span class="label">Bestand</span>
+          </button>
+          <span class="title">{session.name ?? "Carrera-Planer"}</span>
+        </div>
+        {/* Außerhalb des scrollenden Teils: immer sichtbar (REQ-BUI-3). */}
+        <fieldset class="mode-switch" aria-label="Modus">
+          {MODES.map(([m, label]) => (
+            <button
+              type="button"
+              key={m}
+              aria-pressed={mode === m}
+              onClick={() => {
+                session.setMode(m);
+                rerender();
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </fieldset>
       </header>
 
       {groups.size > 0 && (
         <div class="messages" role="alert">
           {[...groups].map(([key, members]) => {
-            const m = members[0] as EditorMessage;
+            const m = members[0] as PlannerMessage;
             return (
               <div class={`message message-${m.kind}`} key={key}>
                 <span>
@@ -364,15 +417,20 @@ function App({ session }: { readonly session: Session }) {
           .filter((p) => p.kind !== "ausgeblendet")
           .map((p) => {
             const entry = catalog.find((c) => c.id === p.partId) as CatalogEntry;
+            // Gesperrt (Rest ≤ 0 oder unbestimmt): ausgegraut, reagiert nicht (REQ-BUI-3).
             return p.kind === "platzierbar" ? (
               <button
                 type="button"
-                class="palette-item"
+                class={p.locked === true ? "palette-item locked" : "palette-item"}
                 key={p.partId}
+                disabled={p.locked === true}
                 onClick={() => run({ type: "choosePart", partId: p.partId })}
               >
                 <PartIcon entry={entry} />
-                <span>{p.name}</span>
+                <span>
+                  {p.name}
+                  {stock !== undefined && <small class="rest">Rest {restText(p.rest)}</small>}
+                </span>
               </button>
             ) : (
               <div class="palette-item missing" key={p.partId} aria-disabled="true">
@@ -380,6 +438,7 @@ function App({ session }: { readonly session: Session }) {
                 <span>
                   {p.name}
                   <small>Maße fehlen</small>
+                  {p.stock !== undefined && <small class="rest">Rest {restText(p.rest)}</small>}
                 </span>
               </div>
             );
@@ -403,6 +462,14 @@ function App({ session }: { readonly session: Session }) {
           >
             {derived.usage.ok ? `${derived.usage.total} Teile` : derived.usage.text}{" "}
             {showUsage ? "▴" : "▾"}
+          </button>
+          <button
+            type="button"
+            class="shopping-toggle"
+            title="Einkaufsliste"
+            onClick={() => setDialog("einkauf")}
+          >
+            🛒 {shoppingShort(shopping)}
           </button>
           <span class="length">{derived.length}</span>
           <span class="overlap">Überschneidung: nicht geprüft</span>
@@ -439,10 +506,10 @@ function App({ session }: { readonly session: Session }) {
         )}
       </footer>
 
-      {dialog && (
+      {dialog === "speichern" && (
         <StorageDialog
           session={session}
-          onClose={() => setDialog(false)}
+          onClose={() => setDialog("keiner")}
           onChange={() => {
             rerender();
           }}
@@ -451,11 +518,28 @@ function App({ session }: { readonly session: Session }) {
           }}
         />
       )}
+      {dialog === "bestand" && (
+        <InventoryDialog
+          session={session}
+          catalog={catalog}
+          templates={SET_TEMPLATES}
+          onClose={() => setDialog("keiner")}
+          onChange={rerender}
+        />
+      )}
+      {dialog === "einkauf" && (
+        <ShoppingDialog list={shopping} onClose={() => setDialog("keiner")} />
+      )}
     </div>
   );
 }
 
 export const mount = (root: HTMLElement): void => {
-  const session = createSession({ catalog, storage: browserStorage(), clock: browserClock });
+  const session = createPlannerSession({
+    catalog,
+    templates: SET_TEMPLATES,
+    storage: browserStorage(),
+    clock: browserClock,
+  });
   render(<App session={session} />, root);
 };

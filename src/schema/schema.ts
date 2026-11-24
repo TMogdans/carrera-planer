@@ -7,6 +7,7 @@
  * scheitern alte oder fremde Daten laut, auch wenn der Aufrufer keine eigenen ParseOptions angibt.
  */
 import { Schema } from "effect";
+import { identity } from "effect/Function";
 
 const STRICT = { parseOptions: { onExcessProperty: "error" } } as const;
 
@@ -42,6 +43,25 @@ export const GeometrySchema = Schema.Union(
   }),
 );
 
+/**
+ * Prägung (Spec M3a, REQ-PRAEG-1): auf dem Teil eingeprägte Form- oder Teilenummer. Kein Leerraum
+ * am Rand und nie eine Artikelnummer (genau 8 Ziffern): die beiden Nummernarten bleiben getrennt.
+ */
+export const PraegungSchema = Schema.Struct({
+  value: Schema.NonEmptyTrimmedString.pipe(
+    Schema.filter((v): boolean => !Schema.is(ArticleNumber)(v)),
+  ),
+  source: Schema.NonEmptyString,
+  certainty: CertaintySchema,
+});
+
+/**
+ * Prägungen als optionales Feld ohne `undefined` als Wert (ein Eintrag hat das Feld oder nicht).
+ * Bewusst über `optionalToOptional` mit Identität statt `optionalWith(…, { exact: true })`: JSON
+ * kennt kein `undefined`, die Option wäre an Daten nicht beobachtbar.
+ */
+const Praegungen = Schema.NonEmptyArray(PraegungSchema);
+
 export const CatalogEntrySchema = Schema.Struct({
   id: Schema.NonEmptyString,
   name: Schema.NonEmptyString,
@@ -49,9 +69,14 @@ export const CatalogEntrySchema = Schema.Struct({
   source: Schema.NonEmptyString,
   certainty: CertaintySchema,
   geometry: GeometrySchema,
+  praegung: Schema.optionalToOptional(Praegungen, Praegungen, {
+    decode: identity,
+    encode: identity,
+  }),
 }).annotations(STRICT);
 
 export type Certainty = typeof CertaintySchema.Type;
+export type Praegung = typeof PraegungSchema.Type;
 export type Geometry = typeof GeometrySchema.Type;
 export type CatalogEntry = typeof CatalogEntrySchema.Type;
 
@@ -88,3 +113,30 @@ export type PartElement = typeof PartElementSchema.Type;
 export type CrossingElement = typeof CrossingElementSchema.Type;
 export type LayoutElement = typeof LayoutElementSchema.Type;
 export type Layout = typeof LayoutSchema.Type;
+
+/**
+ * Bestand (Spec M3a, REQ-BEST-1): Teil-ID → Anzahl. Das Schema kennt den Katalog nicht; ob eine
+ * Teil-ID bekannt und bestandsfähig ist, prüft die Logik (REQ-BEST-7).
+ */
+export const InventorySchema = Schema.Struct({
+  schemaVersion: Schema.Literal(1),
+  counts: Schema.Record({ key: Schema.NonEmptyString, value: Schema.NonNegativeInt }),
+}).annotations(STRICT);
+
+/** Set-Vorlage (Spec M3a, REQ-SET-1): Packung mit fester Teileliste. */
+export const SetTemplateSchema = Schema.Struct({
+  id: Schema.NonEmptyString,
+  name: Schema.NonEmptyString,
+  articleNumber: ArticleNumber,
+  source: Schema.NonEmptyString,
+  certainty: CertaintySchema,
+  contents: Schema.NonEmptyArray(
+    Schema.Struct({
+      part: Schema.NonEmptyString,
+      count: Schema.Int.pipe(Schema.greaterThanOrEqualTo(1)),
+    }),
+  ),
+}).annotations(STRICT);
+
+export type Inventory = typeof InventorySchema.Type;
+export type SetTemplate = typeof SetTemplateSchema.Type;

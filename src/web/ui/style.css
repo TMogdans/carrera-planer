@@ -84,6 +84,15 @@ button:disabled {
   align-items: center;
   background: var(--panel);
   border-bottom: 1px solid var(--line);
+}
+
+/* Die Knöpfe scrollen bei Platzmangel, der Modus-Schalter daneben bleibt stehen (REQ-BUI-3). */
+.toolbar-buttons {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  gap: 6px;
+  align-items: center;
   overflow-x: auto;
 }
 
@@ -483,4 +492,206 @@ button:disabled {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* M3a (REQ-BUI-1 bis -5): Modus-Schalter, Leiste mit Rest, Bestandsdialog, Einkaufsliste. */
+
+.mode-switch {
+  flex: 0 0 auto;
+  display: inline-flex;
+  margin: 0;
+  padding: 0;
+  border: none;
+  min-width: 0;
+}
+
+.mode-switch button {
+  border-radius: 0;
+  padding: 0 10px;
+}
+
+.mode-switch button:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.mode-switch button:last-child {
+  border-radius: 0 8px 8px 0;
+  margin-left: -1px;
+}
+
+.mode-switch button[aria-pressed="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+  font-weight: 600;
+}
+
+.palette-item .rest {
+  display: block;
+  font-size: 11px;
+}
+
+.palette-item.locked {
+  background: #eceae5;
+  border-style: dashed;
+}
+
+.shopping-toggle {
+  min-height: var(--tap);
+}
+
+.set-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+}
+
+.set-item {
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 6px 10px;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.set-item strong {
+  font-size: 15px;
+}
+
+.certainty {
+  color: var(--muted);
+}
+
+.unchecked {
+  color: var(--open);
+  font-weight: 600;
+}
+
+.confirm-set {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff7e6;
+}
+
+.confirm-set p {
+  margin: 0 0 6px;
+}
+
+.set-contents {
+  margin: 0 0 8px;
+  padding-left: 20px;
+}
+
+button.primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+button.danger {
+  color: var(--err);
+  border-color: #f5b5b5;
+}
+
+.stock-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.stock-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid #eeece7;
+}
+
+.stock-name {
+  flex: 1 1 140px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.stock-name .numbers {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.stock-controls {
+  display: inline-flex;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.stock-controls input {
+  width: 64px;
+  min-height: var(--tap);
+  font: inherit;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.clear-row {
+  margin-top: 10px;
+}
+
+.shopping-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.shopping-row {
+  padding: 6px 0;
+  border-bottom: 1px solid #eeece7;
+}
+
+.shopping-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.shopping-missing {
+  color: var(--err);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.shopping-counts {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.search-terms {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.term {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: #f1efea;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.term-artikelnummer,
+.term-praegung {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 }

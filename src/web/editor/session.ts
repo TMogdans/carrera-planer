@@ -102,11 +102,16 @@ export function createSession(deps: {
   readonly catalog: Catalog;
   readonly storage: KeyValueStorage;
   readonly clock: Clock;
+  /**
+   * Liste, in die die Sitzung ihre Meldungen schreibt (Spec M3a): Die Planer-Sitzung reicht ihre
+   * eigene ein, damit Layout- und Bestandsmeldungen in einer zeitlichen Reihenfolge stehen.
+   * Ohne Angabe eine eigene, leere Liste.
+   */
+  readonly messages?: EditorMessage[];
 }): Session {
-  const { catalog, storage, clock } = deps;
+  const { catalog, storage, clock, messages = [] } = deps;
   let state = initialState();
   let name: string | undefined;
-  const messages: EditorMessage[] = [];
   /** Kaputter Arbeitsstand ließ sich nicht verschieben: in dieser Sitzung nicht überschreiben. */
   let keepWorking = false;
 
