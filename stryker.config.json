@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
-  "_comment": "Mutationsprobe am Rechenkern (KONZEPT.md, Abschnitt Prüfen). Scope: src/core, src/catalog, src/schema, ohne Tests und Barrel-Dateien. break=100 ist ein strikter Ratchet: jeder überlebende Mutant lässt CI scheitern. Den Leerzustand (noch kein Code) behandelt das Skript test:mutation in package.json, nicht diese Datei.",
+  "_comment": "Mutationsprobe am Rechenkern (KONZEPT.md, Abschnitt Prüfen). Scope: src/core, src/catalog, src/schema und ab M2 die reine Editor-Logik src/web/editor (ohne DOM), ohne Tests und Barrel-Dateien. break=100 ist ein strikter Ratchet: jeder überlebende Mutant lässt CI scheitern. Den Leerzustand (noch kein Code) behandelt das Skript test:mutation in package.json, nicht diese Datei.",
   "packageManager": "pnpm",
   "testRunner": "vitest",
   "plugins": ["@stryker-mutator/vitest-runner"],
@@ -11,6 +11,7 @@
     "src/core/**/*.ts",
     "src/catalog/**/*.ts",
     "src/schema/**/*.ts",
+    "src/web/editor/**/*.ts",
     "!src/**/*.test.ts",
     "!src/**/index.ts"
   ],
