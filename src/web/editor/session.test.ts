@@ -669,7 +669,7 @@ describe("Nachtrag: Neustart", () => {
 });
 
 describe("Nachtrag: Laden und Import heben die Auswahl auf", () => {
-  test.skip("[REQ-STORE-10] Laden eines gespeicherten Layouts und Import heben die Auswahl auf, auch bei gleicher Element-ID", async () => {
+  test("[REQ-STORE-10] Laden eines gespeicherten Layouts und Import heben die Auswahl auf, auch bei gleicher Element-ID", async () => {
     const api = await loadSession();
     const sameIds: Elements = ACHT.map((el) => ({ id: el.id, part: "gerade-114" }));
     const storage = new MemoryStorage({
@@ -691,7 +691,7 @@ describe("Nachtrag: Laden und Import heben die Auswahl auf", () => {
 });
 
 describe("Nachtrag: Name und „Neu“", () => {
-  test.skip("[REQ-EDIT-12] „Neu“ setzt den aktuellen Namen zurück, gleich ob er aus Speichern unter, Laden oder Import stammt; Export danach mit Zeitstempel-Namen", async () => {
+  test("[REQ-EDIT-12] „Neu“ setzt den aktuellen Namen zurück, gleich ob er aus Speichern unter, Laden oder Import stammt; Export danach mit Zeitstempel-Namen", async () => {
     const api = await loadSession();
     const clock = fixedClock("2026-11-24T07:15:00.000Z", {
       year: 2026,
@@ -734,7 +734,7 @@ describe("Nachtrag: Name und „Neu“", () => {
     expect(empty.name).toBeUndefined();
   });
 
-  test.skip("[REQ-STORE-9] Rückgängig und Wiederholen ändern den aktuellen Namen nie, auch nicht bei „Neu“ oder Import (Smoke-Fall 6 als Logik)", async () => {
+  test("[REQ-STORE-9] Rückgängig und Wiederholen ändern den aktuellen Namen nie, auch nicht bei „Neu“ oder Import (Smoke-Fall 6 als Logik)", async () => {
     const api = await loadSession();
     const storage = new MemoryStorage();
     const s = withLayout(api, storage, OVAL); // voriger Arbeitsstand des Handys, ohne Namen

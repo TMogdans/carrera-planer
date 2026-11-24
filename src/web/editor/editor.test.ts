@@ -744,7 +744,7 @@ describe("Verlauf und Element-IDs", () => {
 });
 
 describe("Nachtrag: Laden hebt die Auswahl auf", () => {
-  test.skip("[REQ-STORE-3] Laden hebt die Auswahl auf, auch wenn die ausgewählte ID im geladenen Layout wieder vorkommt; die Aktion endet", async () => {
+  test("[REQ-STORE-3] Laden hebt die Auswahl auf, auch wenn die ausgewählte ID im geladenen Layout wieder vorkommt; die Aktion endet", async () => {
     const E = await loadEditor();
     // geladenes Layout enthält dieselben IDs e1 … e10 (anderer Inhalt)
     const sameIds: Elements = ACHT.map((el) => ({ id: el.id, part: "gerade-114" }));
