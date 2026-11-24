@@ -95,7 +95,7 @@ const BROKEN: ReadonlyArray<readonly [string, string]> = [
 ];
 
 describe("Bestand speichern und laden", () => {
-  test.skip("[REQ-BEST-3] Start ohne Schlüssel: leerer Bestand, keine Meldung, nichts geschrieben", async () => {
+  test("[REQ-BEST-3] Start ohne Schlüssel: leerer Bestand, keine Meldung, nichts geschrieben", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const s = open(api, storage);
@@ -105,7 +105,7 @@ describe("Bestand speichern und laden", () => {
     expect(storage.data.has(INVENTORY_KEY)).toBe(false);
   });
 
-  test.skip("[REQ-BEST-3] nach jeder wirksamen Änderung sofort unter carrera-planer:bestand das kodierte Bestandsdokument", async () => {
+  test("[REQ-BEST-3] nach jeder wirksamen Änderung sofort unter carrera-planer:bestand das kodierte Bestandsdokument", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const s = open(api, storage);
@@ -133,7 +133,7 @@ describe("Bestand speichern und laden", () => {
     expectStored({});
   });
 
-  test.skip("[REQ-BEST-3] Start lädt den gespeicherten Bestand", async () => {
+  test("[REQ-BEST-3] Start lädt den gespeicherten Bestand", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage({
       [INVENTORY_KEY]: JSON.stringify(inventoryDoc({ ...MACH8, "gerade-171": 0 })),
@@ -143,7 +143,7 @@ describe("Bestand speichern und laden", () => {
     expect(s.messages).toEqual([]);
   });
 
-  test.skip("[REQ-BEST-4] Eigenschaft: Sichern und Laden in neuer Sitzung ergibt exakt dieselben Anzahlen", async () => {
+  test("[REQ-BEST-4] Eigenschaft: Sichern und Laden in neuer Sitzung ergibt exakt dieselben Anzahlen", async () => {
     const api = await loadPlannerSession();
     type Op =
       | { readonly t: "set"; readonly id: string; readonly input: string }
@@ -185,7 +185,7 @@ describe("Bestand speichern und laden", () => {
 });
 
 describe("Kaputter Bestand", () => {
-  test.skip("[REQ-BEST-5] Rohtext unverändert unter Ausweichschlüssel mit UTC-Zeitstempel, leerer Bestand, Meldung mit Schlüssel und Grund", async () => {
+  test("[REQ-BEST-5] Rohtext unverändert unter Ausweichschlüssel mit UTC-Zeitstempel, leerer Bestand, Meldung mit Schlüssel und Grund", async () => {
     const api = await loadPlannerSession();
     const backupKey = `${INVENTORY_DEFECT_PREFIX}${ISO}`;
     for (const [label, raw] of BROKEN) {
@@ -214,7 +214,7 @@ describe("Kaputter Bestand", () => {
     }
   });
 
-  test.skip("[REQ-BEST-5] ein Fund wird nur einmal verschoben: sofort leerer Bestand gespeichert, spätere Starts legen keinen weiteren Ausweichschlüssel an", async () => {
+  test("[REQ-BEST-5] ein Fund wird nur einmal verschoben: sofort leerer Bestand gespeichert, spätere Starts legen keinen weiteren Ausweichschlüssel an", async () => {
     const api = await loadPlannerSession();
     const defectKeys = (storage: MemoryStorage): string[] =>
       [...storage.data.keys()].filter((k) => k.startsWith(INVENTORY_DEFECT_PREFIX)).sort();
@@ -245,7 +245,7 @@ describe("Kaputter Bestand", () => {
     }
   });
 
-  test.skip("[REQ-BEST-5] erneute Beschädigung nach dem Verschieben: der nächste Start legt einen zweiten Ausweichschlüssel an", async () => {
+  test("[REQ-BEST-5] erneute Beschädigung nach dem Verschieben: der nächste Start legt einen zweiten Ausweichschlüssel an", async () => {
     const api = await loadPlannerSession();
     const later = "2026-11-24T08:30:00.000Z";
     const first = BROKEN[0]?.[1] as string;
@@ -273,7 +273,7 @@ describe("Kaputter Bestand", () => {
     expect(normalized(s.inventory)).toEqual({});
   });
 
-  test.skip("[REQ-BEST-5] belegter Ausweichschlüssel: -2, -3 …; auflisten, Rohtext, löschen; keine Layout-Schlüssel", async () => {
+  test("[REQ-BEST-5] belegter Ausweichschlüssel: -2, -3 …; auflisten, Rohtext, löschen; keine Layout-Schlüssel", async () => {
     const api = await loadPlannerSession();
     const m2 = await loadSession();
     const storage = new MemoryStorage();
@@ -304,7 +304,7 @@ describe("Kaputter Bestand", () => {
     expect(normalized(s.inventory)).toEqual({});
   });
 
-  test.skip("[REQ-BEST-5] scheitert das Verschieben, bleibt der kaputte Wert stehen und wird in der Sitzung nicht überschrieben; Änderungen nur im Speicher der Seite", async () => {
+  test("[REQ-BEST-5] scheitert das Verschieben, bleibt der kaputte Wert stehen und wird in der Sitzung nicht überschrieben; Änderungen nur im Speicher der Seite", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage({ [INVENTORY_KEY]: NOT_JSON });
     storage.fail = (op, key) => op === "set" && key.startsWith(INVENTORY_DEFECT_PREFIX);
@@ -328,7 +328,7 @@ describe("Kaputter Bestand", () => {
     expect(writesTo(storage, 0)).not.toContain(INVENTORY_KEY);
   });
 
-  test.skip("[REQ-BEST-6] Speicher wirft beim Lesen oder Schreiben des Bestands: Meldung, Bestand der Seite bleibt, keine Ausnahme", async () => {
+  test("[REQ-BEST-6] Speicher wirft beim Lesen oder Schreiben des Bestands: Meldung, Bestand der Seite bleibt, keine Ausnahme", async () => {
     const api = await loadPlannerSession();
     // Lesen scheitert
     const r = new MemoryStorage({ [INVENTORY_KEY]: JSON.stringify(inventoryDoc(MACH8)) });
@@ -388,7 +388,7 @@ describe("Kaputter Bestand", () => {
     expect(broken.messages.length).toBeGreaterThan(n);
   });
 
-  test.skip("[REQ-BEST-7] gespeicherter Bestand mit unbekannter ID: geladen, gemeldet, beim nächsten Sichern unverändert mitgeschrieben", async () => {
+  test("[REQ-BEST-7] gespeicherter Bestand mit unbekannter ID: geladen, gemeldet, beim nächsten Sichern unverändert mitgeschrieben", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage({
       [INVENTORY_KEY]: '{"schemaVersion":1,"counts":{"kurve-1-90":8,"gibt-es-nicht":3}}',
@@ -411,7 +411,7 @@ describe("Kaputter Bestand", () => {
     });
   });
 
-  test.skip("[REQ-BEST-7] Baugruppen-IDs im Bestand werden ebenfalls gemeldet und mitgeführt", async () => {
+  test("[REQ-BEST-7] Baugruppen-IDs im Bestand werden ebenfalls gemeldet und mitgeführt", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage({
       [INVENTORY_KEY]: JSON.stringify(inventoryDoc({ steilkehre: 1, looping: 2, "kurve-1-90": 1 })),
@@ -429,7 +429,7 @@ describe("Kaputter Bestand", () => {
 });
 
 describe("Nicht zählende Einträge mit Anzahl 0", () => {
-  test.skip("[REQ-BEST-7] unbekannte und Baugruppen-IDs mit Anzahl 0: unverändert mitgespeichert, nicht gemeldet", async () => {
+  test("[REQ-BEST-7] unbekannte und Baugruppen-IDs mit Anzahl 0: unverändert mitgespeichert, nicht gemeldet", async () => {
     const api = await loadPlannerSession();
     const rawCounts = (storage: MemoryStorage): Record<string, number> =>
       (JSON.parse(storage.data.get(INVENTORY_KEY) as string) as InventoryDoc).counts;
@@ -478,7 +478,7 @@ describe("Nicht zählende Einträge mit Anzahl 0", () => {
 });
 
 describe("Bestand und Layouts getrennt", () => {
-  test.skip("[REQ-BEST-8] Bestandsänderungen schreiben nur carrera-planer:bestand und ändern weder Folge, Verlauf, Namen noch Arbeitsstand", async () => {
+  test("[REQ-BEST-8] Bestandsänderungen schreiben nur carrera-planer:bestand und ändern weder Folge, Verlauf, Namen noch Arbeitsstand", async () => {
     const api = await loadPlannerSession();
     const m2 = await loadSession();
     const E = await loadEditor();
@@ -514,7 +514,7 @@ describe("Bestand und Layouts getrennt", () => {
     expect(normalized(s.inventory)).toEqual({});
   });
 
-  test.skip("[REQ-BEST-8] Folgeänderungen schreiben den Bestand nicht", async () => {
+  test("[REQ-BEST-8] Folgeänderungen schreiben den Bestand nicht", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const s = open(api, storage);
@@ -536,7 +536,7 @@ describe("Bestand und Layouts getrennt", () => {
     expect(writesTo(storage, mark).some((k) => k.startsWith(INVENTORY_DEFECT_PREFIX))).toBe(false);
   });
 
-  test.skip("[REQ-BEST-8] Layout-Liste und Layout-Defektliste enthalten keine Bestandsschlüssel, die Bestand-Defektliste keine Layout-Schlüssel", async () => {
+  test("[REQ-BEST-8] Layout-Liste und Layout-Defektliste enthalten keine Bestandsschlüssel, die Bestand-Defektliste keine Layout-Schlüssel", async () => {
     const api = await loadPlannerSession();
     const m2 = await loadSession();
     const storage = new MemoryStorage({
@@ -564,7 +564,7 @@ describe("Bestand und Layouts getrennt", () => {
     expect(inventoryDefects).not.toContain(s.defectBackups()[0]);
   });
 
-  test.skip("[REQ-BEST-9] „Bestand leeren“ nur mit Bestätigung; leert alles, auch nicht zählende Einträge", async () => {
+  test("[REQ-BEST-9] „Bestand leeren“ nur mit Bestätigung; leert alles, auch nicht zählende Einträge", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage({
       [INVENTORY_KEY]: JSON.stringify(
@@ -586,7 +586,7 @@ describe("Bestand und Layouts getrennt", () => {
 });
 
 describe("Bestand ändern in der Sitzung", () => {
-  test.skip("[REQ-BEST-2] abgewiesene Änderungen: Bestand und Speicher bleiben, Meldung", async () => {
+  test("[REQ-BEST-2] abgewiesene Änderungen: Bestand und Speicher bleiben, Meldung", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const s = open(api, storage);
@@ -625,7 +625,7 @@ describe("Bestand ändern in der Sitzung", () => {
     expect(s.messages).toHaveLength(n);
   });
 
-  test.skip("[REQ-BEST-2] −1 bei Anzahl 0 in der Sitzung: keine Änderung, kein Schreiben, keine Meldung", async () => {
+  test("[REQ-BEST-2] −1 bei Anzahl 0 in der Sitzung: keine Änderung, kein Schreiben, keine Meldung", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const s = open(api, storage);
@@ -648,7 +648,7 @@ describe("Bestand ändern in der Sitzung", () => {
     expect(s.messages.some((m) => m.kind === "bestandAbgewiesen")).toBe(false);
   });
 
-  test.skip("[REQ-SET-4] Vorlage gewählt und bestätigt: addiert und sichert; Abbrechen ändert nichts; Beispiel Summe und zweites Mach 8", async () => {
+  test("[REQ-SET-4] Vorlage gewählt und bestätigt: addiert und sichert; Abbrechen ändert nichts; Beispiel Summe und zweites Mach 8", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const s = open(api, storage);
@@ -664,7 +664,7 @@ describe("Bestand ändern in der Sitzung", () => {
     expect(storedCounts(storage.data)).toEqual(normalized(plus(SUMME3, MACH8)));
   });
 
-  test.skip("[REQ-SET-4] die Sitzung nutzt die eingereichten Vorlagen; nicht zählende Einträge bleiben", async () => {
+  test("[REQ-SET-4] die Sitzung nutzt die eingereichten Vorlagen; nicht zählende Einträge bleiben", async () => {
     const api = await loadPlannerSession();
     const own: SetTemplate = {
       id: "eigene",
@@ -686,7 +686,7 @@ describe("Bestand ändern in der Sitzung", () => {
 });
 
 describe("Modus in der Sitzung", () => {
-  test.skip("[REQ-MODUS-1] Start ohne gespeicherten Modus: Sandbox ohne Meldung; Wechsel bleibt über Neustart", async () => {
+  test("[REQ-MODUS-1] Start ohne gespeicherten Modus: Sandbox ohne Meldung; Wechsel bleibt über Neustart", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const s = open(api, storage);
@@ -704,7 +704,7 @@ describe("Modus in der Sitzung", () => {
     expect(back.messages).toEqual([]);
   });
 
-  test.skip("[REQ-MODUS-1] Moduswechsel ändert weder Folge, Verlauf, Auswahl, Aktion noch Namen und schreibt den Arbeitsstand nicht", async () => {
+  test("[REQ-MODUS-1] Moduswechsel ändert weder Folge, Verlauf, Auswahl, Aktion noch Namen und schreibt den Arbeitsstand nicht", async () => {
     const api = await loadPlannerSession();
     const m2 = await loadSession();
     const E = await loadEditor();
@@ -735,7 +735,7 @@ describe("Modus in der Sitzung", () => {
     expect(s.state.elements).toEqual([]);
   });
 
-  test.skip("[REQ-MODUS-1] ungültiger gespeicherter Modus: Sandbox mit Meldung; beim nächsten Wechsel überschrieben", async () => {
+  test("[REQ-MODUS-1] ungültiger gespeicherter Modus: Sandbox mit Meldung; beim nächsten Wechsel überschrieben", async () => {
     const api = await loadPlannerSession();
     for (const value of ["kaputt", "", "{}", "1", "   "]) {
       const storage = new MemoryStorage({ [MODE_KEY]: value });
@@ -755,7 +755,7 @@ describe("Modus in der Sitzung", () => {
     }
   });
 
-  test.skip("[REQ-MODUS-1] Speicher wirft beim Lesen oder Schreiben des Modus: Meldung speicherFehler, Modus wechselt trotzdem, keine Ausnahme", async () => {
+  test("[REQ-MODUS-1] Speicher wirft beim Lesen oder Schreiben des Modus: Meldung speicherFehler, Modus wechselt trotzdem, keine Ausnahme", async () => {
     const api = await loadPlannerSession();
     // Lesen scheitert (gespeichert wäre „bestand“): Sandbox, Meldung, Wechsel wirkt
     const r = new MemoryStorage();
@@ -793,7 +793,7 @@ describe("Modus in der Sitzung", () => {
     expect(writer.state.elements).toHaveLength(1);
   });
 
-  test.skip("[REQ-MODUS-2] Sitzung im Modus „Sandbox“: Bestand beeinflusst keinen Befehl", async () => {
+  test("[REQ-MODUS-2] Sitzung im Modus „Sandbox“: Bestand beeinflusst keinen Befehl", async () => {
     const api = await loadPlannerSession();
     const m2 = await loadSession();
     const storage = new MemoryStorage();
@@ -819,7 +819,7 @@ describe("Modus in der Sitzung", () => {
     expect(s.messages.some((m) => m.kind === "befehlAbgewiesen")).toBe(false);
   });
 
-  test.skip("[REQ-MODUS-3] Sitzung im Modus „Bestand“: abgewiesener Befehl meldet das Teil, ändert nichts und sichert nichts", async () => {
+  test("[REQ-MODUS-3] Sitzung im Modus „Bestand“: abgewiesener Befehl meldet das Teil, ändert nichts und sichert nichts", async () => {
     const api = await loadPlannerSession();
     const m2 = await loadSession();
     const storage = new MemoryStorage();
@@ -845,7 +845,7 @@ describe("Modus in der Sitzung", () => {
     expect(s.state.elements).toHaveLength(5);
   });
 
-  test.skip("[REQ-MODUS-4] im Modus „Bestand“: Laden, Import, Neu, Rückgängig, Wiederholen und Moduswechsel nie abgewiesen", async () => {
+  test("[REQ-MODUS-4] im Modus „Bestand“: Laden, Import, Neu, Rückgängig, Wiederholen und Moduswechsel nie abgewiesen", async () => {
     const api = await loadPlannerSession();
     const m2 = await loadSession();
     const storage = new MemoryStorage({
@@ -880,7 +880,7 @@ describe("Modus in der Sitzung", () => {
 });
 
 describe("Einkaufsliste in der Sitzung", () => {
-  test.skip("[REQ-EINK-5] in beiden Modi; im Modus „Bestand“ nur nach Laden, Import oder Bestandsänderung nicht leer", async () => {
+  test("[REQ-EINK-5] in beiden Modi; im Modus „Bestand“ nur nach Laden, Import oder Bestandsänderung nicht leer", async () => {
     const api = await loadPlannerSession();
     const I = await loadInventory();
     const storage = new MemoryStorage();

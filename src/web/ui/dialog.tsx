@@ -4,11 +4,11 @@
  * Bestätigungen (Überschreiben, Löschen) fragt die Oberfläche; die Logik verlangt sie ausdrücklich.
  */
 import { useState } from "preact/hooks";
-import type { EditorMessage, SaveResult, Session } from "../editor/index.js";
+import type { PlannerMessage, PlannerSession, SaveResult } from "../editor/index.js";
 import { download } from "./browser.js";
 
 type Props = {
-  readonly session: Session;
+  readonly session: PlannerSession;
   readonly onClose: () => void;
   readonly onChange: () => void;
   readonly afterLoad: () => void;
@@ -21,13 +21,13 @@ export function StorageDialog({ session, onClose, onChange, afterLoad }: Props) 
   const readLists = () => ({ names: session.savedNames(), defects: session.defectBackups() });
   const [lists, setLists] = useState(readLists);
   // Meldungen, die eine Aktion im Dialog ausgelöst hat, zeigt der Dialog selbst (REQ-UI-9).
-  const [problems, setProblems] = useState<ReadonlyArray<EditorMessage>>([]);
+  const [problems, setProblems] = useState<ReadonlyArray<PlannerMessage>>([]);
   const refresh = () => {
     setLists(readLists());
     onChange();
   };
   /** Führt eine Aktion aus und liefert die Meldungen, die sie erzeugt hat. */
-  const act = (fn: () => void): ReadonlyArray<EditorMessage> => {
+  const act = (fn: () => void): ReadonlyArray<PlannerMessage> => {
     const before = session.messages.length;
     fn();
     const added = session.messages.slice(before);

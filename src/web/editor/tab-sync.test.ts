@@ -108,7 +108,7 @@ const tabWith = (
 };
 
 describe("Abgleich: Wirkungsnachweis der Spec", () => {
-  test.skip("[REQ-BEST-10] A fügt Mach 8 hinzu, B bekommt die Meldung und erhöht Gerade 342: alle 27 Mach-8-Teile, Gerade 342 mit 5; B schreibt zwischen Meldung und Zähleränderung nichts", async () => {
+  test("[REQ-BEST-10] A fügt Mach 8 hinzu, B bekommt die Meldung und erhöht Gerade 342: alle 27 Mach-8-Teile, Gerade 342 mit 5; B schreibt zwischen Meldung und Zähleränderung nichts", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const a = open(api, storage);
@@ -134,7 +134,7 @@ describe("Abgleich: Wirkungsnachweis der Spec", () => {
     expect(normalized(open(api, storage).inventory)).toEqual(expected);
   });
 
-  test.skip("[REQ-BEST-10] Gegenprobe ohne Meldung: B überschreibt den Bestand von A (das veraltete Tab, das der Abgleich schließt)", async () => {
+  test("[REQ-BEST-10] Gegenprobe ohne Meldung: B überschreibt den Bestand von A (das veraltete Tab, das der Abgleich schließt)", async () => {
     // Diese Probe prüft die Testkonstruktion: ohne storageChanged gewinnt der letzte Schreiber.
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
@@ -147,7 +147,7 @@ describe("Abgleich: Wirkungsnachweis der Spec", () => {
 });
 
 describe("Abgleich: gültiger Wert", () => {
-  test.skip("[REQ-BEST-10] gültiger Wert ersetzt den Bestand der Seite vollständig, ohne Meldung, ohne Schreiben", async () => {
+  test("[REQ-BEST-10] gültiger Wert ersetzt den Bestand der Seite vollständig, ohne Meldung, ohne Schreiben", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const b = tabWith(api, storage, { "kurve-1-90": 8, "gerade-171": 2 });
@@ -166,7 +166,7 @@ describe("Abgleich: gültiger Wert", () => {
     );
   });
 
-  test.skip("[REQ-BEST-10] null heißt „alles geändert“ und gleicht den Bestand ab", async () => {
+  test("[REQ-BEST-10] null heißt „alles geändert“ und gleicht den Bestand ab", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const b = tabWith(api, storage, { "kurve-1-90": 8 });
@@ -178,7 +178,7 @@ describe("Abgleich: gültiger Wert", () => {
     expect(writesTo(storage, mark)).toEqual([]);
   });
 
-  test.skip("[REQ-BEST-10] Einträge nach REQ-BEST-7 gelten mit; gemeldet werden nur neue nicht zählende IDs mit Anzahl ≥ 1", async () => {
+  test("[REQ-BEST-10] Einträge nach REQ-BEST-7 gelten mit; gemeldet werden nur neue nicht zählende IDs mit Anzahl ≥ 1", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const start = { "kurve-1-90": 2, "gibt-es-nicht": 3 };
@@ -220,7 +220,7 @@ describe("Abgleich: gültiger Wert", () => {
     expect(raw.counts["kurve-9-90"]).toBe(0);
   });
 
-  test.skip("[REQ-BEST-10] Eigenschaft: jeder gültige gespeicherte Bestand wird exakt übernommen, ohne Schreiben und ohne Meldung außer REQ-BEST-7", async () => {
+  test("[REQ-BEST-10] Eigenschaft: jeder gültige gespeicherte Bestand wird exakt übernommen, ohne Schreiben und ohne Meldung außer REQ-BEST-7", async () => {
     const api = await loadPlannerSession();
     fc.assert(
       fc.property(anyInventoryArb, anyInventoryArb, (before, after) => {
@@ -242,7 +242,7 @@ describe("Abgleich: gültiger Wert", () => {
 });
 
 describe("Abgleich: Schlüssel fehlt", () => {
-  test.skip("[REQ-BEST-10] Schlüssel in einem anderen Tab gelöscht: Bestand leer, ohne Meldung, ohne Schreiben", async () => {
+  test("[REQ-BEST-10] Schlüssel in einem anderen Tab gelöscht: Bestand leer, ohne Meldung, ohne Schreiben", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const b = tabWith(api, storage, { ...MACH8, "gibt-es-nicht": 3 });
@@ -263,7 +263,7 @@ describe("Abgleich: Schlüssel fehlt", () => {
 });
 
 describe("Abgleich: kaputter Wert", () => {
-  test.skip("[REQ-BEST-10] kaputter Wert: Bestand der Seite bleibt, Meldung mit Grund, nicht verschoben, kein Schreiben", async () => {
+  test("[REQ-BEST-10] kaputter Wert: Bestand der Seite bleibt, Meldung mit Grund, nicht verschoben, kein Schreiben", async () => {
     const api = await loadPlannerSession();
     for (const [label, raw] of BROKEN) {
       const storage = new MemoryStorage();
@@ -291,7 +291,7 @@ describe("Abgleich: kaputter Wert", () => {
     }
   });
 
-  test.skip("[REQ-BEST-10] nach kaputtem Wert schreibt keine Bestandsänderung in dieser Sitzung; Änderungen leben nur im Speicher der Seite", async () => {
+  test("[REQ-BEST-10] nach kaputtem Wert schreibt keine Bestandsänderung in dieser Sitzung; Änderungen leben nur im Speicher der Seite", async () => {
     const api = await loadPlannerSession();
     for (const [label, raw] of BROKEN) {
       const storage = new MemoryStorage();
@@ -331,7 +331,7 @@ describe("Abgleich: kaputter Wert", () => {
     }
   });
 
-  test.skip("[REQ-BEST-10] verschoben wird erst beim nächsten Start (REQ-BEST-5), genau einmal", async () => {
+  test("[REQ-BEST-10] verschoben wird erst beim nächsten Start (REQ-BEST-5), genau einmal", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const b = tabWith(api, storage, MACH8);
@@ -354,7 +354,7 @@ describe("Abgleich: kaputter Wert", () => {
 });
 
 describe("Abgleich: Schreibschutz endet", () => {
-  test.skip("[REQ-BEST-10] nach kaputtem Wert hebt ein gültiger Abgleich den Schreibschutz auf", async () => {
+  test("[REQ-BEST-10] nach kaputtem Wert hebt ein gültiger Abgleich den Schreibschutz auf", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const b = tabWith(api, storage, MACH8);
@@ -371,7 +371,7 @@ describe("Abgleich: Schreibschutz endet", () => {
     expect(storedCounts(storage.data)).toEqual({ "gerade-342": 1, "kurve-1-45": 1 });
   });
 
-  test.skip("[REQ-BEST-10] Start mit gescheitertem Verschieben (REQ-BEST-5): ein gültiger Abgleich hebt den Schreibschutz auf", async () => {
+  test("[REQ-BEST-10] Start mit gescheitertem Verschieben (REQ-BEST-5): ein gültiger Abgleich hebt den Schreibschutz auf", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage({ [INVENTORY_KEY]: NOT_JSON });
     storage.fail = (op, key) => op === "set" && key.startsWith(INVENTORY_DEFECT_PREFIX);
@@ -392,7 +392,7 @@ describe("Abgleich: Schreibschutz endet", () => {
 });
 
 describe("Abgleich: andere Schlüssel", () => {
-  test.skip("[REQ-BEST-10] Layouts, Arbeitsstand, carrera-planer:modus, Ausweichschlüssel und fremde Schlüssel lösen keinen Abgleich aus", async () => {
+  test("[REQ-BEST-10] Layouts, Arbeitsstand, carrera-planer:modus, Ausweichschlüssel und fremde Schlüssel lösen keinen Abgleich aus", async () => {
     const api = await loadPlannerSession();
     const m2 = await loadSession();
     const storage = new MemoryStorage();
@@ -429,7 +429,7 @@ describe("Abgleich: andere Schlüssel", () => {
     expect(b.mode).toBe("sandbox");
   });
 
-  test.skip("[REQ-BEST-10] kaputter Wert unter carrera-planer:modus mit Meldung des Modus-Schlüssels: keine Modus-Meldung, Modus bleibt", async () => {
+  test("[REQ-BEST-10] kaputter Wert unter carrera-planer:modus mit Meldung des Modus-Schlüssels: keine Modus-Meldung, Modus bleibt", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const b = open(api, storage);
@@ -446,7 +446,7 @@ describe("Abgleich: andere Schlüssel", () => {
 });
 
 describe("Abgleich: Strecke, Verlauf und Modus bleiben; Rest, Sperre, Leiste und Einkaufsliste folgen", () => {
-  test.skip("[REQ-BEST-10] Folge, Verlauf, Auswahl, Aktion, Leistenrichtung, Name und Modus unverändert; kein Verlaufseintrag; nichts geschrieben", async () => {
+  test("[REQ-BEST-10] Folge, Verlauf, Auswahl, Aktion, Leistenrichtung, Name und Modus unverändert; kein Verlaufseintrag; nichts geschrieben", async () => {
     const api = await loadPlannerSession();
     const E = await loadEditor();
     const storage = new MemoryStorage();
@@ -485,7 +485,7 @@ describe("Abgleich: Strecke, Verlauf und Modus bleiben; Rest, Sperre, Leiste und
     expect(b.state.elements).toEqual(OVAL);
   });
 
-  test.skip("[REQ-BEST-10] Smoke-Fall 16 als Logik: Oval im Modus „Bestand“, A setzt Kurve 1/90° auf 3 → Rest −1 gesperrt, „fehlt 1 Teil“, Strecke bleibt, weitere Kurve abgewiesen", async () => {
+  test("[REQ-BEST-10] Smoke-Fall 16 als Logik: Oval im Modus „Bestand“, A setzt Kurve 1/90° auf 3 → Rest −1 gesperrt, „fehlt 1 Teil“, Strecke bleibt, weitere Kurve abgewiesen", async () => {
     const api = await loadPlannerSession();
     const I = await loadInventory();
     const storage = new MemoryStorage();
@@ -524,7 +524,7 @@ describe("Abgleich: Strecke, Verlauf und Modus bleiben; Rest, Sperre, Leiste und
     );
   });
 
-  test.skip("[REQ-BEST-10] Sperre folgt auch nach oben: leerer Bestand im Modus „Bestand“, A fügt Mach 8 hinzu → B kann anhängen", async () => {
+  test("[REQ-BEST-10] Sperre folgt auch nach oben: leerer Bestand im Modus „Bestand“, A fügt Mach 8 hinzu → B kann anhängen", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const a = open(api, storage);
@@ -548,7 +548,7 @@ describe("Abgleich: Strecke, Verlauf und Modus bleiben; Rest, Sperre, Leiste und
 });
 
 describe("Abgleich: zwei Tabs bleiben gleich", () => {
-  test.skip("[REQ-BEST-10] Eigenschaft: beliebige Bestandsänderungen abwechselnd in A und B, jeweils mit Meldung an das andere Tab → beide Tabs und Speicher stimmen überein, keine Änderung geht verloren", async () => {
+  test("[REQ-BEST-10] Eigenschaft: beliebige Bestandsänderungen abwechselnd in A und B, jeweils mit Meldung an das andere Tab → beide Tabs und Speicher stimmen überein, keine Änderung geht verloren", async () => {
     const api = await loadPlannerSession();
     type Op =
       | { readonly tab: 0 | 1; readonly t: "set"; readonly id: string; readonly n: number }
@@ -606,7 +606,7 @@ describe("Abgleich: zwei Tabs bleiben gleich", () => {
 });
 
 describe("Abgleich: Speicher wirft beim Lesen", () => {
-  test.skip("[REQ-BEST-6] Speicher wirft beim Lesen im Abgleich: Meldung speicherFehler, Bestand der Seite bleibt, keine Ausnahme", async () => {
+  test("[REQ-BEST-6] Speicher wirft beim Lesen im Abgleich: Meldung speicherFehler, Bestand der Seite bleibt, keine Ausnahme", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const b = tabWith(api, storage, MACH8);

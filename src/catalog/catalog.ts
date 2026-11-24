@@ -4,6 +4,9 @@
  * Test REQ-CAT-3). Maße in mm auf der Mittellinie. „abgeleitet“ heißt aus Carrera-Außenmaßen
  * geschlossen, nicht nachgemessen. Teile mit unbekannten Maßen werden nicht geschätzt, sondern als
  * `masseFehlen` bzw. Baugruppe (ohne Maße) geführt und sind damit nicht platzierbar.
+ *
+ * Prägungen (Spec M3a, Tabelle „Prägungen M3a“, REQ-PRAEG-2): nur K-Teil und Gerade 342. Das
+ * Looping-Teil (L) bekommt keine, solange offen ist, ob K und L baugleich sind (#28).
  */
 import type { CatalogEntry } from "../schema/schema.js";
 
@@ -15,6 +18,7 @@ export const CATALOG: ReadonlyArray<CatalogEntry> = [
     source: "CT",
     certainty: "hoch",
     geometry: { kind: "gerade", length: 342 },
+    praegung: [{ value: "142202-1", source: "Kleinanzeigen (Issue #28)", certainty: "niedrig" }],
   },
   {
     id: "gerade-171",
@@ -144,6 +148,14 @@ export const CATALOG: ReadonlyArray<CatalogEntry> = [
     source: "Karton Mach 8 (nur in Baugruppe)",
     certainty: "niedrig",
     geometry: { kind: "masseFehlen" },
+    praegung: [
+      {
+        value: "141903-1B",
+        source:
+          "gokarli.de, „Looping Ersatzschiene“ (Shop-Nr. 100.61613-Ersatz), Shopfoto passt zum K-Teil (Issue #28)",
+        certainty: "niedrig",
+      },
+    ],
   },
   {
     id: "looping",

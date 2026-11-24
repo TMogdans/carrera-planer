@@ -78,7 +78,7 @@ const curves = (n: number): Elements =>
 const one = (part: string): Elements => [{ id: "x", part }];
 
 describe("Einkaufsliste", () => {
-  test.skip("[REQ-EINK-1] Oval, leerer Bestand: Gerade 342 fehlt 2, Kurve 1/90° fehlt 4, zusammen 6 (Katalogreihenfolge)", async () => {
+  test("[REQ-EINK-1] Oval, leerer Bestand: Gerade 342 fehlt 2, Kurve 1/90° fehlt 4, zusammen 6 (Katalogreihenfolge)", async () => {
     const I = await loadInventory();
     const list = okList(I.shoppingList(CATALOG, {}, OVAL));
     expect(counts(list)).toEqual([
@@ -89,7 +89,7 @@ describe("Einkaufsliste", () => {
     for (const r of list.rows) expect(r.name).toBe(nameOf(r.partId));
   });
 
-  test.skip("[REQ-EINK-1] Acht, leerer Bestand: Gerade 114 1, Kurve 1/90° 6, Kreuzung 1, Anschlussstück 1, zusammen 9", async () => {
+  test("[REQ-EINK-1] Acht, leerer Bestand: Gerade 114 1, Kurve 1/90° 6, Kreuzung 1, Anschlussstück 1, zusammen 9", async () => {
     const I = await loadInventory();
     const list = okList(I.shoppingList(CATALOG, {}, ACHT));
     expect(counts(list)).toEqual([
@@ -101,7 +101,7 @@ describe("Einkaufsliste", () => {
     expect(list.total).toBe(9);
   });
 
-  test.skip("[REQ-EINK-1] Oval oder Acht mit Bestand Mach 8 → „alles vorhanden“; neun Kurven mit Summenbestand → benötigt 9, vorhanden 8, fehlt 1", async () => {
+  test("[REQ-EINK-1] Oval oder Acht mit Bestand Mach 8 → „alles vorhanden“; neun Kurven mit Summenbestand → benötigt 9, vorhanden 8, fehlt 1", async () => {
     const I = await loadInventory();
     for (const elements of [OVAL, ACHT, []]) {
       const list = okList(I.shoppingList(CATALOG, MACH8, elements));
@@ -115,7 +115,7 @@ describe("Einkaufsliste", () => {
     expect(nine.text).toBeUndefined();
   });
 
-  test.skip("[REQ-EINK-1] Baugruppen erscheinen nie als Zeile, nur ihre Bestandteile; teilweise gedeckt", async () => {
+  test("[REQ-EINK-1] Baugruppen erscheinen nie als Zeile, nur ihre Bestandteile; teilweise gedeckt", async () => {
     const I = await loadInventory();
     const list = okList(
       I.shoppingList(CATALOG, { "kurve-1-90": 1, steilkehre: 3 }, [
@@ -131,7 +131,7 @@ describe("Einkaufsliste", () => {
     expect(list.total).toBe(13);
   });
 
-  test.skip("[REQ-EINK-2] Teil unbekannt → „Einkaufsliste nicht bestimmbar“, keine Zeilen", async () => {
+  test("[REQ-EINK-2] Teil unbekannt → „Einkaufsliste nicht bestimmbar“, keine Zeilen", async () => {
     const I = await loadInventory();
     for (const elements of [[...OVAL, { id: "u", part: UNKNOWN_ID }], one(UNKNOWN_ID)]) {
       expect(I.shoppingList(CATALOG, MACH8, elements)).toEqual({
@@ -149,7 +149,7 @@ describe("Einkaufsliste", () => {
     ).toBe(false);
   });
 
-  test.skip("[REQ-EINK-2] Maße fehlen, offene Strecke, ungültiger Verweis, fehlende Richtung verhindern die Liste nicht", async () => {
+  test("[REQ-EINK-2] Maße fehlen, offene Strecke, ungültiger Verweis, fehlende Richtung verhindern die Liste nicht", async () => {
     const I = await loadInventory();
     const cases: ReadonlyArray<readonly [Elements, ReadonlyArray<string>]> = [
       [one("steilkehre"), ["kurve-1-90", "steilkehre-teil"]],
@@ -171,7 +171,7 @@ describe("Suchbegriffe", () => {
   const termsOf = (list: ShoppingList): Record<string, ReadonlyArray<SearchTerm>> =>
     Object.fromEntries(okList(list).rows.map((r: ShoppingRow) => [r.partId, r.searchTerms]));
 
-  test.skip("[REQ-EINK-3] Beispiele: Steilkehre, Looping, Anschlussstück, Gerade 342 mit leerem Bestand", async () => {
+  test("[REQ-EINK-3] Beispiele: Steilkehre, Looping, Anschlussstück, Gerade 342 mit leerem Bestand", async () => {
     const I = await loadInventory();
     const steilkehre = I.shoppingList(CATALOG, {}, one("steilkehre"));
     expect(counts(steilkehre)).toEqual([
@@ -197,7 +197,7 @@ describe("Suchbegriffe", () => {
     });
   });
 
-  test.skip("[REQ-EINK-3] Wirkungsnachweis mit verändertem Katalog: Suchbegriffe folgen Artikelnummern, Prägungen und Baugruppen", async () => {
+  test("[REQ-EINK-3] Wirkungsnachweis mit verändertem Katalog: Suchbegriffe folgen Artikelnummern, Prägungen und Baugruppen", async () => {
     const I = await loadInventory();
     const P = (value: string) => ({ value, source: "Test", certainty: "niedrig" as const });
     // alle Prägungen des Produktkatalogs entfernen, dann gezielt setzen
@@ -262,7 +262,7 @@ describe("Suchbegriffe", () => {
 });
 
 describe("Suchbegriffe: Baugruppe mit mehreren Artikelnummern", () => {
-  test.skip("[REQ-EINK-3] Baugruppe mit mehreren Artikelnummern: ein Eintrag, Nummern in Katalogreihenfolge, getrennt durch „, “", async () => {
+  test("[REQ-EINK-3] Baugruppe mit mehreren Artikelnummern: ein Eintrag, Nummern in Katalogreihenfolge, getrennt durch „, “", async () => {
     const I = await loadInventory();
     const withNumbers = (numbers: readonly [string, ...string[]]) =>
       CATALOG.map(
@@ -292,7 +292,7 @@ describe("Suchbegriffe: Baugruppe mit mehreren Artikelnummern", () => {
 });
 
 describe("Einkaufsliste: Eigenschaften", () => {
-  test.skip("[REQ-EINK-4] Eigenschaft: fehlt = max(0, Verbrauch − Bestand); leer ⇔ nicht überzogen; Fehlmengen addiert → leer; nicht zählende Einträge ändern nichts", async () => {
+  test("[REQ-EINK-4] Eigenschaft: fehlt = max(0, Verbrauch − Bestand); leer ⇔ nicht überzogen; Fehlmengen addiert → leer; nicht zählende Einträge ändern nichts", async () => {
     const I = await loadInventory();
     fc.assert(
       fc.property(catalogElementsArb, anyInventoryArb, ignoredOnlyArb, (elements, inv, extra) => {
@@ -326,7 +326,7 @@ describe("Einkaufsliste: Eigenschaften", () => {
     );
   });
 
-  test.skip("[REQ-EINK-4] Eigenschaft: bestimmbar genau dann, wenn der Kern den Verbrauch bestimmt", async () => {
+  test("[REQ-EINK-4] Eigenschaft: bestimmbar genau dann, wenn der Kern den Verbrauch bestimmt", async () => {
     const I = await loadInventory();
     fc.assert(
       fc.property(elementsArb, anyInventoryArb, (elements, inv) => {
@@ -339,7 +339,7 @@ describe("Einkaufsliste: Eigenschaften", () => {
 });
 
 describe("Kurzform und Modi", () => {
-  test.skip("[REQ-EINK-5] Kurzform: „Bestand reicht“ ohne Zeilen, sonst „fehlen n Teile“ mit der Summe der Fehlmengen", async () => {
+  test("[REQ-EINK-5] Kurzform: „Bestand reicht“ ohne Zeilen, sonst „fehlen n Teile“ mit der Summe der Fehlmengen", async () => {
     const I = await loadInventory();
     expect(I.shoppingShort(I.shoppingList(CATALOG, MACH8, OVAL))).toBe("Bestand reicht");
     expect(I.shoppingShort(I.shoppingList(CATALOG, {}, []))).toBe("Bestand reicht");
@@ -348,7 +348,7 @@ describe("Kurzform und Modi", () => {
     expect(I.shoppingShort(I.shoppingList(CATALOG, {}, ACHT))).toBe("fehlen 9 Teile");
   });
 
-  test.skip("[REQ-EINK-5] Kurzform in der Einzahl: Summe 1 → „fehlt 1 Teil“, Summe 2 → „fehlen 2 Teile“", async () => {
+  test("[REQ-EINK-5] Kurzform in der Einzahl: Summe 1 → „fehlt 1 Teil“, Summe 2 → „fehlen 2 Teile“", async () => {
     const I = await loadInventory();
     // neun Kurven mit Summenbestand: fehlt 1 (Beispiel REQ-EINK-1)
     expect(I.shoppingShort(I.shoppingList(CATALOG, SUMME3, curves(9)))).toBe("fehlt 1 Teil");
@@ -372,7 +372,7 @@ describe("Kurzform und Modi", () => {
     ).toBe("fehlen 2 Teile");
   });
 
-  test.skip("[REQ-EINK-5] Eigenschaft: Kurzform wörtlich aus der Summe der Fehlmengen", async () => {
+  test("[REQ-EINK-5] Eigenschaft: Kurzform wörtlich aus der Summe der Fehlmengen", async () => {
     const I = await loadInventory();
     fc.assert(
       fc.property(catalogElementsArb, anyInventoryArb, (elements, inv) => {
@@ -389,7 +389,7 @@ describe("Kurzform und Modi", () => {
     );
   });
 
-  test.skip("[REQ-EINK-5] Kurzform bei nicht bestimmbarem Verbrauch: „Einkaufsliste nicht bestimmbar“", async () => {
+  test("[REQ-EINK-5] Kurzform bei nicht bestimmbarem Verbrauch: „Einkaufsliste nicht bestimmbar“", async () => {
     const I = await loadInventory();
     for (const elements of [one(UNKNOWN_ID), [...OVAL, { id: "u", part: UNKNOWN_ID }]]) {
       for (const inv of [MACH8, {}] as Inventory[]) {
@@ -399,7 +399,7 @@ describe("Kurzform und Modi", () => {
     }
   });
 
-  test.skip("[REQ-EINK-5] im Modus „Bestand“ bleibt eine leere Einkaufsliste ohne Laden, Import und Bestandsänderung leer (Eigenschaft)", async () => {
+  test("[REQ-EINK-5] im Modus „Bestand“ bleibt eine leere Einkaufsliste ohne Laden, Import und Bestandsänderung leer (Eigenschaft)", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     fc.assert(

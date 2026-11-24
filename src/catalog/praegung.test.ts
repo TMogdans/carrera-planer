@@ -46,7 +46,7 @@ const duplicatePraegungen = (catalog: ReadonlyArray<CatalogEntry>): string[] => 
 };
 
 describe("Prägungen", () => {
-  test.skip("[REQ-PRAEG-2] genau die Prägungen der Tabelle; alle anderen Einträge ohne Feld praegung", () => {
+  test("[REQ-PRAEG-2] genau die Prägungen der Tabelle; alle anderen Einträge ohne Feld praegung", () => {
     const withField = cat()
       .filter((e) => "praegung" in e)
       .map((e) => e.id)
@@ -61,7 +61,7 @@ describe("Prägungen", () => {
     expect("praegung" in (cat().find((e) => e.id === "looping-teil") ?? {})).toBe(false);
   });
 
-  test.skip("[REQ-PRAEG-2] Katalog mit Prägungen besteht weiter das Katalog-Schema", () => {
+  test("[REQ-PRAEG-2] Katalog mit Prägungen besteht weiter das Katalog-Schema", () => {
     for (const e of cat()) {
       const r = Schema.decodeUnknownEither(schemaApi.CatalogEntrySchema)(e);
       expect({ id: e.id, valid: Either.isRight(r) }).toEqual({ id: e.id, valid: true });
@@ -69,11 +69,11 @@ describe("Prägungen", () => {
     }
   });
 
-  test.skip("[REQ-PRAEG-3] Prägungswerte sind über den ganzen Katalog eindeutig", () => {
+  test("[REQ-PRAEG-3] Prägungswerte sind über den ganzen Katalog eindeutig", () => {
     expect(duplicatePraegungen(cat())).toEqual([]);
   });
 
-  test.skip("[REQ-PRAEG-3] Wirkungsnachweis: bekommt das Looping-Teil (L) ebenfalls 141903-1B, schlägt die Prüfung fehl", () => {
+  test("[REQ-PRAEG-3] Wirkungsnachweis: bekommt das Looping-Teil (L) ebenfalls 141903-1B, schlägt die Prüfung fehl", () => {
     const changed = cat().map(
       (e): CatalogEntry =>
         e.id === "looping-teil"

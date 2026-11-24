@@ -91,7 +91,7 @@ const ENTRY: CatalogEntry = {
 const P: Praegung = { value: "141903-1B", source: "gokarli.de", certainty: "niedrig" };
 
 describe("Bestand-Schema", () => {
-  test.skip("[REQ-BEST-1] gültiger Bestand: schemaVersion 1, Anzahlen ganz ≥ 0, auch unbekannte Teil-IDs", () => {
+  test("[REQ-BEST-1] gültiger Bestand: schemaVersion 1, Anzahlen ganz ≥ 0, auch unbekannte Teil-IDs", () => {
     for (const doc of [
       INVENTORY,
       { schemaVersion: 1, counts: {} },
@@ -104,7 +104,7 @@ describe("Bestand-Schema", () => {
     }
   });
 
-  test.skip("[REQ-BEST-1] Zusatzfelder, fehlende/fremde Version, negative/gebrochene/Text-Anzahlen und leerer Schlüssel werden abgewiesen", () => {
+  test("[REQ-BEST-1] Zusatzfelder, fehlende/fremde Version, negative/gebrochene/Text-Anzahlen und leerer Schlüssel werden abgewiesen", () => {
     const invalid: ReadonlyArray<readonly [string, unknown]> = [
       ["Zusatzfeld", { ...INVENTORY, name: "Kiste" }],
       ["schemaVersion fehlt", withoutKey(INVENTORY, "schemaVersion")],
@@ -133,7 +133,7 @@ describe("Bestand-Schema", () => {
     }
   });
 
-  test.skip("[REQ-BEST-1] Kodieren und Dekodieren eines gültigen Bestands ergibt denselben Wert (Eigenschaft)", () => {
+  test("[REQ-BEST-1] Kodieren und Dekodieren eines gültigen Bestands ergibt denselben Wert (Eigenschaft)", () => {
     const roundtrip = (v: Inventory): Inventory =>
       Schema.decodeUnknownSync(schemas.InventorySchema)(
         Schema.encodeSync(schemas.InventorySchema)(v),
@@ -156,7 +156,7 @@ describe("Bestand-Schema", () => {
 });
 
 describe("Set-Vorlagen-Schema", () => {
-  test.skip("[REQ-SET-1] gültige Vorlage wird angenommen, alle drei Sicherheiten", () => {
+  test("[REQ-SET-1] gültige Vorlage wird angenommen, alle drei Sicherheiten", () => {
     for (const certainty of ["hoch", "mittel", "niedrig"]) {
       const t = { ...TEMPLATE, certainty };
       const r = decodeTemplate(t);
@@ -168,7 +168,7 @@ describe("Set-Vorlagen-Schema", () => {
     );
   });
 
-  test.skip("[REQ-SET-1] Pflichtfelder, leere Felder, Zusatzfelder, Artikelnummer und count werden geprüft", () => {
+  test("[REQ-SET-1] Pflichtfelder, leere Felder, Zusatzfelder, Artikelnummer und count werden geprüft", () => {
     const invalid: ReadonlyArray<readonly [string, unknown]> = [
       ...["id", "name", "articleNumber", "source", "certainty", "contents"].map(
         (k): readonly [string, unknown] => [`${k} fehlt`, withoutKey(TEMPLATE, k)],
@@ -204,7 +204,7 @@ describe("Set-Vorlagen-Schema", () => {
     }
   });
 
-  test.skip("[REQ-SET-1] Kodieren und Dekodieren ergibt denselben Wert (Eigenschaft)", () => {
+  test("[REQ-SET-1] Kodieren und Dekodieren ergibt denselben Wert (Eigenschaft)", () => {
     const roundtrip = (v: SetTemplate): SetTemplate =>
       Schema.decodeUnknownSync(schemas.SetTemplateSchema)(
         Schema.encodeSync(schemas.SetTemplateSchema)(v),
@@ -219,7 +219,7 @@ describe("Set-Vorlagen-Schema", () => {
 });
 
 describe("Prägung im Katalog-Schema", () => {
-  test.skip("[REQ-PRAEG-1] praegung ist optional; Eintrag mit einer oder mehreren Prägungen wird angenommen", () => {
+  test("[REQ-PRAEG-1] praegung ist optional; Eintrag mit einer oder mehreren Prägungen wird angenommen", () => {
     expect(accepted(decodeEntry(ENTRY))).toBe(true);
     for (const praegung of [
       [P],
@@ -245,7 +245,7 @@ describe("Prägung im Katalog-Schema", () => {
     expect(accepted(decodeEntry(withNumbers))).toBe(true);
   });
 
-  test.skip("[REQ-PRAEG-1] leere Liste, Zusatzfeld, fehlende/leere Quelle, Leerraum am Rand und genau 8 Ziffern werden abgewiesen", () => {
+  test("[REQ-PRAEG-1] leere Liste, Zusatzfeld, fehlende/leere Quelle, Leerraum am Rand und genau 8 Ziffern werden abgewiesen", () => {
     const invalid: ReadonlyArray<readonly [string, unknown]> = [
       ["leere Liste", []],
       ["Zusatzfeld", [{ ...P, foto: "k.jpg" }]],
@@ -274,14 +274,14 @@ describe("Prägung im Katalog-Schema", () => {
     }
   });
 
-  test.skip("[REQ-PRAEG-1] articleNumbers bleibt unverändert: eine Prägung als Artikelnummer wird weiter abgewiesen", () => {
+  test("[REQ-PRAEG-1] articleNumbers bleibt unverändert: eine Prägung als Artikelnummer wird weiter abgewiesen", () => {
     expect(accepted(decodeEntry({ ...ENTRY, articleNumbers: ["141903-1B"] }))).toBe(false);
     expect(accepted(decodeEntry({ ...ENTRY, articleNumbers: ["20061602"] }))).toBe(true);
     expect(accepted(decodeEntry({ ...ENTRY, articleNumbers: "keineEigene" }))).toBe(true);
     expect(accepted(decodeEntry({ ...ENTRY, articleNumbers: [] }))).toBe(false);
   });
 
-  test.skip("[REQ-PRAEG-1] Kodieren und Dekodieren eines Eintrags mit Prägung ergibt denselben Wert (Eigenschaft)", () => {
+  test("[REQ-PRAEG-1] Kodieren und Dekodieren eines Eintrags mit Prägung ergibt denselben Wert (Eigenschaft)", () => {
     const roundtrip = (v: CatalogEntry): CatalogEntry =>
       Schema.decodeUnknownSync(schemas.CatalogEntrySchema)(
         Schema.encodeSync(schemas.CatalogEntrySchema)(v),

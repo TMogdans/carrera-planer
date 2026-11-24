@@ -154,3 +154,117 @@ export type Session = {
   exportFile(): { readonly fileName: string; readonly text: string };
   importFile(fileName: string, text: string): void;
 };
+
+// ---------------------------------------------------------------------------------------------
+// M3a: Bestand, Set-Vorlagen, Modus, Einkaufsliste (Spec .specify/specs/m3a-bestand/spec.md).
+// Spiegeln die Vertragstypen aus src/web/test-support/bestand-fixtures.ts; die Übereinstimmung
+// prüft `tsc` über `src/web/editor/index.ts`.
+// ---------------------------------------------------------------------------------------------
+
+export type Certainty = "hoch" | "mittel" | "niedrig";
+
+/**
+ * Set-Vorlage, wie die Logik sie braucht. Strukturell weiter als der Schema-Typ (Inhalt als
+ * gewöhnliche Liste), damit auch geprüfte Katalogdaten und Testvorlagen passen.
+ */
+export type SetTemplate = {
+  readonly id: string;
+  readonly name: string;
+  readonly articleNumber: string;
+  readonly source: string;
+  readonly certainty: Certainty;
+  readonly contents: ReadonlyArray<{ readonly part: string; readonly count: number }>;
+};
+
+/** Teil-ID → Anzahl; fehlend heißt 0. Nicht zählende Einträge (REQ-BEST-7) dürfen darin stehen. */
+export type Inventory = Readonly<Record<string, number>>;
+
+export type InventoryChange =
+  | { readonly ok: true; readonly inventory: Inventory }
+  | { readonly ok: false; readonly text: string };
+
+export type Mode = "sandbox" | "bestand";
+
+export type Rejection = {
+  readonly partId: string | undefined;
+  readonly name: string | undefined;
+  readonly text: string;
+};
+
+export type ModeResult = {
+  readonly state: EditorState;
+  readonly rejection: Rejection | undefined;
+};
+
+export type StockPaletteEntry = {
+  readonly partId: string;
+  readonly name: string;
+  readonly kind: PaletteKind;
+  readonly stock: number | undefined;
+  readonly rest: number | undefined;
+  readonly locked: boolean;
+};
+
+export type SearchTerm =
+  | { readonly kind: "artikelnummer"; readonly value: string; readonly text: string }
+  | { readonly kind: "praegung"; readonly value: string; readonly text: string }
+  | { readonly kind: "hinweis"; readonly text: string };
+
+export type ShoppingRow = {
+  readonly partId: string;
+  readonly name: string;
+  readonly needed: number;
+  readonly have: number;
+  readonly missing: number;
+  readonly searchTerms: ReadonlyArray<SearchTerm>;
+};
+
+export type ShoppingList =
+  | {
+      readonly ok: true;
+      readonly rows: ReadonlyArray<ShoppingRow>;
+      readonly total: number;
+      readonly text: "alles vorhanden" | undefined;
+    }
+  | { readonly ok: false; readonly text: string };
+
+export type InventoryMessage =
+  | { readonly kind: "bestandAbgewiesen"; readonly partId: string; readonly text: string }
+  | {
+      readonly kind: "bestandVerschoben";
+      readonly backupKey: string;
+      readonly reason: string;
+      readonly text: string;
+    }
+  | { readonly kind: "bestandNichtVerschoben"; readonly reason: string; readonly text: string }
+  | {
+      readonly kind: "bestandIgnoriert";
+      readonly partIds: ReadonlyArray<string>;
+      readonly text: string;
+    }
+  | { readonly kind: "modusUngueltig"; readonly value: string; readonly text: string }
+  | { readonly kind: "bestandAbgleichKaputt"; readonly reason: string; readonly text: string }
+  | {
+      readonly kind: "befehlAbgewiesen";
+      readonly partId: string | undefined;
+      readonly text: string;
+    };
+
+export type PlannerMessage = EditorMessage | InventoryMessage;
+
+export type PlannerSession = Omit<Session, "messages"> & {
+  readonly messages: ReadonlyArray<PlannerMessage>;
+  readonly mode: Mode;
+  readonly inventory: Inventory;
+  setMode(mode: Mode): void;
+  setCount(partId: string, input: string): void;
+  increment(partId: string): void;
+  decrement(partId: string): void;
+  addSet(templateId: string, confirmed: boolean): void;
+  clearInventory(confirmed: boolean): void;
+  inventoryDefectBackups(): ReadonlyArray<string>;
+  inventoryDefectRawText(key: string): string | undefined;
+  deleteInventoryDefect(key: string): void;
+  /** Änderung des Speichers von außen (anderes Tab; null = alles), REQ-BEST-10. */
+  storageChanged(key: string | null): void;
+};

@@ -78,7 +78,7 @@ const importFresh = async <T>(path: string): Promise<T> =>
   )) as T;
 
 describe("Architektur der Bestandslogik", () => {
-  test.skip("[REQ-BARCH-1] Bestandslogik und Planer-Sitzung laden und rechnen ohne Preact und ohne DOM-Globale", async () => {
+  test("[REQ-BARCH-1] Bestandslogik und Planer-Sitzung laden und rechnen ohne Preact und ohne DOM-Globale", async () => {
     vi.resetModules();
     for (const m of PREACT_MODULES) {
       vi.doMock(m, () => {
@@ -121,7 +121,7 @@ describe("Architektur der Bestandslogik", () => {
 });
 
 describe("Verbrauch nur aus dem Kern", () => {
-  test.skip("[REQ-BARCH-2] Verfälschter Katalog (Steilkehre aus 4 K + 3 Kurven): Einkaufsliste fehlt 3, Rest bei Mach 8 = 3 (echt 4)", async () => {
+  test("[REQ-BARCH-2] Verfälschter Katalog (Steilkehre aus 4 K + 3 Kurven): Einkaufsliste fehlt 3, Rest bei Mach 8 = 3 (echt 4)", async () => {
     const I = await loadInventory();
     const forged: ReadonlyArray<CatalogEntry> = CATALOG.map(
       (e): CatalogEntry =>
@@ -149,7 +149,7 @@ describe("Verbrauch nur aus dem Kern", () => {
     expect(rest(CATALOG)).toBe(4);
   });
 
-  test.skip("[REQ-BARCH-2] Ersetztes consumption des Kerns bestimmt Einkaufsliste, Rest und Sperre", async () => {
+  test("[REQ-BARCH-2] Ersetztes consumption des Kerns bestimmt Einkaufsliste, Rest und Sperre", async () => {
     vi.resetModules();
     let answer: unknown = { ok: true, counts: { "gerade-114": 7 } };
     vi.doMock(CONSUMPTION_MODULE, () => ({ consumption: () => answer }));

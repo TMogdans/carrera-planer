@@ -33,7 +33,7 @@ const thousand: ReadonlyArray<LayoutElement> = Array.from({ length: 100 }, (_, k
   ),
 ).flat();
 
-test.skip("[REQ-BARCH-4] 1000 Elemente im Bestandsmodus: Anhängen samt Prüfung, Leiste und Einkaufsliste höchstens 250 ms im Maximum über 20 Durchläufe", async () => {
+test("[REQ-BARCH-4] 1000 Elemente im Bestandsmodus: Anhängen samt Prüfung, Leiste und Einkaufsliste höchstens 250 ms im Maximum über 20 Durchläufe", async () => {
   const E = await loadEditor();
   const I = await loadInventory();
   expect(thousand).toHaveLength(1000);
