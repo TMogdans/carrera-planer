@@ -622,7 +622,7 @@ describe("Export und Import", () => {
 });
 
 describe("Nachtrag: Neustart", () => {
-  test.skip("[REQ-STORE-7] Kaputter Arbeitsstand wird verschoben, nicht kopiert: zweimal starten ohne Änderung ergibt genau einen Ausweichschlüssel", async () => {
+  test("[REQ-STORE-7] Kaputter Arbeitsstand wird verschoben, nicht kopiert: zweimal starten ohne Änderung ergibt genau einen Ausweichschlüssel", async () => {
     const api = await loadSession();
     const storage = new MemoryStorage();
     storage.data.set(api.WORKING_KEY, NOT_JSON);
@@ -647,7 +647,7 @@ describe("Nachtrag: Neustart", () => {
     expect(storage.data.get(backups[0] as string)).toBe(NOT_JSON);
   });
 
-  test.skip("[REQ-EDIT-16] Der Verlauf wird nicht gespeichert: nach dem Start mit gesichertem Arbeitsstand ist er leer, Rückgängig ändert nichts und sichert nicht", async () => {
+  test("[REQ-EDIT-16] Der Verlauf wird nicht gespeichert: nach dem Start mit gesichertem Arbeitsstand ist er leer, Rückgängig ändert nichts und sichert nicht", async () => {
     const api = await loadSession();
     const E = await loadEditor();
     const storage = new MemoryStorage({ [api.WORKING_KEY]: JSON.stringify(layoutJson(ACHT)) });
