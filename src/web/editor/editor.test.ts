@@ -525,15 +525,38 @@ describe("Befehle", () => {
 });
 
 describe("Leisten-Einteilung", () => {
-  test("[REQ-EDIT-21] M1-Katalog: 13 platzierbar, 4 Maße fehlen, L und K ausgeblendet, in Katalogreihenfolge", async () => {
+  test("[REQ-EDIT-21] aktueller Katalog: Platzierbare als Block von Gerade 342 bis Rundenzähler, 4 Maße fehlen, L und K ausgeblendet, in Katalogreihenfolge (gilt vor und nach gerade-100)", async () => {
     const E = await loadEditor();
     const entries = E.paletteEntries(CATALOG);
     expect(entries.map((e) => e.partId)).toEqual(CATALOG.map((e) => e.id));
     expect(entries.map((e) => e.name)).toEqual(CATALOG.map((e) => e.name));
     const ofKind = (kind: string) => entries.filter((e) => e.kind === kind).map((e) => e.partId);
-    expect(ofKind("platzierbar")).toEqual(CATALOG.slice(0, 13).map((e) => e.id));
+    const placeable = ofKind("platzierbar");
+    expect(placeable).toEqual(CATALOG.slice(0, placeable.length).map((e) => e.id));
+    expect(placeable[0]).toBe("gerade-342");
+    expect(placeable[placeable.length - 1]).toBe("rundenzaehler");
+    expect(ofKind("masseFehlen")).toEqual([
+      "wireless-anschluss",
+      "steilkurve-1-45",
+      "looping",
+      "steilkehre",
+    ]);
+    expect(ofKind("ausgeblendet")).toEqual(["looping-teil", "steilkehre-teil"]);
+    expect(entries).toHaveLength(CATALOG.length);
+  });
+
+  test.skip("[REQ-EDIT-21] Katalog mit gerade-100: die 14 Einträge von Gerade 342 bis Rundenzähler platzierbar, Gerade 100 an vierter Stelle; Maße fehlen und ausgeblendet unverändert", async () => {
+    const E = await loadEditor();
+    const entries = E.paletteEntries(CATALOG);
+    expect(entries.map((e) => e.partId)).toEqual(CATALOG.map((e) => e.id));
+    expect(entries.map((e) => e.name)).toEqual(CATALOG.map((e) => e.name));
+    const ofKind = (kind: string) => entries.filter((e) => e.kind === kind).map((e) => e.partId);
+    expect(ofKind("platzierbar")).toEqual(CATALOG.slice(0, 14).map((e) => e.id));
     expect(ofKind("platzierbar")[0]).toBe("gerade-342");
-    expect(ofKind("platzierbar")[12]).toBe("rundenzaehler");
+    expect(ofKind("platzierbar")[2]).toBe("gerade-114");
+    expect(ofKind("platzierbar")[3]).toBe("gerade-100");
+    expect(entries[3]).toEqual({ partId: "gerade-100", name: "Gerade 100", kind: "platzierbar" });
+    expect(ofKind("platzierbar")[13]).toBe("rundenzaehler");
     expect(ofKind("masseFehlen")).toEqual([
       "wireless-anschluss",
       "steilkurve-1-45",
