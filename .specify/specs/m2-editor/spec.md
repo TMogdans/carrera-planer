@@ -1,7 +1,8 @@
 # Spec: M2 — Editor im Sandbox-Modus, Layout lokal im Browser
 
-Status: Entwurf, Überarbeitung 2 (Überarbeitung 1: Antworten des Menschen vom 2026-11-24 auf die
-offenen Fragen; Überarbeitung 2: Exportname ohne Streckennamen mit Zeitstempel), wartet auf
+Status: Entwurf, Überarbeitung 3 (Überarbeitung 1: Antworten des Menschen vom 2026-11-24 auf die
+offenen Fragen; Überarbeitung 2: Exportname ohne Streckennamen mit Zeitstempel; Überarbeitung 3:
+Klarstellungen aus spec-to-tests, Leisten-Einteilung als Logik, Smoke ergänzt), wartet auf
 erneute Abnahme (harter Stopp).
 Grundlage: [KONZEPT.md](../../../KONZEPT.md) (abgenommen 2026-11-23; Abschnitte „Ziel“, „Modi“,
 „Geometrie“, „Bedienung“, „Architektur“, „Prüfen“, „Meilensteine“),
@@ -49,7 +50,12 @@ definiert.
   gespeichert werden: Auswahl, aktive Aktion, Leisten-Kurvenrichtung, Verlauf, Ansicht
   (Zoom/Verschiebung).
 - **Befehl:** eine Operation, die die Elementfolge ändert (anhängen, Querung anhängen, löschen,
-  ersetzen, davor einfügen, Richtung umschalten, neu, laden). Nur Befehle kommen in den Verlauf.
+  ersetzen, davor einfügen, Richtung umschalten, neu, laden, importieren). Nur Befehle kommen in
+  den Verlauf.
+- **Folgeänderung:** jede tatsächliche Änderung der Elementfolge, also ein wirksamer Befehl,
+  ein Rückgängig oder ein Wiederholen. Jede Folgeänderung löst die automatische Sicherung aus
+  (REQ-STORE-2); Rückgängig und Wiederholen sind selbst keine Befehle und kommen nicht in den
+  Verlauf.
 - **Auswahl:** höchstens ein ausgewähltes Element, angegeben über seine Element-ID.
 - **Aktion:** bei bestehender Auswahl entweder keine, „Ersetzen“ oder „Davor einfügen“. Sie
   bestimmt, was ein Tipp auf ein Leistenteil bewirkt.
@@ -132,7 +138,10 @@ fassen lässt, steht in der Logik-Schicht.
   verfügbar; Folge Nr. 1–7 (bereits gequert) → nicht verfügbar.
 - **REQ-EDIT-10** [If/Then] Eine Querung lässt sich nur am Ende anhängen; als Ziel von „Ersetzen“
   und „Davor einfügen“ ist sie nicht wählbar. Eine vorhandene Querung lässt sich auswählen,
-  löschen und durch ein Teil ersetzen (REQ-EDIT-6).
+  löschen und durch ein Teil ersetzen (REQ-EDIT-6). Auslegung: „Querung anhängen“ bei aktiver
+  Aktion (Ersetzen oder Davor einfügen) hängt, wenn verfügbar (REQ-EDIT-9), immer am Ende an und
+  lässt Auswahl und Aktion unberührt. Grund: Die Verfügbarkeit hängt nur am offenen Ende, die
+  Aktion wirkt nur auf Leistenteile; so hat derselbe Knopf immer dieselbe Wirkung.
 - **REQ-EDIT-11** [If/Then] Wird eine Kreuzung gelöscht oder durch ein anderes Teil ersetzt, auf
   die eine Querung verweist, bleibt die Querung unverändert stehen; der Kern meldet dann
   „ungültiger Verweis“ und der Editor zeigt ihn an. Keine stille Kaskade (Frage 5).
@@ -145,6 +154,17 @@ fassen lässt, steht in der Logik-Schicht.
   außerhalb des gezeichneten Abschnitts) und aufheben. Eine Aktion lässt sich nur bei bestehender
   Auswahl setzen; Aufheben der Auswahl beendet die Aktion. Auswahl und Aktion ändern die Folge
   nicht und kommen nicht in den Verlauf.
+
+- **REQ-EDIT-21** [When] Die Teileleiste wird aus dem übergebenen Katalog abgeleitet, nicht hart
+  verdrahtet: Eine reine Funktion ordnet jedem Katalogeintrag in Katalogreihenfolge genau eine
+  Klasse zu — **platzierbar** (Geometrie `gerade`, `kurve` oder `kreuzung`), **ausgeblendet** (nur
+  Bestandteil: Geometrie `masseFehlen` und Bestandteil mindestens einer Baugruppe des Katalogs)
+  oder **Maße fehlen** (jeder übrige Eintrag, also `masseFehlen` ohne Baugruppen-Verwendung und
+  jede Baugruppe). Beispiel mit dem M1-Katalog: platzierbar sind die 13 Einträge von Gerade 342
+  bis Rundenzähler; „Maße fehlen“ Wireless-Anschluss, Steilkurve 1/45°, Looping (Baugruppe),
+  Steilkehre (Baugruppe); ausgeblendet Looping-Teil (L) und Steilkehre-Teil (K). Wirkungsnachweis
+  mit verändertem Katalog: Bekommt die Steilkurve 1/45° eine Kurvengeometrie, ist sie platzierbar;
+  verwendet eine zusätzliche Baugruppe den Wireless-Anschluss, ist er ausgeblendet.
 
 ### Editor-Logik: Verlauf und Element-IDs
 
@@ -179,23 +199,34 @@ fassen lässt, steht in der Logik-Schicht.
   Beispiele: 3 × Kurve 1/90° links → Lücke 242 mm, Winkel 90°; Oval ohne letzte Gerade 342 →
   Lücke 342 mm, Winkel 0°; Formatierung eines konstruierten Versatzes dx = 28,5·(99 − 70·√2) mm ≈
   0,14 mm, dy = 0 → „< 1 mm“. Gleiche Position, andere Richtung → „0 mm“ ist hier richtig, weil
-  der Versatz exakt null ist; der Winkel zeigt die Abweichung.
+  der Versatz exakt null ist; der Winkel zeigt die Abweichung. Auslegung: gerundet wird auf ganze
+  mm mit ,5 aufwärts (0,5 mm → „1 mm“, 241,5 mm → „242 mm“); „< 1 mm“ gilt also für einen
+  Betrag größer null und kleiner 0,5 mm. Die Logik liefert den Winkel als Zahl in Grad (−135 …
+  180, Vielfache von 45); das Textformat des Winkels bleibt der UI überlassen.
 - **REQ-STAT-3** [If/Then] Meldet der Kern Fehler, liefert der Editor für jeden Fehler einen
   Eintrag mit Nummer des betroffenen Elements (bei doppelter ID alle Nummern), Teil- bzw.
   Elementname und deutschem Text je Fehlerart (Vorschlag): „Teil unbekannt“, „Maße fehlen, nicht
   platzierbar“, „Kurvenrichtung fehlt“, „Richtung bei Nicht-Kurve“, „Querung verweist auf keine
   frühere Kreuzung“, „Kreuzung bereits gequert“, „Strecke kommt nicht am Queranschluss an“,
   „doppelte Element-ID“. Beispiel: Acht mit Gerade 171 statt Gerade 114 an Nr. 5 → genau ein
-  Eintrag, Nr. 6, „Strecke kommt nicht am Queranschluss an“.
+  Eintrag, Nr. 6, „Strecke kommt nicht am Queranschluss an“. Auslegung: Als Elementname dient bei
+  Fehlern an Teil-Elementen der Katalogname (bei unbekanntem Teil die Teil-ID); bei Querungs-
+  und Doppel-ID-Fehlern ist der Name frei wählbar und wird nicht geprüft.
 - **REQ-STAT-4** [When] Der Teileverbrauch kommt aus `consumption` des Kerns: je Katalogeintrag
-  Name und Anzahl in Katalogreihenfolge, dazu die Summe. Er wird auch bei Fehlern angezeigt; nur
-  wenn der Kern „Teil unbekannt“ meldet, zeigt der Editor „Verbrauch nicht bestimmbar“. Beispiel
-  Acht: Kreuzung 1, Kurve 1/90° 6, Gerade 114 1, Anschlussstück 1, zusammen 9.
+  Name und Anzahl, in Katalogreihenfolge und nur für Einträge mit Anzahl ≥ 1, dazu die Summe. Er
+  wird auch bei Fehlern angezeigt; nur wenn der Kern „Teil unbekannt“ meldet, zeigt der Editor
+  „Verbrauch nicht bestimmbar“. Beispiel Acht: Gerade 114 1, Kurve 1/90° 6, Kreuzung 1,
+  Anschlussstück 1, zusammen 9.
 - **REQ-STAT-5** [When] Die **Gesamtlänge** ist die Summe der Mittellinienlängen: Gerade L, Kurve
   π·R·Winkel/180°, Kreuzung ihr Längsweg, Querung der Querweg der verwiesenen Kreuzung. Anzeige in
   Metern mit zwei Nachkommastellen und Komma (Frage 9). Sie hängt nicht von
   Fehlern der Lage ab; hat ein Element keine bekannte Länge (unbekanntes oder nicht platzierbares
-  Teil, Querung ohne Kreuzung als Ziel), zeigt der Editor „–“. Gleitkomma nur hier und in der
+  Teil, Querung ohne frühere Kreuzung als Ziel), zeigt der Editor „–“. Auslegung: „verwiesene
+  Kreuzung“ heißt wie in REQ-CORE-25 ein Teil-Element mit Kreuzungsgeometrie **vor** der Querung.
+  Eine Querung auf eine nicht vorhandene ID, auf ein Nicht-Kreuzungs-Element oder auf eine
+  spätere Kreuzung (Kern: „ungültiger Verweis“) hat keine bekannte Länge → „–“. Eine zweite
+  Querung derselben früheren Kreuzung („bereits gequert“) zählt dagegen ihren Querweg, weil die
+  Länge nicht von Lagefehlern abhängt. Gleitkomma nur hier und in der
   Zeichengeometrie, nie für Status oder Querungsprüfung. Beispiele: Oval (REQ-CORE-13 (c)) →
   „1,76 m“ (684 + 342·π ≈ 1758,4 mm); Acht → „2,30 m“ (342 + 6 · 85,5·π + 3 · 114 ≈ 2295,6 mm).
 
@@ -210,7 +241,10 @@ fassen lässt, steht in der Logik-Schicht.
   (gegen den Uhrzeigersinn, M1) auch auf dem Bildschirm gegen den Uhrzeigersinn dreht. Die
   Umrechnung a + b·√2 → Zahl weicht höchstens 0,01 mm vom exakten Wert ab. Je Element liefert sie
   die Mittellinie (Strecke bzw. Kreisbogen mit Mittelpunkt und Radius) und das 114 mm breite Band
-  darum; zu einer Kreuzung zusätzlich ihre Queranschlüsse. Beispiel: Kurve 1/90° links ab Start
+  darum; zu einer Kreuzung zusätzlich ihre Queranschlüsse. Auslegung: Das Band wird als zwei
+  Randlinien im Abstand ±57 mm von der Mittellinie geliefert (bei Kurven Bögen mit Radius R ± 57
+  um denselben Mittelpunkt); die Genauigkeit von 0,01 mm gilt für Koordinaten mit Betrag
+  ≤ 10⁷ mm. Beispiel: Kurve 1/90° links ab Start
   endet bei Bildschirm (171, −171), also oberhalb der Startlinie.
 
 ### Editor-Logik: Speichern und Laden
@@ -220,11 +254,15 @@ fassen lässt, steht in der Logik-Schicht.
   Browser ist das `localStorage`, in Tests eine Attrappe. Jeder Wert ist der JSON-Text des mit
   `LayoutSchema` kodierten Layouts (`schemaVersion`, `elements`), sonst nichts. Das Schema wird
   dafür nicht erweitert; der Layoutname steckt im Schlüssel (Entscheidung 2).
-- **REQ-STORE-2** [When] Nach jedem wirksamen Befehl sichert der Editor den Arbeitsstand
-  automatisch unter einem festen Schlüssel; beim Start lädt er ihn von dort (Frage 2).
+- **REQ-STORE-2** [When] Nach jeder Folgeänderung — jedem wirksamen Befehl und ebenso jedem
+  Rückgängig und Wiederholen — sichert der Editor den Arbeitsstand automatisch unter einem festen
+  Schlüssel; beim Start lädt er ihn von dort (Frage 2). Neuladen nach einem Rückgängig zeigt also
+  den Stand nach dem Rückgängig. Auswahl, Aktion, Leistenrichtung und Ansicht lösen keine
+  Sicherung aus.
 - **REQ-STORE-3** [When] Speichern unter Namen: Der Name wird an den Rändern von Leerraum befreit
   und darf dann nicht leer sein. Existiert er schon, wird erst nach ausdrücklicher Bestätigung
-  überschrieben. Die gespeicherten Namen lassen sich alphabetisch auflisten, ein gespeichertes
+  überschrieben. Die gespeicherten Namen lassen sich alphabetisch auflisten (Auslegung:
+  `localeCompare` mit Locale „de“, Groß-/Kleinschreibung ignoriert), ein gespeichertes
   Layout lässt sich nach Bestätigung löschen. Laden ersetzt die Folge (ein Befehl, rückgängig
   machbar) und hebt die Auswahl auf.
 - **REQ-STORE-4** [Contract] Speichern und anschließendes Laden ergibt exakt dieselbe Folge
@@ -262,7 +300,8 @@ fassen lässt, steht in der Logik-Schicht.
   Wert, REQ-STORE-1; Einrückung ist erlaubt), und einen Dateinamen. Name ist der zuletzt beim
   Speichern, Laden oder Import verwendete.
   - **Mit Namen:** `<Name>.json`; die Zeichen `/ \ : * ? " < > |` und Steuerzeichen im Namen
-    werden durch `_` ersetzt.
+    werden durch `_` ersetzt. Auslegung: Steuerzeichen sind C0 (U+0000–U+001F) und DEL
+    (U+007F); C1-Zeichen (U+0080–U+009F) bleiben erhalten.
   - **Ohne Namen:** `strecke-<JJJJ>-<MM>-<TT>-<HH><mm>.json` in Ortszeit, alle Felder mit
     führenden Nullen, Stunde 00–23. Beispiel: 24.11.2026, 8:15 Uhr → `strecke-2026-11-24-0815.json`.
   - **Uhr:** Der Editor bekommt eine eingereichte Uhr, die bei jedem Aufruf zwei Dinge liefert:
@@ -278,7 +317,8 @@ fassen lässt, steht in der Logik-Schicht.
   JSON-Parsen und `LayoutSchema`-Dekodierung und ersetzt bei Erfolg die Folge (ein Befehl,
   rückgängig machbar, Auswahl aufgehoben). Der Dateiname ohne die Endung `.json`
   (Groß-/Kleinschreibung egal) wird Namensvorschlag für „Speichern unter“; gespeichert wird dabei
-  nichts. Schema-gültige Layouts mit Kern-Fehlern werden importiert wie in REQ-STORE-6.
+  nichts. Auslegung: „nichts“ heißt kein benanntes Layout; die automatische Sicherung des
+  Arbeitsstands nach REQ-STORE-2 läuft wie nach jeder Folgeänderung. Schema-gültige Layouts mit Kern-Fehlern werden importiert wie in REQ-STORE-6.
 - **REQ-STORE-11** [If/Then] Scheitert der Import, bleiben Folge, Verlauf und gespeicherte Daten
   unverändert, und der Editor liefert eine verständliche Meldung mit Dateinamen und Art des
   Fehlers: „keine JSON-Datei“ (Parsen scheitert, auch bei leerer Datei), „keine Strecke dieses
@@ -300,12 +340,11 @@ fassen lässt, steht in der Logik-Schicht.
   waagerechtes Scrollen der Seite bedienbar auf Laptop (1280 × 800), Tablet (768 × 1024 hoch und
   1024 × 768 quer) und Handy (360 × 740 hoch); die Leiste darf in sich scrollen. Antippbare Ziele
   sind mindestens 44 × 44 CSS-Pixel groß.
-- **REQ-UI-2** [Where] Die Leiste zeigt alle platzierbaren Einträge in Katalogreihenfolge mit
-  Namen und Symbol, den Kurvenrichtungs-Schalter mit sichtbarer aktueller Richtung und den
-  Eintrag „Querung“, der nur aktiv ist, wenn REQ-EDIT-9 ihn verfügbar macht. Nicht platzierbare
-  Einträge (Looping, Steilkehre, Steilkurve 1/45°, Wireless-Anschluss) erscheinen ausgegraut mit
-  dem Hinweis „Maße fehlen“ und reagieren nicht auf Antippen. Einträge „nur Bestandteil“
-  (L- und K-Teile) erscheinen nicht (Frage 7).
+- **REQ-UI-2** [Where] Die Leiste stellt die Einteilung aus REQ-EDIT-21 dar, in deren
+  Reihenfolge: platzierbare Einträge mit Namen und Symbol, antippbar; Einträge „Maße fehlen“
+  ausgegraut mit diesem Hinweis, ohne Reaktion auf Antippen; ausgeblendete Einträge gar nicht.
+  Dazu der Kurvenrichtungs-Schalter mit sichtbarer aktueller Richtung und der Eintrag „Querung“,
+  der nur aktiv ist, wenn REQ-EDIT-9 ihn verfügbar macht (Frage 7).
 - **REQ-UI-3** [Where] Die Zeichnung zeigt jedes Element des gezeichneten Abschnitts als 114 mm
   breites Band entlang der Mittellinie mit erkennbaren Teilgrenzen, Kurven als Ringsegmente, die
   Kreuzung mit sichtbarem Querweg und eine Querung als hervorgehobenes Band über diesem Querweg.
@@ -462,8 +501,8 @@ Maus-Fälle am Laptop, Touch-Fälle an Tablet und Handy.
 2. **Acht mit Querung.** Neu, dann Kreuzung; Richtung „rechts“, 3 × Kurve 1/90°, Gerade 114. Der
    Pfeil am Ende steht auf einer Zielmarke der Kreuzung, „Querung“ wird aktiv; antippen. Dann
    Anschlussstück, Richtung „links“, 3 × Kurve 1/90°. Sichtbar: Acht, Querung über die Kreuzung
-   hervorgehoben, „geschlossen“, Verbrauch 9 Teile (Kreuzung 1, Kurve 1/90° 6, Gerade 114 1,
-   Anschlussstück 1), „2,30 m“. Vor dem Tippen auf Gerade 114 ist „Querung“ ausgegraut.
+   hervorgehoben, „geschlossen“, Verbrauch 9 Teile (Gerade 114 1, Kurve 1/90° 6, Kreuzung 1,
+   Anschlussstück 1, in dieser Reihenfolge), „2,30 m“. Vor dem Tippen auf Gerade 114 ist „Querung“ ausgegraut.
 3. **Bearbeiten.** Im Oval die erste Gerade 342 (Nr. 3) auswählen, „Davor einfügen“, dann
    Gerade 114, Anschlussstück, Rundenzähler tippen; die Gerade 342 bleibt ausgewählt, „Löschen“.
    Sichtbar: an ihrer Stelle die drei kurzen Teile, Status wieder „geschlossen“, Verbrauch 8 Teile.
@@ -517,6 +556,24 @@ Gegenfälle, die geschlossen bleiben müssen:
     die Strecke auf dem Bildschirm bleibt.
 13. Netzwerk-Reiter der Entwicklerwerkzeuge: nach dem Laden der Seite keine Anfragen an fremde
     Adressen (REQ-UI-10).
+
+Weitere Fälle zu Build und Bedienung:
+
+14. `pnpm build` läuft im Repo ohne Fehler durch und erzeugt die statischen Dateien (REQ-UI-11).
+15. Fokus im Namensfeld des Speichern-Dialogs, ein Element ist ausgewählt: Entf, Rücktaste und
+    Strg/Cmd+Z wirken nur auf den Text im Feld; die Strecke und der Verlauf bleiben unverändert.
+    Fokus raus aus dem Feld → die Kürzel wirken wieder (REQ-UI-8).
+16. Hineinzoomen, bis das offene Ende nahe am Bildrand liegt, dann Geraden in Richtung Rand
+    anhängen: Die Ansicht rückt mit, das offene Ende bleibt sichtbar, der Maßstab ändert sich
+    nicht (Teile behalten ihre Bildschirmgröße). Liegt das Ende mitten im Bild, bewegt sich die
+    Ansicht beim Anhängen nicht (REQ-UI-7).
+17. Ein Teil auswählen, dann auf leere Fläche neben der Strecke tippen bzw. klicken: Auswahl und
+    eine aktive Aktion sind aufgehoben, die Auswahlleiste verschwindet, die Strecke bleibt
+    unverändert (REQ-UI-4).
+18. Tippziele: In den Entwicklerwerkzeugen (Geräteansicht 360 × 740) messen Leisteneinträge,
+    Kurvenrichtungs-Schalter, Knöpfe der Auswahlleiste und Rückgängig/Wiederholen/Einpassen
+    jeweils mindestens 44 × 44 CSS-Pixel; am echten Handy lässt sich jeder davon mit dem Daumen
+    treffen, ohne den Nachbarn auszulösen (REQ-UI-1).
 
 ### Nach dem Deploy
 
