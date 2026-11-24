@@ -1,7 +1,8 @@
 # Spec: M2 — Editor im Sandbox-Modus, Layout lokal im Browser
 
-Status: Entwurf, Überarbeitung 1 (Antworten des Menschen vom 2026-11-24 auf die offenen Fragen
-eingearbeitet), wartet auf erneute Abnahme (harter Stopp).
+Status: Entwurf, Überarbeitung 2 (Überarbeitung 1: Antworten des Menschen vom 2026-11-24 auf die
+offenen Fragen; Überarbeitung 2: Exportname ohne Streckennamen mit Zeitstempel), wartet auf
+erneute Abnahme (harter Stopp).
 Grundlage: [KONZEPT.md](../../../KONZEPT.md) (abgenommen 2026-11-23; Abschnitte „Ziel“, „Modi“,
 „Geometrie“, „Bedienung“, „Architektur“, „Prüfen“, „Meilensteine“),
 [docs/recherche.md](../../../docs/recherche.md), [constitution.md](../../constitution.md), die
@@ -240,8 +241,8 @@ fassen lässt, steht in der Logik-Schicht.
   geladen und die Fehler erscheinen wie bei der Bearbeitung (REQ-STAT-3, REQ-EDIT-18).
 - **REQ-STORE-7** [If/Then] Ist der automatisch gesicherte Arbeitsstand beim Start kaputt
   (REQ-STORE-5), verschiebt der Editor den Rohtext unverändert unter einen **Ausweichschlüssel**
-  `<Präfix>:defekt:<Zeitstempel>` (ISO 8601 in UTC mit Millisekunden, aus einer eingereichten
-  Uhr). Ist dieser Schlüssel schon belegt, hängt er `-2`, `-3`, … an, bis einer frei ist; ein
+  `<Präfix>:defekt:<Zeitstempel>` (ISO 8601 in UTC mit Millisekunden, aus der eingereichten
+  Uhr, REQ-STORE-9). Ist dieser Schlüssel schon belegt, hängt er `-2`, `-3`, … an, bis einer frei ist; ein
   späterer Fund überschreibt also nie einen früheren. Erst wenn das Schreiben unter dem
   Ausweichschlüssel gelungen ist, darf der Arbeitsstand-Schlüssel überschrieben werden. Der
   Editor startet mit leerer Folge, liefert eine Meldung mit Ausweichschlüssel und Grund und
@@ -258,11 +259,21 @@ fassen lässt, steht in der Logik-Schicht.
 
 - **REQ-STORE-9** [When] Export: Der Editor erzeugt für die aktuelle Folge einen Text, der genau
   das mit `LayoutSchema` kodierte Layout als JSON enthält (dasselbe Format wie der gespeicherte
-  Wert, REQ-STORE-1; Einrückung ist erlaubt), und einen Dateinamen `<Name>.json`. Name ist der
-  zuletzt beim Speichern, Laden oder Import verwendete, sonst „strecke“; die Zeichen
-  `/ \ : * ? " < > |` und Steuerzeichen werden durch `_` ersetzt. Kein neues Schema, kein Name in
-  der Datei. Eigenschaft: Export und anschließender Import ergibt exakt dieselbe Folge
-  (Element-IDs, Teile, Richtungen, Verweise).
+  Wert, REQ-STORE-1; Einrückung ist erlaubt), und einen Dateinamen. Name ist der zuletzt beim
+  Speichern, Laden oder Import verwendete.
+  - **Mit Namen:** `<Name>.json`; die Zeichen `/ \ : * ? " < > |` und Steuerzeichen im Namen
+    werden durch `_` ersetzt.
+  - **Ohne Namen:** `strecke-<JJJJ>-<MM>-<TT>-<HH><mm>.json` in Ortszeit, alle Felder mit
+    führenden Nullen, Stunde 00–23. Beispiel: 24.11.2026, 8:15 Uhr → `strecke-2026-11-24-0815.json`.
+  - **Uhr:** Der Editor bekommt eine eingereichte Uhr, die bei jedem Aufruf zwei Dinge liefert:
+    den Zeitpunkt als UTC (für REQ-STORE-7) und die **lokalen Bestandteile** Jahr, Monat, Tag,
+    Stunde, Minute als ganze Zahlen. Den Dateinamen formatiert der Editor ausschließlich aus diesen
+    Bestandteilen und liest selbst weder Zeitzone noch Systemuhr. So hängen Tests nicht von der
+    Zeitzone der Maschine ab; sie reichen die Bestandteile direkt herein. Die Umrechnung in
+    Ortszeit macht nur die Browser-Uhr in der UI-Schicht (Zeitzone des Geräts).
+
+  Kein neues Schema, kein Name in der Datei. Eigenschaft: Export und anschließender Import ergibt
+  exakt dieselbe Folge (Element-IDs, Teile, Richtungen, Verweise), mit und ohne Namen.
 - **REQ-STORE-10** [When] Import: Der Editor bekommt Dateiname und Dateitext, prüft den Text mit
   JSON-Parsen und `LayoutSchema`-Dekodierung und ersetzt bei Erfolg die Folge (ein Befehl,
   rückgängig machbar, Auswahl aufgehoben). Der Dateiname ohne die Endung `.json`
@@ -473,7 +484,10 @@ Maus-Fälle am Laptop, Touch-Fälle an Tablet und Handy.
 6. **Austausch zwischen Geräten.** Am Laptop die Acht als „Acht“ speichern und exportieren →
    Datei `Acht.json`. Die Datei aufs Handy bringen (z. B. Messenger oder Seafile), dort
    „Importieren“ → dieselbe Acht, „geschlossen“, „2,30 m“, im Namensfeld steht „Acht“.
-   Rückgängig → der vorige Arbeitsstand des Handys ist wieder da.
+   Rückgängig → der vorige Arbeitsstand des Handys ist wieder da. Ohne Namen: „Neu“, ein Oval
+   tippen, ohne Speichern exportieren → Datei `strecke-<heutiges Datum>-<Uhrzeit>.json` mit der
+   Ortszeit des Geräts (z. B. `strecke-2026-11-24-0815.json`); importiert ergibt sie dasselbe
+   Oval, und im Namensfeld steht der Dateiname ohne `.json`.
 
 Gegenfälle, die geschlossen bleiben müssen:
 
