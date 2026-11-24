@@ -10,7 +10,8 @@
  *     Ohne Zeilen ist text „alles vorhanden“.
  *   searchTerms: { kind: "artikelnummer", value, text: value }
  *              | { kind: "praegung", value, text: "Prägung <value>" } | { kind: "hinweis", text }
- *   shoppingShort(list) → „Bestand reicht“ | „fehlen n Teile“
+ *   shoppingShort(list) → „Bestand reicht“ | „fehlt 1 Teil“ | „fehlen n Teile“ (n ≥ 2)
+ *                       | „Einkaufsliste nicht bestimmbar“
  * Orakel für den Verbrauch ist der Kern (`consumption`).
  */
 import fc from "fast-check";
@@ -260,18 +261,32 @@ describe("Suchbegriffe", () => {
   });
 });
 
-describe("Suchbegriffe: von spec-to-tests gewählte Form (Frage an den Menschen)", () => {
-  test.skip("[REQ-EINK-3] Baugruppe mit mehreren Artikelnummern: Nummern in Katalogreihenfolge, getrennt durch „, “", async () => {
-    // Die Spec sagt „Art.-Nr. <Nummern>“ ohne Trennzeichen; „, “ ist eine Wahl von spec-to-tests.
+describe("Suchbegriffe: Baugruppe mit mehreren Artikelnummern", () => {
+  test.skip("[REQ-EINK-3] Baugruppe mit mehreren Artikelnummern: ein Eintrag, Nummern in Katalogreihenfolge, getrennt durch „, “", async () => {
     const I = await loadInventory();
-    const forged = CATALOG.map(
-      (e): CatalogEntry =>
-        e.id === "looping" ? { ...e, articleNumbers: ["20061613", "20061699"] } : e,
-    );
-    const list = okList(I.shoppingList(forged, {}, one("looping")));
-    expect(list.rows[0]?.searchTerms).toEqual([
+    const withNumbers = (numbers: readonly [string, ...string[]]) =>
+      CATALOG.map(
+        (e): CatalogEntry => (e.id === "looping" ? { ...e, articleNumbers: numbers } : e),
+      );
+    const two = okList(I.shoppingList(withNumbers(["20061613", "20061699"]), {}, one("looping")));
+    expect(two.rows[0]?.searchTerms).toEqual([
       NO_NUMBER,
       hint("enthalten in Looping (Baugruppe), Art.-Nr. 20061613, 20061699"),
+    ]);
+    // Katalogreihenfolge, nicht sortiert
+    const reversed = okList(
+      I.shoppingList(withNumbers(["20061699", "20061613"]), {}, one("looping")),
+    );
+    expect(reversed.rows[0]?.searchTerms).toEqual([
+      NO_NUMBER,
+      hint("enthalten in Looping (Baugruppe), Art.-Nr. 20061699, 20061613"),
+    ]);
+    const three = okList(
+      I.shoppingList(withNumbers(["20061613", "20061699", "20061600"]), {}, one("looping")),
+    );
+    expect(three.rows[0]?.searchTerms).toEqual([
+      NO_NUMBER,
+      hint("enthalten in Looping (Baugruppe), Art.-Nr. 20061613, 20061699, 20061600"),
     ]);
   });
 });
@@ -333,12 +348,55 @@ describe("Kurzform und Modi", () => {
     expect(I.shoppingShort(I.shoppingList(CATALOG, {}, ACHT))).toBe("fehlen 9 Teile");
   });
 
-  test.skip("[REQ-EINK-5] Kurzform bei nicht bestimmbarem Verbrauch: „Einkaufsliste nicht bestimmbar“", async () => {
-    // Die Spec nennt die Kurzform nur für bestimmbare Listen; diese Form ist eine Wahl von
-    // spec-to-tests (Text aus REQ-EINK-2).
+  test.skip("[REQ-EINK-5] Kurzform in der Einzahl: Summe 1 → „fehlt 1 Teil“, Summe 2 → „fehlen 2 Teile“", async () => {
     const I = await loadInventory();
-    const list = I.shoppingList(CATALOG, MACH8, one(UNKNOWN_ID));
-    expect(I.shoppingShort(list)).toBe("Einkaufsliste nicht bestimmbar");
+    // neun Kurven mit Summenbestand: fehlt 1 (Beispiel REQ-EINK-1)
+    expect(I.shoppingShort(I.shoppingList(CATALOG, SUMME3, curves(9)))).toBe("fehlt 1 Teil");
+    expect(I.shoppingShort(I.shoppingList(CATALOG, {}, one("engstelle")))).toBe("fehlt 1 Teil");
+    // Baugruppe mit einem fehlenden Bestandteil: Steilkehre = 4 K + 2 Kurven, 3 K vorhanden
+    expect(
+      I.shoppingShort(
+        I.shoppingList(CATALOG, { "kurve-1-90": 2, "steilkehre-teil": 3 }, one("steilkehre")),
+      ),
+    ).toBe("fehlt 1 Teil");
+    expect(I.shoppingShort(I.shoppingList(CATALOG, SUMME3, curves(10)))).toBe("fehlen 2 Teile");
+    expect(I.shoppingShort(I.shoppingList(CATALOG, {}, curves(2)))).toBe("fehlen 2 Teile");
+    // zwei verschiedene Teile je 1: Summe zählt, nicht Zeilen
+    expect(
+      I.shoppingShort(
+        I.shoppingList(CATALOG, {}, [
+          { id: "a", part: "engstelle" },
+          { id: "b", part: "gerade-114" },
+        ]),
+      ),
+    ).toBe("fehlen 2 Teile");
+  });
+
+  test.skip("[REQ-EINK-5] Eigenschaft: Kurzform wörtlich aus der Summe der Fehlmengen", async () => {
+    const I = await loadInventory();
+    fc.assert(
+      fc.property(catalogElementsArb, anyInventoryArb, (elements, inv) => {
+        const list = okList(I.shoppingList(CATALOG, inv, elements));
+        const expected =
+          list.total === 0
+            ? "Bestand reicht"
+            : list.total === 1
+              ? "fehlt 1 Teil"
+              : `fehlen ${list.total} Teile`;
+        expect(I.shoppingShort(list)).toBe(expected);
+      }),
+      { numRuns: 200 },
+    );
+  });
+
+  test.skip("[REQ-EINK-5] Kurzform bei nicht bestimmbarem Verbrauch: „Einkaufsliste nicht bestimmbar“", async () => {
+    const I = await loadInventory();
+    for (const elements of [one(UNKNOWN_ID), [...OVAL, { id: "u", part: UNKNOWN_ID }]]) {
+      for (const inv of [MACH8, {}] as Inventory[]) {
+        const list = I.shoppingList(CATALOG, inv, elements);
+        expect(I.shoppingShort(list)).toBe("Einkaufsliste nicht bestimmbar");
+      }
+    }
   });
 
   test.skip("[REQ-EINK-5] im Modus „Bestand“ bleibt eine leere Einkaufsliste ohne Laden, Import und Bestandsänderung leer (Eigenschaft)", async () => {

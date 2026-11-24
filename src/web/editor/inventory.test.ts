@@ -138,13 +138,28 @@ describe("Bestand ändern", () => {
     );
   });
 
-  test.skip("[REQ-BEST-2] −1 bei Anzahl 0 ist nicht verfügbar und ändert nichts", async () => {
+  test.skip("[REQ-BEST-2] −1 bei Anzahl 0 ist nicht verfügbar, ändert nichts und liefert keine Meldung", async () => {
     const I = await loadInventory();
-    for (const inv of [{}, { "kurve-1-90": 0 }, { "gerade-342": 3 }] as Inventory[]) {
+    const cases: Inventory[] = [
+      {},
+      { "kurve-1-90": 0 },
+      { "gerade-342": 3 },
+      { "gerade-342": 3, [UNKNOWN_ID]: 2, steilkehre: 1 },
+    ];
+    for (const inv of cases) {
       expect(I.decrementAvailable(CATALOG, inv, "kurve-1-90")).toBe(false);
-      const next = applied(inv, I.decrement(CATALOG, frozen(inv), "kurve-1-90"));
+      const change = I.decrement(CATALOG, frozen(inv), "kurve-1-90");
+      // keine Meldung: keine Abweisung (eine Abweisung trägt den Meldungstext)
+      expect(change.ok).toBe(true);
+      const next = applied(inv, change);
       expect(countIn(next, "kurve-1-90")).toBe(0);
       expect(normalized(next)).toEqual(normalized(inv));
+    }
+    // für jedes bestandsfähige Teil, auch nicht platzierbare
+    for (const id of STOCKABLE_IDS.filter((p) => p !== "gerade-342")) {
+      const change = I.decrement(CATALOG, frozen({ "gerade-342": 2 }), id);
+      expect({ id, ok: change.ok }).toEqual({ id, ok: true });
+      expect(normalized(applied({ "gerade-342": 2 }, change))).toEqual({ "gerade-342": 2 });
     }
     expect(I.decrementAvailable(CATALOG, { "kurve-1-90": 1 }, "kurve-1-90")).toBe(true);
     expect(I.decrementAvailable(CATALOG, { "kurve-1-90": 7 }, "kurve-1-90")).toBe(true);
@@ -207,6 +222,15 @@ describe("Nicht zählende Einträge", () => {
     const set = applied(base, I.setCount(CATALOG, frozen(base), "kurve-1-90", "2"));
     expect(set).toEqual({ ...base, "kurve-1-90": 2 });
     expect(I.addSet(frozen(base), T_AUSBAU1)).toEqual(plus(base, AUSBAU1));
+  });
+
+  test.skip("[REQ-BEST-7] nicht zählende Einträge mit Anzahl 0 werden nicht gemeldet", async () => {
+    const I = await loadInventory();
+    const zeros: Inventory = { "kurve-1-90": 8, [UNKNOWN_ID]: 0, looping: 0 };
+    expect(I.ignoredPartIds(CATALOG, zeros)).toEqual([]);
+    expect(I.ignoredPartIds(CATALOG, { ...zeros, steilkehre: 2, "kurve-9-90": 0 })).toEqual([
+      "steilkehre",
+    ]);
   });
 });
 

@@ -181,13 +181,20 @@ export type InventoryApi = {
   /** Anzahl auf den eingegebenen Text setzen (Zahlenfeld); nur ganze Zahl ≥ 0 (REQ-BEST-2). */
   setCount(catalog: Catalog, inventory: Inventory, partId: string, input: string): InventoryChange;
   increment(catalog: Catalog, inventory: Inventory, partId: string): InventoryChange;
-  /** Bei Anzahl 0 ändert „−1“ nichts (REQ-BEST-2); ob ok oder nicht, ist frei. */
+  /**
+   * Bei Anzahl 0 ändert „−1“ nichts und liefert keine Meldung (REQ-BEST-2, Überarbeitung 2): bei
+   * bestandsfähiger ID `{ ok: true }` mit unverändertem Bestand. Unbekannte und Baugruppen-IDs
+   * werden wie bei Setzen und „+1“ abgewiesen.
+   */
   decrement(catalog: Catalog, inventory: Inventory, partId: string): InventoryChange;
   /** „−1“ verfügbar: bestandsfähig und Anzahl ≥ 1. */
   decrementAvailable(catalog: Catalog, inventory: Inventory, partId: string): boolean;
   /** Inhalt einer Set-Vorlage addieren (REQ-SET-4). */
   addSet(inventory: Inventory, template: SetTemplate): Inventory;
-  /** Teil-IDs im Bestand, die nicht bestandsfähig sind (REQ-BEST-7), aufsteigend sortiert. */
+  /**
+   * Teil-IDs im Bestand, die nicht bestandsfähig sind und Anzahl ≥ 1 haben (REQ-BEST-7: die zu
+   * meldenden; Einträge mit Anzahl 0 werden mitgeführt, aber nicht gemeldet), aufsteigend sortiert.
+   */
   ignoredPartIds(catalog: Catalog, inventory: Inventory): ReadonlyArray<string>;
   /** Befehl im Modus anwenden; „sandbox“ wirkt exakt wie M2 `apply` (REQ-MODUS-2/-3/-4). */
   applyInMode(
@@ -205,8 +212,9 @@ export type InventoryApi = {
   ): ReadonlyArray<StockPaletteEntry>;
   shoppingList(catalog: Catalog, inventory: Inventory, elements: Elements): ShoppingList;
   /**
-   * Kurzform für die Statusleiste: „Bestand reicht“ bzw. „fehlen n Teile“ (REQ-EINK-5); nicht
-   * bestimmbar: „Einkaufsliste nicht bestimmbar“ (Wahl von spec-to-tests, siehe Testdatei).
+   * Kurzform für die Statusleiste (REQ-EINK-5): „Bestand reicht“ bei leerer Liste, „fehlt 1 Teil“
+   * bei Summe 1, „fehlen n Teile“ bei Summe n ≥ 2, „Einkaufsliste nicht bestimmbar“ bei nicht
+   * bestimmbarem Verbrauch.
    */
   shoppingShort(list: ShoppingList): string;
 };
@@ -227,7 +235,10 @@ export type InventoryMessage =
     }
   /** Kaputter Bestand ließ sich nicht verschieben (REQ-BEST-5). */
   | { readonly kind: "bestandNichtVerschoben"; readonly reason: string; readonly text: string }
-  /** Unbekannte oder Baugruppen-IDs im gespeicherten Bestand (REQ-BEST-7), aufsteigend sortiert. */
+  /**
+   * Unbekannte oder Baugruppen-IDs mit Anzahl ≥ 1 im gespeicherten Bestand (REQ-BEST-7),
+   * aufsteigend sortiert. Gibt es keine, entsteht keine solche Meldung.
+   */
   | {
       readonly kind: "bestandIgnoriert";
       readonly partIds: ReadonlyArray<string>;
@@ -242,7 +253,10 @@ export type InventoryMessage =
       readonly text: string;
     };
 
-/** Speicherfehler beim Bestand (REQ-BEST-6) melden sich wie in M2 als `speicherFehler`. */
+/**
+ * Speicherfehler beim Bestand (REQ-BEST-6) und beim Modus (REQ-MODUS-1) melden sich wie in M2 als
+ * `speicherFehler`.
+ */
 export type PlannerMessage = EditorMessage | InventoryMessage;
 
 export type PlannerSession = Omit<Session, "messages"> & {

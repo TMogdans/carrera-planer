@@ -319,6 +319,119 @@ describe("Bestandsprüfung der Befehle", () => {
     ).toHaveLength(3);
   });
 
+  test.skip("[REQ-MODUS-3] Verbrauch vor dem Befehl nicht bestimmbar: zählt je Teil als 0; Beispiel [unbekanntes Teil] → Gerade 342 bei Bestand 0 abgewiesen, bei 1 wirkt", async () => {
+    const E = await loadEditor();
+    const I = await loadInventory();
+    const s = loaded(E, [{ id: "u", part: UNKNOWN_ID }]);
+    const prep = run(E, s, [select("u"), { type: "setAction", action: "ersetzen" }]);
+
+    for (const inv of [
+      {},
+      { "gerade-342": 0 },
+      { "gerade-114": 5, "kurve-1-90": 5 },
+    ] as Inventory[]) {
+      const r = I.applyInMode(CATALOG, inv, "bestand", prep, choose("gerade-342"));
+      expectRejectedUnchanged(E, r, prep);
+      expect(r.rejection?.partId).toBe("gerade-342");
+      expect(r.rejection?.name).toBe("Gerade 342");
+      expect(r.rejection?.text).toContain("Gerade 342");
+    }
+    for (const inv of [{ "gerade-342": 1 }, MACH8] as Inventory[]) {
+      const r = I.applyInMode(CATALOG, inv, "bestand", prep, choose("gerade-342"));
+      expect(r.rejection).toBeUndefined();
+      expectSameState(E, r.state, E.apply(CATALOG, prep, choose("gerade-342")));
+      expect(partsOf(r.state.elements)).toEqual(["gerade-342"]);
+    }
+  });
+
+  test.skip("[REQ-MODUS-3] Verbrauch vor dem Befehl nicht bestimmbar: die Sperre prüft jedes Teil der neuen Folge, nicht nur das neue", async () => {
+    const E = await loadEditor();
+    const I = await loadInventory();
+    // [unbekannt, Gerade 342, Gerade 342]: das unbekannte Element durch Gerade 342 ersetzen
+    const s = loaded(E, [
+      { id: "u", part: UNKNOWN_ID },
+      { id: "g1", part: "gerade-342" },
+      { id: "g2", part: "gerade-342" },
+    ]);
+    const prep = run(E, s, [select("u"), { type: "setAction", action: "ersetzen" }]);
+    const ok = I.applyInMode(CATALOG, { "gerade-342": 3 }, "bestand", prep, choose("gerade-342"));
+    expect(ok.rejection).toBeUndefined();
+    expect(partsOf(ok.state.elements)).toEqual(Array(3).fill("gerade-342"));
+    const short = I.applyInMode(
+      CATALOG,
+      { "gerade-342": 2 },
+      "bestand",
+      prep,
+      choose("gerade-342"),
+    );
+    expectRejectedUnchanged(E, short, prep);
+    expect(short.rejection?.partId).toBe("gerade-342");
+
+    // ein vorhandenes, schon überzogenes Teil zählt vorher als 0 und damit als gestiegen
+    const withCurve = loaded(E, [
+      { id: "u", part: UNKNOWN_ID },
+      { id: "k", part: "kurve-1-90", turn: "links" },
+    ]);
+    const prepCurve = run(E, withCurve, [select("u"), { type: "setAction", action: "ersetzen" }]);
+    const curveShort = I.applyInMode(
+      CATALOG,
+      { "gerade-342": 5 },
+      "bestand",
+      prepCurve,
+      choose("gerade-342"),
+    );
+    expectRejectedUnchanged(E, curveShort, prepCurve);
+    expect(curveShort.rejection?.partId).toBe("kurve-1-90");
+    expect(curveShort.rejection?.name).toBe("Kurve 1/90°");
+    const curveOk = I.applyInMode(
+      CATALOG,
+      { "gerade-342": 1, "kurve-1-90": 1 },
+      "bestand",
+      prepCurve,
+      choose("gerade-342"),
+    );
+    expect(curveOk.rejection).toBeUndefined();
+    expect(partsOf(curveOk.state.elements)).toEqual(["gerade-342", "kurve-1-90"]);
+  });
+
+  test.skip("[REQ-MODUS-3] Eigenschaft: vorher nicht bestimmbar, nachher bestimmbar → abgewiesen genau dann, wenn ein Teil mit Verbrauch über dem Bestand liegt", async () => {
+    const E = await loadEditor();
+    const I = await loadInventory();
+    const placeable = E.paletteEntries(CATALOG)
+      .filter((e) => e.kind === "platzierbar")
+      .map((e) => e.partId);
+    fc.assert(
+      fc.property(
+        catalogElementsArb,
+        fc.constantFrom(...placeable),
+        anyInventoryArb,
+        fc.nat(),
+        (rest, part, inventory, pos) => {
+          // genau ein unbekanntes Element an beliebiger Stelle; Querungen auf es gibt es nicht
+          const onlyParts = rest.filter((el) => "part" in el);
+          const at = pos % (onlyParts.length + 1);
+          const elements: Elements = [
+            ...onlyParts.slice(0, at),
+            { id: "u", part: UNKNOWN_ID },
+            ...onlyParts.slice(at),
+          ];
+          const prep = run(E, loaded(E, elements), [
+            select("u"),
+            { type: "setAction", action: "ersetzen" },
+          ]);
+          const viaM2 = E.apply(CATALOG, prep, choose(part));
+          const after = usage(viaM2.elements);
+          const over = Object.entries(after).some(([p, n]) => n > 0 && n > countIn(inventory, p));
+          const r = I.applyInMode(CATALOG, inventory, "bestand", prep, choose(part));
+          expect(r.rejection !== undefined).toBe(over);
+          if (over) expectRejectedUnchanged(E, r, prep);
+          else expectSameState(E, r.state, viaM2);
+        },
+      ),
+      { numRuns: 200 },
+    );
+  });
+
   test.skip("[REQ-MODUS-3] Befehle ohne Folgeänderung (Auswahl, Aktion, Leistenrichtung) wirken wie in M2", async () => {
     const E = await loadEditor();
     const I = await loadInventory();

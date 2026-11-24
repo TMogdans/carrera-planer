@@ -200,12 +200,13 @@ describe("Kaputter Bestand", () => {
       expect(m.text).toContain(backupKey);
       expect(m.reason.length).toBeGreaterThan(0);
       if (raw !== NOT_JSON) expect(m.reason, label).toContain(inventoryReason(raw));
-      // erst Ausweichschlüssel geschrieben, dann erst der Bestandsschlüssel angefasst
+      // erst Ausweichschlüssel geschrieben, danach sofort der leere Bestand (Überarbeitung 2)
       const writes = writesTo(storage, 0);
       const backupAt = writes.indexOf(backupKey);
       const inventoryAt = writes.indexOf(INVENTORY_KEY);
       expect(backupAt, label).toBeGreaterThanOrEqual(0);
-      if (inventoryAt >= 0) expect(inventoryAt, label).toBeGreaterThan(backupAt);
+      expect(inventoryAt, label).toBeGreaterThan(backupAt);
+      expect(storedCounts(storage.data), label).toEqual({});
       // danach normales Sichern
       s.increment("gerade-342");
       expect(storedCounts(storage.data)).toEqual({ "gerade-342": 1 });
@@ -213,17 +214,63 @@ describe("Kaputter Bestand", () => {
     }
   });
 
-  test.skip("[REQ-BEST-5] ein Fund wird nur einmal verschoben: der nächste Start legt keinen weiteren Ausweichschlüssel an", async () => {
-    // Abgeleitet aus Smoke 9 („ein zweiter Fund legt einen zweiten Schlüssel an“): Neuladen ohne
-    // neuen Fund verschiebt nichts erneut. Die Spec sagt nur, wann der Schlüssel überschrieben
-    // werden darf; dass er nach dem Verschieben nicht mehr als Fund gilt, folgt daraus.
+  test.skip("[REQ-BEST-5] ein Fund wird nur einmal verschoben: sofort leerer Bestand gespeichert, spätere Starts legen keinen weiteren Ausweichschlüssel an", async () => {
     const api = await loadPlannerSession();
-    const storage = new MemoryStorage({ [INVENTORY_KEY]: NOT_JSON });
+    const defectKeys = (storage: MemoryStorage): string[] =>
+      [...storage.data.keys()].filter((k) => k.startsWith(INVENTORY_DEFECT_PREFIX)).sort();
+    for (const [label, raw] of BROKEN) {
+      const storage = new MemoryStorage({ [INVENTORY_KEY]: raw });
+      open(api, storage);
+      // sofort nach dem Verschieben: gültiger leerer Bestand, ohne jede Bestandsänderung
+      const stored = storage.data.get(INVENTORY_KEY);
+      expect(stored, label).toBeDefined();
+      const doc: unknown = JSON.parse(stored as string);
+      expect(Schema.decodeUnknownEither(inventorySchema())(doc)._tag, label).toBe("Right");
+      expect(storedCounts(storage.data), label).toEqual({});
+      // weitere Starts, auch zu späterer Zeit, ohne neue Beschädigung
+      for (const at of [ISO, "2026-11-24T09:00:00.000Z"]) {
+        const mark = storage.log.length;
+        const again = api.createPlannerSession({
+          catalog: CATALOG,
+          templates: TEMPLATES,
+          storage,
+          clock: fixedClock(at),
+        });
+        expect(defectKeys(storage), label).toEqual([`${INVENTORY_DEFECT_PREFIX}${ISO}`]);
+        expect(again.inventoryDefectBackups(), label).toEqual([`${INVENTORY_DEFECT_PREFIX}${ISO}`]);
+        expect(again.messages, label).toEqual([]);
+        expect(normalized(again.inventory), label).toEqual({});
+        expect(writesTo(storage, mark), label).toEqual([]);
+      }
+    }
+  });
+
+  test.skip("[REQ-BEST-5] erneute Beschädigung nach dem Verschieben: der nächste Start legt einen zweiten Ausweichschlüssel an", async () => {
+    const api = await loadPlannerSession();
+    const later = "2026-11-24T08:30:00.000Z";
+    const first = BROKEN[0]?.[1] as string;
+    const second = BROKEN[2]?.[1] as string;
+    const storage = new MemoryStorage({ [INVENTORY_KEY]: first });
     open(api, storage);
-    const again = open(api, storage);
-    expect(again.inventoryDefectBackups()).toEqual([`${INVENTORY_DEFECT_PREFIX}${ISO}`]);
-    expect(again.messages.some((m) => m.kind === "bestandVerschoben")).toBe(false);
-    expect(normalized(again.inventory)).toEqual({});
+    open(api, storage); // Neuladen ohne Änderung
+    storage.data.set(INVENTORY_KEY, second); // von Hand ein zweites Mal beschädigt
+    const s = api.createPlannerSession({
+      catalog: CATALOG,
+      templates: TEMPLATES,
+      storage,
+      clock: fixedClock(later),
+    });
+    const m = s.messages.find((x) => x.kind === "bestandVerschoben");
+    expect(m?.kind === "bestandVerschoben" && m.backupKey).toBe(
+      `${INVENTORY_DEFECT_PREFIX}${later}`,
+    );
+    expect(storage.data.get(`${INVENTORY_DEFECT_PREFIX}${ISO}`)).toBe(first);
+    expect(storage.data.get(`${INVENTORY_DEFECT_PREFIX}${later}`)).toBe(second);
+    expect([...s.inventoryDefectBackups()].sort()).toEqual(
+      [`${INVENTORY_DEFECT_PREFIX}${ISO}`, `${INVENTORY_DEFECT_PREFIX}${later}`].sort(),
+    );
+    expect(storedCounts(storage.data)).toEqual({});
+    expect(normalized(s.inventory)).toEqual({});
   });
 
   test.skip("[REQ-BEST-5] belegter Ausweichschlüssel: -2, -3 …; auflisten, Rohtext, löschen; keine Layout-Schlüssel", async () => {
@@ -381,6 +428,55 @@ describe("Kaputter Bestand", () => {
   });
 });
 
+describe("Nicht zählende Einträge mit Anzahl 0", () => {
+  test.skip("[REQ-BEST-7] unbekannte und Baugruppen-IDs mit Anzahl 0: unverändert mitgespeichert, nicht gemeldet", async () => {
+    const api = await loadPlannerSession();
+    const rawCounts = (storage: MemoryStorage): Record<string, number> =>
+      (JSON.parse(storage.data.get(INVENTORY_KEY) as string) as InventoryDoc).counts;
+    const expectZeroKept = (storage: MemoryStorage, id: string): void => {
+      const counts = rawCounts(storage);
+      expect({ id, kept: Object.hasOwn(counts, id) }).toEqual({ id, kept: true });
+      expect({ id, n: counts[id] }).toEqual({ id, n: 0 });
+    };
+
+    // nur Nullen: keine Meldung
+    const zeros = new MemoryStorage({
+      [INVENTORY_KEY]:
+        '{"schemaVersion":1,"counts":{"kurve-1-90":8,"gibt-es-nicht":0,"looping":0}}',
+    });
+    const s = open(api, zeros);
+    expect(s.messages).toEqual([]);
+    expect(countIn(s.inventory, "kurve-1-90")).toBe(8);
+    s.increment("gerade-342");
+    expectZeroKept(zeros, "gibt-es-nicht");
+    expectZeroKept(zeros, "looping");
+    expect(rawCounts(zeros)["kurve-1-90"]).toBe(8);
+    expect(rawCounts(zeros)["gerade-342"]).toBe(1);
+    // auch nach weiteren Änderungen und einem Neustart
+    s.addSet(T_AUSBAU1.id, true);
+    s.setCount("kurve-1-90", "3");
+    const reopened = open(api, zeros);
+    expect(reopened.messages).toEqual([]);
+    reopened.decrement("gerade-342");
+    expectZeroKept(zeros, "gibt-es-nicht");
+    expectZeroKept(zeros, "looping");
+
+    // gemischt: gemeldet wird nur die ID mit Anzahl ≥ 1
+    const mixed = new MemoryStorage({
+      [INVENTORY_KEY]:
+        '{"schemaVersion":1,"counts":{"kurve-1-90":8,"gibt-es-nicht":0,"steilkehre":2}}',
+    });
+    const t = open(api, mixed);
+    const m = t.messages.filter((x) => x.kind === "bestandIgnoriert");
+    expect(m).toHaveLength(1);
+    expect(m[0]?.kind === "bestandIgnoriert" && m[0].partIds).toEqual(["steilkehre"]);
+    expect(m[0]?.text).not.toContain("gibt-es-nicht");
+    t.increment("gerade-342");
+    expectZeroKept(mixed, "gibt-es-nicht");
+    expect(rawCounts(mixed).steilkehre).toBe(2);
+  });
+});
+
 describe("Bestand und Layouts getrennt", () => {
   test.skip("[REQ-BEST-8] Bestandsänderungen schreiben nur carrera-planer:bestand und ändern weder Folge, Verlauf, Namen noch Arbeitsstand", async () => {
     const api = await loadPlannerSession();
@@ -521,10 +617,35 @@ describe("Bestand ändern in der Sitzung", () => {
       s.decrement(id);
       expect(s.messages.length).toBe(before + 2);
     }
-    // −1 bei Anzahl 0 ändert nichts und schreibt nicht
+    // −1 bei Anzahl 0 ändert nichts, schreibt nicht und liefert keine Meldung
+    const n = s.messages.length;
     s.decrement("gerade-171");
     expect(normalized(s.inventory)).toEqual({ "kurve-1-90": 8 });
     expect(writesTo(storage, mark)).toEqual([]);
+    expect(s.messages).toHaveLength(n);
+  });
+
+  test.skip("[REQ-BEST-2] −1 bei Anzahl 0 in der Sitzung: keine Änderung, kein Schreiben, keine Meldung", async () => {
+    const api = await loadPlannerSession();
+    const storage = new MemoryStorage();
+    const s = open(api, storage);
+    const n = s.messages.length;
+    s.decrement("kurve-1-90"); // leerer Bestand
+    expect(storage.data.has(INVENTORY_KEY)).toBe(false);
+    expect(s.messages).toHaveLength(n);
+    // nach dem Herunterzählen auf 0
+    s.setCount("gerade-114", "1");
+    s.decrement("gerade-114");
+    expect(countIn(s.inventory, "gerade-114")).toBe(0);
+    expect(storedCounts(storage.data)).toEqual({});
+    const mark = storage.log.length;
+    const n0 = s.messages.length;
+    s.decrement("gerade-114");
+    s.decrement("gerade-114");
+    expect(countIn(s.inventory, "gerade-114")).toBe(0);
+    expect(writesTo(storage, mark)).toEqual([]);
+    expect(s.messages).toHaveLength(n0);
+    expect(s.messages.some((m) => m.kind === "bestandAbgewiesen")).toBe(false);
   });
 
   test.skip("[REQ-SET-4] Vorlage gewählt und bestätigt: addiert und sichert; Abbrechen ändert nichts; Beispiel Summe und zweites Mach 8", async () => {
@@ -634,11 +755,11 @@ describe("Modus in der Sitzung", () => {
     }
   });
 
-  test.skip("[REQ-MODUS-1] Speicher wirft beim Lesen oder Schreiben des Modus: Meldung, Modus wechselt im Speicher der Seite, keine Ausnahme", async () => {
-    // Abgeleitet aus REQ-BEST-6 und M2 REQ-STORE-8 (Speicherfehler → Meldung, bedienbar); die
-    // Spec nennt den Modus dort nicht ausdrücklich.
+  test.skip("[REQ-MODUS-1] Speicher wirft beim Lesen oder Schreiben des Modus: Meldung speicherFehler, Modus wechselt trotzdem, keine Ausnahme", async () => {
     const api = await loadPlannerSession();
-    const r = new MemoryStorage({ [MODE_KEY]: "kaputt" });
+    // Lesen scheitert (gespeichert wäre „bestand“): Sandbox, Meldung, Wechsel wirkt
+    const r = new MemoryStorage();
+    open(api, r).setMode("bestand");
     r.fail = (op, key) => op === "get" && key === MODE_KEY;
     let s: PlannerSession | undefined;
     expect(() => {
@@ -647,15 +768,29 @@ describe("Modus in der Sitzung", () => {
     const reader = s as PlannerSession;
     expect(reader.mode).toBe("sandbox");
     expect(reader.messages.some((m) => m.kind === "speicherFehler")).toBe(true);
+    expect(reader.messages.some((m) => m.kind === "modusUngueltig")).toBe(false);
+    expect(() => reader.setMode("bestand")).not.toThrow();
+    expect(reader.mode).toBe("bestand");
+    reader.dispatch(choose("gerade-342")); // leerer Bestand: abgewiesen, aber bedienbar
+    expect(reader.state.elements).toEqual([]);
+    expect(reader.messages.at(-1)?.kind).toBe("befehlAbgewiesen");
 
+    // Schreiben scheitert: jeder Wechsel wirkt und meldet speicherFehler
     const w = new MemoryStorage();
     const writer = open(api, w);
     w.fail = (op, key) => op === "set" && key === MODE_KEY;
-    const n = writer.messages.length;
-    expect(() => writer.setMode("bestand")).not.toThrow();
-    expect(writer.mode).toBe("bestand");
-    expect(writer.messages.length).toBeGreaterThan(n);
-    expect(writer.messages.at(-1)?.kind).toBe("speicherFehler");
+    for (const mode of ["bestand", "sandbox", "bestand"] as const) {
+      const n = writer.messages.length;
+      expect(() => writer.setMode(mode)).not.toThrow();
+      expect(writer.mode).toBe(mode);
+      expect(writer.messages.length).toBeGreaterThan(n);
+      expect(writer.messages.at(-1)?.kind).toBe("speicherFehler");
+    }
+    expect(w.data.has(MODE_KEY)).toBe(false);
+    // bedienbar: Bestand und Strecke reagieren weiter
+    writer.increment("gerade-342");
+    writer.dispatch(choose("gerade-342"));
+    expect(writer.state.elements).toHaveLength(1);
   });
 
   test.skip("[REQ-MODUS-2] Sitzung im Modus „Sandbox“: Bestand beeinflusst keinen Befehl", async () => {
