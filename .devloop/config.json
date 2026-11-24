@@ -5,7 +5,8 @@
   },
   "smoke": {
     "tiers": [
-      "T1"
+      "T1",
+      "T3"
     ],
     "setup": null
   }
