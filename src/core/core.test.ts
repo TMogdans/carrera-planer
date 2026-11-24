@@ -1919,3 +1919,37 @@ describe("Teileverbrauch", () => {
     );
   });
 });
+
+describe("Testnachtrag M1: Lücken aus #12 und #13", () => {
+  test.skip("[REQ-CORE-26] [REQ-CORE-28] zweite Querung nach gescheiterter erster: ankunftNichtAmQueranschluss und bereitsGequert", () => {
+    // Kreuzung, drei Kurven rechts, Gerade 171: Ankunft (171, 0, 2), nicht an (171, ±57)
+    const layout = [
+      part("k", "kreuzung"),
+      ...ids("c", repeat(3, "kurve-1-90", "rechts")),
+      part("g", "gerade-171"),
+      crossing("q1", "k"),
+      crossing("q2", "k"),
+    ];
+    expect(runTrace(layout, ORIGIN)).toEqual({
+      ok: false,
+      errors: [
+        {
+          kind: "ankunftNichtAmQueranschluss",
+          index: 5,
+          id: "q1",
+          ref: "k",
+          arrival: P(171, 0, 2),
+        },
+        { kind: "bereitsGequert", index: 6, id: "q2", ref: "k" },
+      ],
+    });
+  });
+
+  test.skip("[REQ-CORE-25] Querung auf Kreuzung mit überzähliger Richtung: nur richtungUeberzaehlig, kein ungültiger Verweis", () => {
+    const layout = [part("k", "kreuzung", "links"), crossing("q", "k")];
+    expect(runTrace(layout, ORIGIN)).toEqual({
+      ok: false,
+      errors: [{ kind: "richtungUeberzaehlig", index: 0, partId: "kreuzung" }],
+    });
+  });
+});
