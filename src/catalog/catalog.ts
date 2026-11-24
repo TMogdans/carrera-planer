@@ -31,10 +31,19 @@ export const CATALOG: ReadonlyArray<CatalogEntry> = [
   {
     id: "gerade-114",
     name: "Gerade 114",
-    articleNumbers: ["20061658"],
-    source: "CT, Karton Mach 8 (nachgemessen)",
+    articleNumbers: "keineEigene",
+    source: "CT (nur in Packung 20061658), Karton Mach 8 (nachgemessen)",
     certainty: "hoch",
     geometry: { kind: "gerade", length: 114 },
+  },
+  {
+    id: "gerade-100",
+    name: "Gerade 100",
+    articleNumbers: "keineEigene",
+    source:
+      "CT, Artikel 20061658 (Packung 3 × 100 + 3 × 114); Maß laut Carrera, nicht nachgemessen",
+    certainty: "hoch",
+    geometry: { kind: "gerade", length: 100 },
   },
   {
     id: "kurve-1-90",

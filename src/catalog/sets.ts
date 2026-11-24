@@ -1,6 +1,7 @@
 /**
- * Set-Vorlagen (Spec M3a, Tabelle „Set-Vorlagen M3a“, REQ-SET-2/-3): Packungen mit fester
- * Teileliste, deren Inhalt auf den Bestand addiert wird. Reine Daten in Tabellenreihenfolge.
+ * Set-Vorlagen (Spec M3a, Tabelle „Set-Vorlagen M3a“, REQ-SET-2/-3; danach die Packung 20061658
+ * aus Spec gerade-100): Packungen mit fester Teileliste, deren Inhalt auf den Bestand addiert
+ * wird. Reine Daten in Tabellenreihenfolge.
  * Stützen und Regler sind keine Katalogteile und fehlen deshalb.
  */
 import type { SetTemplate } from "../schema/schema.js";
@@ -55,5 +56,17 @@ export const SET_TEMPLATES: ReadonlyArray<SetTemplate> = [
     source: "CT-Seite 20061676 („1x Wireless Anschlussschiene, 2x Wireless Handregler“)",
     certainty: "hoch",
     contents: [{ part: "wireless-anschluss", count: 1 }],
+  },
+  {
+    id: "geraden-100-114",
+    name: "Geraden 3 × 100 + 3 × 114",
+    articleNumber: "20061658",
+    source:
+      "CT-Seite 20061658 („3 x Geraden 100 mm Länge, 3 x Geraden 114 mm Länge“), docs/carrera-go-katalog.md",
+    certainty: "hoch",
+    contents: [
+      { part: "gerade-100", count: 3 },
+      { part: "gerade-114", count: 3 },
+    ],
   },
 ];

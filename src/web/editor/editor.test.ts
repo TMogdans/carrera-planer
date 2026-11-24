@@ -545,7 +545,7 @@ describe("Leisten-Einteilung", () => {
     expect(entries).toHaveLength(CATALOG.length);
   });
 
-  test.skip("[REQ-EDIT-21] Katalog mit gerade-100: die 14 Einträge von Gerade 342 bis Rundenzähler platzierbar, Gerade 100 an vierter Stelle; Maße fehlen und ausgeblendet unverändert", async () => {
+  test("[REQ-EDIT-21] Katalog mit gerade-100: die 14 Einträge von Gerade 342 bis Rundenzähler platzierbar, Gerade 100 an vierter Stelle; Maße fehlen und ausgeblendet unverändert", async () => {
     const E = await loadEditor();
     const entries = E.paletteEntries(CATALOG);
     expect(entries.map((e) => e.partId)).toEqual(CATALOG.map((e) => e.id));

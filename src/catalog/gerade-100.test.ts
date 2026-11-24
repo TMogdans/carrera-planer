@@ -66,7 +66,7 @@ const packNumberClashes = (
 };
 
 describe("Gerade 100 und Packung 20061658", () => {
-  test.skip("[REQ-G100-1] gerade-100: Name, keine eigene Nummer, Gerade 100 mm, Sicherheit hoch, Quelle, keine Prägung, direkt nach gerade-114, besteht das Schema", () => {
+  test("[REQ-G100-1] gerade-100: Name, keine eigene Nummer, Gerade 100 mm, Sicherheit hoch, Quelle, keine Prägung, direkt nach gerade-114, besteht das Schema", () => {
     const e = byId("gerade-100");
     expect({
       id: e.id,
@@ -92,7 +92,7 @@ describe("Gerade 100 und Packung 20061658", () => {
     if (Either.isRight(decoded)) expect(decoded.right).toEqual(e);
   });
 
-  test.skip("[REQ-G100-2] gerade-114 ohne eigene Artikelnummer; Geometrie, Name, Sicherheit und Position bleiben; kein Eintrag führt 20061658", () => {
+  test("[REQ-G100-2] gerade-114 ohne eigene Artikelnummer; Geometrie, Name, Sicherheit und Position bleiben; kein Eintrag führt 20061658", () => {
     const e = byId("gerade-114");
     expect({
       name: e.name,
@@ -118,7 +118,7 @@ describe("Gerade 100 und Packung 20061658", () => {
     ).toEqual([]);
   });
 
-  test.skip("[REQ-G100-3] Packungsnummer ist keine Teilenummer: keine Vorlagen-Nummer als Katalognummer; Wirkungsnachweis mit gerade-114 = 20061658 und gerade-342 + 20062492", () => {
+  test("[REQ-G100-3] Packungsnummer ist keine Teilenummer: keine Vorlagen-Nummer als Katalognummer; Wirkungsnachweis mit gerade-114 = 20061658 und gerade-342 + 20062492", () => {
     const templates = api.SET_TEMPLATES;
     // die Prüfung ist nicht leer: die Packung 20061658 und Mach 8 sind Vorlagen
     expect(templates.map((t) => t.articleNumber)).toEqual(
