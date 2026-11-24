@@ -1,7 +1,8 @@
 # Spec: M3a — Bestand, Bestandsmodus, Einkaufsliste, Prägung (im Browser, ohne Server)
 
-Status: abgenommen am 2026-11-24, Überarbeitung 1 (Entscheidungen zu den offenen Fragen
-eingetragen, Smoke als Station für T3). Die Kriterien verweisen mit „(Frage n)“ auf den Abschnitt
+Status: abgenommen am 2026-11-24, Überarbeitung 2 (Klarstellungen aus spec-to-tests, abgenommen
+2026-11-24); Überarbeitung 1 trug die Entscheidungen zu den offenen Fragen ein und machte den
+Smoke zur Station für T3. Die Kriterien verweisen mit „(Frage n)“ auf den Abschnitt
 „Entscheidungen (abgenommen 2026-11-24)“.
 Grundlage: [KONZEPT.md](../../../KONZEPT.md) (abgenommen 2026-11-23; Abschnitte „Modi“,
 „Geometrie“ → „Baugruppen“, „Architektur“, „Meilensteine“, „Offen“),
@@ -121,7 +122,8 @@ sind, ist in #28 offen.
   sie danach genau dieser Wert; „+1“ erhöht um eins, „−1“ senkt um eins. Eine Eingabe, die keine
   ganze Zahl ≥ 0 ist (negativ, gebrochen, leer, keine Zahl), und jede Teil-ID, die unbekannt
   oder eine Baugruppe ist, wird abgewiesen: der Bestand bleibt unverändert, die Logik liefert eine
-  Meldung. „−1“ bei Anzahl 0 ist nicht verfügbar und ändert nichts. Beispiel: leerer Bestand,
+  Meldung. „−1“ bei Anzahl 0 ist nicht verfügbar: es ändert nichts und liefert keine Meldung (in
+  der Oberfläche ist das Bedienelement ausgegraut, REQ-BUI-1). Beispiel: leerer Bestand,
   Kurve 1/90° auf 8 setzen, dann „−1“ → 7; Steilkehre (Baugruppe) auf 1 setzen → abgewiesen.
 - **REQ-BEST-3** [When] Nach jeder wirksamen Bestandsänderung (REQ-BEST-2, REQ-BEST-9,
   REQ-SET-4) sichert die Logik den Bestand sofort über die eingereichte Speicher-Schnittstelle aus
@@ -137,7 +139,12 @@ sind, ist in #28 offen.
   REQ-STORE-9 in M2), bei belegtem Schlüssel mit `-2`, `-3`, … bis einer frei ist. Erst nach
   gelungenem Schreiben dort darf `carrera-planer:bestand` überschrieben werden. Die Logik startet
   mit leerem Bestand und liefert eine Meldung mit Ausweichschlüssel und Grund (Text der
-  Schema-Prüfung). Scheitert das Verschieben, bleibt der kaputte Wert unter
+  Schema-Prüfung). Ein Fund wird genau einmal verschoben: Nach gelungenem Verschieben schreibt
+  die Logik sofort den leeren Bestand unter `carrera-planer:bestand`. Ein späterer Start findet
+  dort also einen gültigen (leeren) Bestand und legt keinen weiteren Ausweichschlüssel an; einen
+  neuen Ausweichschlüssel gibt es nur, wenn `carrera-planer:bestand` danach erneut einen kaputten
+  Wert enthält (Smoke-Fall 9: von Hand ein zweites Mal beschädigt). Scheitert das Verschieben,
+  bleibt der kaputte Wert unter
   `carrera-planer:bestand` und wird in dieser Sitzung nicht überschrieben; Änderungen leben dann
   nur im Speicher der Seite, und die Meldung sagt das. Defekte Bestandssicherungen lassen sich
   auflisten, als Rohtext exportieren und nach Bestätigung löschen, nicht laden (Frage 13).
@@ -150,7 +157,8 @@ sind, ist in #28 offen.
   nächsten Sichern werden sie unverändert mitgeschrieben, nicht still entfernt (Frage 12).
   Beispiel: `{"schemaVersion":1,"counts":{"kurve-1-90":8,"gibt-es-nicht":3}}` → Kurve 1/90° 8,
   Meldung nennt `gibt-es-nicht`; nach „+1“ auf Gerade 342 steht im Speicher weiterhin
-  `"gibt-es-nicht":3`.
+  `"gibt-es-nicht":3`. Ein solcher Eintrag mit Anzahl 0 wird ebenfalls unverändert mitgespeichert,
+  aber nicht gemeldet.
 - **REQ-BEST-8** [Contract] Bestand und Layouts berühren sich im Speicher nicht: Eine
   Bestandsänderung schreibt nur `carrera-planer:bestand` bzw. dessen Ausweichschlüssel und ändert
   weder Elementfolge noch Verlauf, aktuellen Namen oder Arbeitsstand-Schlüssel; die Liste der
@@ -191,7 +199,9 @@ sind, ist in #28 offen.
   bleiben Elementfolge, Verlauf, Auswahl, Aktion und aktueller Name unverändert; es entsteht kein
   Verlaufseintrag und kein Schreiben des Arbeitsstands. Start und Speicherung des Modus nach
   Frage 6 (zuletzt gewählter Modus unter `carrera-planer:modus`; fehlt oder ist der
-  Wert ungültig, „Sandbox“ und bei ungültigem Wert eine Meldung).
+  Wert ungültig, „Sandbox“ und bei ungültigem Wert eine Meldung). Wirft der Speicher beim Lesen
+  oder Schreiben von `carrera-planer:modus`, liefert die Logik die Meldung `speicherFehler` (wie
+  M2, REQ-STORE-8); der Modus wechselt trotzdem, und die Anwendung bleibt bedienbar.
 - **REQ-MODUS-2** [Contract] Im Modus „Sandbox“ beeinflusst der Bestand keinen Befehl: Für
   beliebige Bestände und Befehlsfolgen ergibt die Sandbox dieselben Zustände wie der M2-Editor
   ohne Bestand (Eigenschaft). Die M2-Tests in `src/web/editor` laufen unverändert grün.
@@ -199,7 +209,11 @@ sind, ist in #28 offen.
   unverändert, kein Verlaufseintrag, Meldung mit dem Namen des betroffenen Teils), wenn nach dem
   Befehl für mindestens ein Teil p gilt: Verbrauch(p) ist gestiegen und Verbrauch(p) > Bestand(p).
   Ist der Verbrauch nach dem Befehl nicht bestimmbar, wird jeder Befehl abgewiesen, der ein
-  Teil-Element hinzufügt oder ersetzt. Alle anderen Befehle wirken wie in der Sandbox (Frage 4).
+  Teil-Element hinzufügt oder ersetzt. War der Verbrauch **vor** dem Befehl nicht bestimmbar,
+  zählt er je Teil als 0; die Sperre greift dann, sobald der neue Verbrauch eines Teils dessen
+  Bestand übersteigt. Beispiel: Folge `[unbekanntes Teil]`, dieses Element durch Gerade 342
+  ersetzen, Bestand Gerade 342 = 0 → abgewiesen; bei Bestand 1 → wirkt. Alle anderen Befehle
+  wirken wie in der Sandbox (Frage 4).
   Beispiele mit Bestand = Mach 8: aus der leeren Folge fünfmal Gerade 342 → vier angehängt, der
   fünfte abgewiesen; siebenmal Kurve 1/90° → sechs angehängt. Im Oval (REQ-CORE-13 (c)) eine
   Gerade 342 durch Engstelle ersetzen → wirkt; danach die andere Gerade 342 durch Engstelle
@@ -231,7 +245,7 @@ sind, ist in #28 offen.
 - **REQ-EINK-1** [When] Die Einkaufsliste ist eine reine Funktion von Katalog, Bestand und
   Elementfolge. Sie enthält je Katalogeintrag mit Fehlmenge ≥ 1, in Katalogreihenfolge, eine Zeile
   mit Teil-ID, Name, benötigt (= Verbrauch), vorhanden (= Bestand) und fehlt (= Fehlmenge), dazu
-  die Summe der Fehlmengen. Ohne Zeilen meldet sie „alles vorhanden“. Baugruppen erscheinen nie
+  die Summe der Fehlmengen. Ohne Zeilen liefert sie wörtlich den Text „alles vorhanden“. Baugruppen erscheinen nie
   als Zeile, nur ihre Bestandteile. Beispiele: Oval, leerer Bestand → Kurve 1/90° fehlt 4,
   Gerade 342 fehlt 2, zusammen 6. Acht, leerer Bestand → Gerade 114 1, Kurve 1/90° 6, Kreuzung 1,
   Anschlussstück 1, zusammen 9. Oval oder Acht mit Bestand Mach 8 → „alles vorhanden“. Neun
@@ -248,7 +262,10 @@ sind, ist in #28 offen.
     Suchbegriff, gekennzeichnet als „Prägung“.
   - Hat er weder Artikelnummer noch Prägung: den Hinweis „keine Artikelnummer, keine Prägung
     bekannt“ und für jede Baugruppe des Katalogs, die ihn enthält und Artikelnummern hat,
-    „enthalten in <Name der Baugruppe>, Art.-Nr. <Nummern>“ (Frage 10).
+    „enthalten in <Name der Baugruppe>, Art.-Nr. <Nummern>“ (Frage 10). Hat die Baugruppe
+    mehrere Artikelnummern, stehen sie in diesem einen Eintrag in Katalogreihenfolge, getrennt
+    durch „, “ (Komma und Leerzeichen): „Art.-Nr. <Nr. 1>, <Nr. 2>“. Heute hat keine Baugruppe
+    mehr als eine Nummer; geprüft wird das mit einem veränderten Katalog.
 
   Beispiele mit leerem Bestand (Layouts nur per Laden/Import, weil Baugruppen nicht platzierbar
   sind; der Kern meldet „Maße fehlen“, der Verbrauch zählt trotzdem):
@@ -260,8 +277,10 @@ sind, ist in #28 offen.
   einschließlich unbekannter Teil-IDs): fehlt(p) = max(0, Verbrauch(p) − Bestand(p)) für jedes
   Teil; die Liste ist genau dann leer, wenn kein Teil überzogen ist; addiert man die Fehlmengen
   auf den Bestand, ist die Liste danach leer; Einträge nach REQ-BEST-7 ändern nichts am Ergebnis.
-- **REQ-EINK-5** [Where] Die Einkaufsliste und ihre Kurzform in der Statusleiste („Bestand
-  reicht“ bzw. „fehlen n Teile“) gibt es in beiden Modi (Frage 7). Im Modus „Bestand“ ist sie nur
+- **REQ-EINK-5** [Where] Die Einkaufsliste und ihre Kurzform in der Statusleiste gibt es in
+  beiden Modi (Frage 7). Die Kurzform lautet wörtlich: „Bestand reicht“ bei leerer Liste, „fehlt
+  1 Teil“ bei Summe 1, „fehlen n Teile“ bei Summe n ≥ 2 und „Einkaufsliste nicht bestimmbar“,
+  wenn der Verbrauch nicht bestimmbar ist (REQ-EINK-2). Im Modus „Bestand“ ist sie nur
   nach Laden, Import oder einer Bestandsänderung nicht leer.
 
 ### Prägung (`src/schema`, `src/catalog`)
@@ -349,6 +368,13 @@ sind, ist in #28 offen.
   Händlerlinks.
 - Bestands-Verlauf (Rückgängig für Bestandsänderungen).
 - Änderungen an `src/core` oder an `articleNumbers`.
+
+## Bekannte Grenzen
+
+- Effect (3.22) verliert beim Dekodieren eines Records den Schlüssel `__proto__`. Ein
+  gespeicherter Bestand mit der Teil-ID `__proto__` verliert diesen Eintrag deshalb beim Laden,
+  entgegen REQ-BEST-7. Über die Oberfläche ist das nicht erreichbar (keine Katalog-ID heißt so,
+  REQ-BEST-2 weist unbekannte IDs ab); nur von Hand im Speicher. Kein Kriterium prüft es.
 
 ## Entscheidungen (abgenommen 2026-11-24)
 
@@ -443,7 +469,9 @@ Gegenfälle, die geschlossen bleiben müssen:
 9. Kaputter Bestand (Entwicklerwerkzeuge, `carrera-planer:bestand` von Hand ändern): kein JSON;
    `schemaVersion` 2; Anzahl −1; Zusatzfeld. Jedes Mal nach Neuladen: leerer Bestand, sichtbare
    Meldung mit Ausweichschlüssel, der Rohtext liegt unverändert unter
-   `carrera-planer:bestand:defekt:<Zeitstempel>`; ein zweiter Fund legt einen zweiten Schlüssel an.
+   `carrera-planer:bestand:defekt:<Zeitstempel>`. Noch einmal neu laden, ohne etwas zu ändern →
+   kein weiterer Ausweichschlüssel. Erst nach einer zweiten Beschädigung von Hand legt der
+   nächste Start einen zweiten Schlüssel an.
    Beide stehen im Bestandsdialog und lassen sich herunterladen und löschen. Die Layout-Liste und
    die Layout-Defektliste aus M2 zeigen keinen dieser Schlüssel.
 10. Unbekannte Teil-ID: `{"schemaVersion":1,"counts":{"kurve-1-90":8,"gibt-es-nicht":3}}` →
