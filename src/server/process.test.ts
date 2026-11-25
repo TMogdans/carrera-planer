@@ -275,6 +275,43 @@ describe("Start", () => {
     expect(await exitWithin(r, 10_000)).not.toBe("zeitueberschreitung");
   }, 30_000);
 
+  test.skip("[REQ-SRV-1] ohne CARRERA_DB und CARRERA_STATIC wirken data/carrera-planer.sqlite und dist relativ zum Arbeitsverzeichnis (ohne Port 8080)", async () => {
+    // Testnachtrag: Wirkung der Pfad-Vorgaben am Kindprozess, cwd = tmp-Verzeichnis. Host und Port
+    // sind gesetzt, damit der Test nicht an 8080 hängt; deren Vorgaben prüfen resolveConfig
+    // (config.test.ts) und der Vorgabe-Test unten.
+    const cwd = newDir();
+    const marker = "Carrera-dist-im-Arbeitsverzeichnis-4b8e";
+    mkdirSync(join(cwd, "dist"));
+    writeFileSync(join(cwd, "dist", "index.html"), `<!doctype html><title>${marker}</title>`);
+    const P = await freePort();
+    const env = { CARRERA_HOST: "127.0.0.1", CARRERA_PORT: String(P) };
+    const dbFile = join(cwd, "data", "carrera-planer.sqlite");
+    expect(existsSync(join(cwd, "data"))).toBe(false);
+
+    const first = startMain(env, cwd);
+    await ready(first, P);
+    expect(existsSync(dbFile)).toBe(true);
+    expect(readFileSync(dbFile).subarray(0, 16).toString("latin1")).toBe("SQLite format 3\0");
+    const index = await call(P, "GET", "/");
+    expect(index.status).toBe(200);
+    expect(index.text).toContain(marker);
+    const put = await call(P, "PUT", "/api/layouts/Oval", { expectedVersion: 0, layout: OVAL });
+    expect(put.status).toBe(201);
+    first.child.kill("SIGTERM");
+    expect(await exitWithin(first, 5_000)).toEqual({ code: 0, signal: null });
+    // die Änderung steht in genau dieser Datei
+    expect(fileContainsJson(dbFile, OVAL)).toBe(true);
+
+    // Neustart im selben Arbeitsverzeichnis findet sie wieder
+    const second = startMain(env, cwd);
+    await ready(second, P);
+    expect((await call(P, "GET", "/api/layouts/Oval")).json()).toMatchObject({
+      version: 1,
+      layout: OVAL,
+    });
+    expect(second.out()).not.toContain("neu angelegt");
+  }, 40_000);
+
   test.skip("[REQ-SRV-1] Vorgaben ohne Umgebungsvariablen: 0.0.0.0:8080, data/carrera-planer.sqlite und dist relativ zum Arbeitsverzeichnis, Erlaubtliste localhost:8080", async () => {
     expect(await portIsFree(8080), "Testvoraussetzung: Port 8080 ist frei").toBe(true);
     const cwd = newDir();
