@@ -1,11 +1,13 @@
 # Spec: M3b — Backend (Teil A: Server, API, Datenbank)
 
-Status: **Überarbeitung 1, zur Abnahme per Review des Spec-PR.** Der Entwurf `0b59a44` legte
+Status: **Überarbeitung 2, zur Abnahme per Review des Spec-PR.** Der Entwurf `0b59a44` legte
 Empfehlungen zu den Entscheidungsfragen vor; laut Rückmeldung an die Kette vom 2026-11-25 hat der
 Mensch sie mit drei Abweichungen angenommen (keine Übernahme-Funktion, Host-Prüfung gegen
-DNS-Rebinding, `src/server` im Mutations-Ratchet) und den Schnitt auf Teil A festgelegt. Diese
-Fassung trägt das ein; sie selbst ist noch nicht abgenommen. Die Kriterien verweisen mit
-„(Entscheidung n)“ auf den Abschnitt „Entscheidungen“.
+DNS-Rebinding, `src/server` im Mutations-Ratchet) und den Schnitt auf Teil A festgelegt
+(Überarbeitung 1). Überarbeitung 2 trägt seine Entscheidungen zu den sieben offenen Punkten ein
+(Abschnitt „Zur Abnahme — entschieden“): das Speicher-Kriterium (ID SARCH-5) entfällt, die
+Architektur des Raspi ist gemessen. Diese Fassung selbst geht noch durch das Review des
+Spec-PR. Die Kriterien verweisen mit „(Entscheidung n)“ auf den Abschnitt „Entscheidungen“.
 Grundlage: [KONZEPT.md](../../../KONZEPT.md) (abgenommen 2026-11-23; Abschnitte „Ziel“,
 „Architektur“ mit „Gleichzeitiges Bearbeiten“, „Meilensteine“),
 [constitution.md](../../constitution.md), die umgesetzten Specs [M2](../m2-editor/spec.md),
@@ -42,6 +44,11 @@ fasst die Dateien an, Entscheidung 10):**
 - `package.json`, Skripte: `"build:server": "tsc -p tsconfig.server.json"` und
   `"start": "node dist-server/server/main.js"` (Entscheidung 6; getrennt, damit in M4 ein
   Container nur `start` braucht und nicht auf dem Raspi übersetzt).
+
+Die Datei `tsconfig.server.json` ist nicht geschützt und kommt von implement (REQ-SRV-1): sie
+erweitert `tsconfig.json` und setzt `noEmit: false`, `rootDir: "src"` und
+`outDir: "dist-server"`, damit `src/server/main.ts` genau nach `dist-server/server/main.js`
+übersetzt wird, den Pfad, den `start` aufruft.
 
 spec-to-tests kann vor dem Admin-PR laufen; implement erst danach.
 
@@ -321,12 +328,9 @@ Layout nicht (mehr) gibt (Entscheidung 3).
   (Vitest, Node 22), `PUT /api/bestand` mit allen Katalogteilen höchstens 50 ms im Maximum; der
   Test gibt Maximum und Median aus. Gemessen auf dem Entwicklungsrechner bzw. in CI, nicht auf dem
   Raspi (Annahme 4).
-- **REQ-SARCH-5** [Performance] **Speicher.** Der gestartete Server (übersetzter Stand,
-  `pnpm start`, Node 22) belegt nach dem Start und nach 200 Anfragen (100 × `PUT` eines Layouts mit
-  1000 Elementen unter wechselnden Namen, 100 × `GET`) höchstens 150 MB Resident Set Size; der
-  Test gibt den Höchstwert über die Messpunkte aus. Grund: Auf dem Ziel sind etwa 615 MB frei, die
-  Rezepte-App läuft daneben (Annahme 3). (`REQ-SARCH-4` war im Entwurf `0b59a44` Teil B
-  zugeordnet und bleibt frei.)
+
+Die IDs SARCH-4 (im Entwurf `0b59a44` Teil B) und SARCH-5 (Speicher-Schwelle in
+Überarbeitung 1, gestrichen; siehe „Bekannte Grenzen“) sind vergeben gewesen und bleiben frei.
 
 ## Entscheidungen
 
@@ -374,19 +378,18 @@ Teil A wird nicht ausgeliefert; diese Punkte prüft M4. Sie stehen hier, weil di
 stillschweigend etwas über die Laufzeit annähme.
 
 1. **Node-Version.** `.nvmrc` und `engines` sagen 22; gemessen habe ich nur mit Node 26.13.1.
-   Annahme: CI und der M4-Container laufen mit Node 22; REQ-SARCH-3 und -5 gelten für Node 22.
+   Annahme: CI und der M4-Container laufen mit Node 22; REQ-SARCH-3 gilt für Node 22.
    Auf dem Raspi ist Node nicht installiert, also kein Widerspruch dort; die Version legt das
    Container-Image in M4 fest.
-2. **Prozessorarchitektur — offener Punkt mit Risiko.** `aarch64` ist die Kernel-Architektur.
-   Raspberry Pi OS liefert auf dem 3B auch einen 64-Bit-Kernel mit 32-Bit-Userland aus; dann zieht
-   Docker `linux/arm/v7`-Images, und für `linux-arm` hat `better-sqlite3` 13.2.0 **keine**
-   fertige Binärdatei. Es müsste im Image übersetzt werden (Compiler im Build-Schritt, und
-   `pnpm-workspace.yaml` müsste den Build von `better-sqlite3` freigeben, geschützter Satz).
-   Vor M4 auf dem Raspi prüfen: `docker info --format '{{.Architecture}}'` und
-   `dpkg --print-architecture` (erwartet `aarch64`/`arm64`), oder die Architektur des
-   Rezepte-Images (`docker image inspect … --format '{{.Architecture}}'`).
-3. **Speicher.** Etwa 615 MB frei neben der Rezepte-App. Annahme: unter 150 MB für den Server
-   (REQ-SARCH-5, gemessen auf dem Entwicklungsrechner). Auf dem Raspi selbst erst in M4.
+2. **Prozessorarchitektur — geklärt (gemessen vom Menschen, 2026-11-25).** Das Userland auf dem
+   Raspi ist 64 Bit: `dpkg --print-architecture` meldet `arm64`, `getconf LONG_BIT` meldet 64,
+   das laufende Image (Rezepte-App) ist `linux/arm64`. Ein M4-Container läuft damit als
+   `linux/arm64`, und dafür bringt `better-sqlite3` 13.2.0 eine fertige Binärdatei mit
+   (`prebuilds/linux-arm64.node` für glibc, `linuxmusl-arm64.node` für Alpine). Kein Übersetzen im
+   Image, keine Freigabe in `pnpm-workspace.yaml` nötig. Der frühere Risikopunkt
+   (32-Bit-Userland) ist geschlossen.
+3. **Speicher.** Etwa 615 MB frei neben der Rezepte-App. Kein Schwellentest in Teil A; gemessen
+   wird in M4 auf dem Zielgerät (siehe „Bekannte Grenzen“).
 4. **Rechenzeit.** Die Grenzen aus REQ-SARCH-3 gelten auf dem Entwicklungsrechner und in CI. Ein
    Pi 3B ist deutlich langsamer (nicht gemessen); ob die Antwortzeiten dort im Alltag reichen,
    misst M4.
@@ -444,25 +447,26 @@ erzeugt dafür keine Kriterien und keine Tests. Festgehalten, weil die API darau
   Adresse anspricht, darf lesen und schreiben (Constitution).
 - **IP-Adressen nur per Liste.** Anders als Vite erlaubt der Server nicht automatisch jede
   IP-Adresse; die LAN-IP muss in `CARRERA_ALLOWED_HOSTS` stehen (sicherer, aber ein
-  Konfigurationsschritt mehr; siehe „Zur Abnahme“).
+  Konfigurationsschritt mehr; entschieden, „Zur Abnahme“ Punkt 3).
+- **Speicherbedarf.** Speicherbedarf auf dem Pi 3B (etwa 615 MB frei) wird in M4 auf dem
+  Zielgerät unter Last gemessen, mit Höchstwert. Ein RSS-Schwellentest auf Entwicklungsrechner/CI
+  würde mit der GC schwanken und nicht das Ziel messen.
 
-## Zur Abnahme
+## Zur Abnahme — entschieden
 
-Der Mensch entscheidet (Empfehlung jeweils in Klammern):
+Alle Punkte entschieden laut Rückmeldung an die Kette vom 2026-11-25:
 
-1. Statuscode 421 statt 403 für fremden Host (Entscheidung 9)? (421)
-2. `[::1]:<P>` zusätzlich in der Vorgabe-Liste (dritte Loopback-Form; nicht in der Vorgabe des
-   Menschen)? (ja)
-3. Jede IP-Adresse als `Host` automatisch erlauben wie Vite? DNS-Rebinding braucht einen
-   Hostnamen, eine IP-Adresse als `Host` kann es nicht vortäuschen. Spart das Eintragen der
-   LAN-IP. (nein, Liste reicht; ja wäre vertretbar)
-4. Zwei Skripte `build:server` und `start` im Admin-PR statt eines einzigen `start`, das auch
-   übersetzt (Annahme 5)? (zwei)
-5. Admin-PR ändert neben `stryker.config.json` auch `vitest.mutation.config.ts`; ohne das läuft
-   unter Stryker kein Server-Test. (ja, nötig)
-6. Speicher-Kriterium REQ-SARCH-5 mit 150 MB (neu, aus dem gemessenen Zielbetrieb)? (ja)
-7. Architektur auf dem Raspi vor M4 prüfen (Annahme 2)? (ja; bei 32-Bit-Userland wird M4
-   deutlich teurer)
+1. Statuscode für fremden Host: **421** (nicht 403), Entscheidung 9, REQ-SRV-7. Angenommen.
+2. `[::1]:<P>` steht in der Vorgabe-Liste neben `localhost:<P>` und `127.0.0.1:<P>`. Angenommen.
+3. IP-Adressen werden **nicht** automatisch erlaubt, nur über `CARRERA_ALLOWED_HOSTS`.
+   Angenommen.
+4. Zwei Skripte `build:server` und `start` (Annahme 5). Angenommen.
+5. Der Admin-PR ändert `stryker.config.json`, `vitest.mutation.config.ts` und `package.json`
+   (Vorbedingung oben). Angenommen.
+6. Das Speicher-Kriterium (ID SARCH-5, Schwelle 150 MB) ist **gestrichen**; die ID bleibt frei. Der
+   Speicherbedarf steht als bekannte Grenze und wird in M4 auf dem Zielgerät gemessen.
+7. Architektur des Raspi: gemessen, Userland 64 Bit (`arm64`), fertige
+   `better-sqlite3`-Binärdatei vorhanden (Annahme 2). Risikopunkt geschlossen.
 
 ## Smoke
 
@@ -533,9 +537,10 @@ Gegenfälle, die geschlossen bleiben müssen:
 
 Teil A wird nicht ausgeliefert (Deploy ist M4). Erst dort nachweisbar:
 
-- Architektur des Raspi-Userlands und damit, ob die fertige `better-sqlite3`-Binärdatei passt
-  (Annahme 2).
-- Speicher und Antwortzeiten auf dem Pi 3B neben der Rezepte-App (Annahmen 3 und 4).
+- Die fertige `better-sqlite3`-Binärdatei (`linux-arm64`) lädt im Container auf dem Raspi
+  (Architektur gemessen, Annahme 2; das Laden selbst erst mit dem Image).
+- Speicherbedarf unter Last mit Höchstwert und Antwortzeiten auf dem Pi 3B neben der Rezepte-App
+  (Annahmen 3 und 4, „Bekannte Grenzen“).
 - `SIGTERM` beim Stoppen des Containers beendet sauber, die Datei auf dem Volume übersteht den
   Neustart (REQ-SRV-5).
 - Mit gesetztem `CARRERA_ALLOWED_HOSTS` erreichen Laptop, Tablet und Handy den Server über
