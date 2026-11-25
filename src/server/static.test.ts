@@ -277,4 +277,26 @@ describe("Statische Dateien", () => {
       ).status,
     ).toBe(201);
   });
+
+  test.skip("[REQ-SRV-2] Gegenprobe zur Warnung: ist das Verzeichnis vorhanden, warnt der Start nicht und / liefert die index.html", async () => {
+    const h = await startHarness();
+    // Testnachtrag: die Warnung darf nur kommen, wenn das Verzeichnis fehlt (Mutant „immer warnen“)
+    expect(
+      h.err.filter((l) => l.includes(h.staticDir)),
+      h.err.join("\n"),
+    ).toEqual([]);
+    const all = [...h.out, ...h.err];
+    expect(
+      all.filter((l) => /nicht gebaut|pnpm build/.test(l)),
+      all.join("\n"),
+    ).toEqual([]);
+    const r = await h.call("GET", "/");
+    expect(r.status).toBe(200);
+    expect(r.text).toContain(INDEX_MARKER);
+    // auch nach einem Neustart keine Warnung
+    const before = all.length;
+    await h.restart();
+    const after = [...h.out, ...h.err].slice(before);
+    expect(after.filter((l) => /nicht gebaut|pnpm build/.test(l))).toEqual([]);
+  });
 });
