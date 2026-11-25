@@ -288,8 +288,11 @@ Drehung einbauen — ein Test muss rot werden).
   parallele Spurlinien mit einer diagonalen Verbindung; Engstelle = zwei Linien, die sich zur Mitte
   hin nähern und wieder öffnen. Im Smoke sind alle vier auch in der Graustufen-Emulation der
   Entwicklerwerkzeuge (Achromatopsie) auseinanderzuhalten. Die Plakette ist hell mit dunkler
-  Kontur; Kontrast Kontur zu Band und Plakette zu Band jeweils mindestens 3 : 1 (WCAG 1.4.11,
-  grafische Objekte) (Frage 10).
+  Kontur; Kontrast Plakette zu Band und Kontur zum Flächenhintergrund (`#e9e6df`) jeweils
+  mindestens 3 : 1 (WCAG 1.4.11, grafische Objekte) (Frage 10). Kontur zu Band wird nicht
+  verlangt: Das Band hat die Leuchtdichte 0,089, selbst Schwarz erreicht dazu nur 2,78 : 1. Gegen
+  das Band trennt die helle Plakette, gegen den Hintergrund die Kontur (Nachschärfung nach der
+  Implementierung, vom Menschen abgenommen).
 - **REQ-SYM-4** [Where] Jedes Symbol trägt ein SVG-`<title>` mit dem vollen Namen des
   Katalogeintrags, sodass am Laptop ein Hovern den Namen zeigt, auch wenn der Schalter aus ist
   oder der Name nicht passt.
@@ -418,7 +421,7 @@ Vor dem ersten Fall in den Entwicklerwerkzeugen `carrera-planer:beschriftung` l�
 8. **Ohne Farbe.** Entwicklerwerkzeuge → Rendering → „Achromatopsia“ emulieren: die vier Symbole
    sind auseinanderzuhalten, die Namen auf Band und Hintergrund lesbar. Kontrast mit dem
    Farbwähler der Entwicklerwerkzeuge: Textfüllung zu `#4b5563` ≥ 4,5, Halo zu `#e9e6df` ≥ 4,5,
-   Plakette und Kontur zum Band ≥ 3.
+   Plakette zum Band ≥ 3, Kontur zu `#e9e6df` ≥ 3.
 9. **Handy 360 × 740** (Entwicklerwerkzeuge oder echtes Gerät). Schalter „Namen“ in der
    Werkzeugleiste mit dem Daumen treffbar (≥ 44 × 44), Seite ohne waagerechtes Scrollen. Großes
    Oval (je Seite 4 × Gerade 342) einpassen → Geraden zeigen „342“, Kurven nichts, kein Name ragt
