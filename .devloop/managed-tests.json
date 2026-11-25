@@ -1,10 +1,11 @@
 {
-  "_comment": "Von spec-to-tests geschriebene Tests: T2/T3-Bereiche plus die DOM-freie Editor-Logik (src/web/editor). Die Testhilfen in src/web/test-support sind keine *.test.ts-Dateien und stehen deshalb im geschützten Satz (protected-globs.json). Übrige Oberflächen-Tests in src/web sind frei.",
+  "_comment": "Von spec-to-tests geschriebene Tests: T2/T3-Bereiche plus die DOM-freie Editor-Logik (src/web/editor) und die Container-Tests (deploy, ab M4). Die Testhilfen in src/web/test-support sind keine *.test.ts-Dateien und stehen deshalb im geschützten Satz (protected-globs.json). Übrige Oberflächen-Tests in src/web sind frei.",
   "globs": [
     "src/core/**/*.test.ts",
     "src/catalog/**/*.test.ts",
     "src/schema/**/*.test.ts",
     "src/server/**/*.test.ts",
-    "src/web/editor/**/*.test.ts"
+    "src/web/editor/**/*.test.ts",
+    "deploy/**/*.test.ts"
   ]
 }
