@@ -1,8 +1,11 @@
 # Spec: M4 — Deploy als Container auf dem Raspberry Pi
 
-Status: **Entwurf, zur Abnahme per Review des Spec-PR.** Die Abschnitte „Empfehlungen“ und „Zur
-Abnahme — offen“ enthalten Entscheidungen, die der Mensch noch treffen muss; die Kriterien sind so
-geschrieben, wie die Empfehlungen sie verlangen. Grundlage: [KONZEPT.md](../../../KONZEPT.md)
+Status: **Überarbeitung 1, zur Abnahme per Review des Spec-PR.** Der Entwurf `ea1827f` legte
+Empfehlungen und acht offene Punkte vor. Laut Rückmeldung an die Kette vom 2026-11-25 hat der
+Mensch entschieden (Abschnitt „Entscheidungen“): Empfehlungen 1–3 und 5–10 angenommen, Heim-VPN
+ist das WireGuard-VPN der Fritzbox mit kanonischer Adresse `rezepte.fritz.box:8080`, der
+Workflow-Job kommt **vor** implement (Empfehlung 4 ersetzt), `smoke.tiers` bekommt T2 dazu.
+Grundlage: [KONZEPT.md](../../../KONZEPT.md)
 (Ziel: „läuft auf dem Raspi im Heimnetz und ist von unterwegs per VPN erreichbar“; Architektur:
 „Docker auf dem Raspi, eigener Port“; Meilenstein M4), [constitution.md](../../constitution.md),
 die umgesetzte Spec [M3b Teil A](../m3b-backend/spec.md) (Abschnitte „Annahmen zum Zielbetrieb“,
@@ -20,11 +23,11 @@ Compose-Datei mit Bind-Mount, `restart: unless-stopped`, Deploy per `docker comp
 `deploy/backup.sh`, `deploy/measure.mjs`, `deploy/*.test.ts`, `docs/raspi-deploy.md`,
 `README.md`, `src/server/server.ts` (+ Tests) → `{"tier":"T2"}`. T2 kommt allein aus
 `src/server/**` (REQ-DATA-1, Empfehlung 6). Gegenprobe ohne `src/server` → T1. Der Admin-PR
-(`.github/workflows/ci.yml`, `.devloop/*`, `vitest.container.config.ts`, `tsconfig.json`) ist ein
-eigener PR → T1, geschützt über CODEOWNERS. Das autoritative Tier rechnet CI aus dem Diff.
-**Hinweis Smoke:** `smoke.tiers` in `.devloop/config.json` nennt `T1` und `T3`, nicht `T2`. Fällt
-REQ-DATA-1 weg (T1), läuft der Smoke automatisch; bleibt es bei T2, muss der Smoke ausdrücklich
-angestoßen werden. Für einen Deploy-Meilenstein ist der Smoke der eigentliche Nachweis.
+(`.github/workflows/ci.yml`, `.github/CODEOWNERS`, `.devloop/managed-tests.json`,
+`.devloop/protected-globs.json`, `.devloop/config.json`, `vitest.container.config.ts`,
+`tsconfig.json`) ist ein eigener PR → `{"tier":"T1"}`, geschützt über CODEOWNERS. Das autoritative
+Tier rechnet CI aus dem Diff. **Smoke:** `smoke.tiers` bekommt mit dem Admin-PR dauerhaft `T2`
+dazu (Entscheidung 4); damit läuft der Smoke für diese Spec regulär.
 
 ## User Story
 
@@ -54,41 +57,58 @@ Version, damit wir ihn ohne Entwicklungsrechner im Haus und per VPN benutzen kö
 
 | Liefert | Inhalt | Geschützt? |
 |---|---|---|
+| **Admin-PR** (ein PR, **vor** dem Tests-PR und vor implement) | Vorbedingung unten | ja |
+| **spec-to-tests** | `src/server/*.test.ts` für REQ-DATA-1; `deploy/*.test.ts` für alle Container-Kriterien | managed (Server schon heute, `deploy/` ab Admin-PR) |
 | **implement** | `Dockerfile`, `.dockerignore`, `deploy/docker-compose.yml`, `deploy/backup.sh`, `deploy/measure.mjs`, `docs/raspi-deploy.md`, `README.md` (Abschnitt Betrieb), Startprüfung „beschreibbar“ in `src/server/server.ts` | nein (Server: T2, CODEOWNERS) |
-| **spec-to-tests** | `src/server/*.test.ts` für REQ-DATA-1; `deploy/*.test.ts` für alle Container-Kriterien | managed (Server heute, `deploy/` nach Admin-PR Teil 1) |
-| **Admin-PR Teil 1** (vor implement) | siehe unten | ja |
-| **Admin-PR Teil 2** (Workflow) | siehe unten | ja |
-| **Mensch am Gerät** | Erst-Deploy, Messung am Zielgerät, Neustart des Raspi, VPN-Probe, Sichtbarkeit des Pakets auf ghcr.io | – |
+| **Mensch am Gerät** | Paket auf ghcr.io öffentlich stellen, Erst-Deploy, Messung am Zielgerät, Neustart des Raspi, VPN-Probe | – |
 
-**Admin-PR Teil 1 (vor implement; spec-to-tests kann vorher laufen):**
+Reihenfolge: Spec-PR → **Admin-PR** → spec-to-tests (Tests-PR) → implement → Critic → Smoke →
+Merge → CI pusht das Image → Deploy durch den Menschen. Solange es kein `Dockerfile` gibt, läuft
+der Job `image` grün durch, ohne zu bauen (Wächter unten); ab dem implement-PR baut und testet er.
 
-- `.devloop/managed-tests.json`: `globs` bekommt `deploy/**/*.test.ts`. Sonst darf implement die
-  Container-Tests schreiben, die seine eigene Arbeit prüfen.
-- `vitest.container.config.ts` (neu, Wurzel, damit `tsconfig.json` sie über `*.config.ts`
-  typprüft): `include: ["deploy/**/*.test.ts"]`, **ohne** `passWithNoTests`, `testTimeout`
-  großzügig (Container-Start), `fileParallelism: false` (feste Ports, ein Docker-Daemon).
-  Die Standard-`vitest.config.ts` bleibt bei `src/**`, damit `pnpm test` kein Docker braucht.
-- `.devloop/protected-globs.json` und `.github/CODEOWNERS`: `vitest.container.config.ts`.
-- `.github/workflows/ci.yml`, Job `escape-hatches`: Semgrep läuft über `src deploy`.
-- Optional `tsconfig.json`: `include` bekommt `deploy`, damit `pnpm typecheck` die Container-Tests
-  prüft (sonst nur von Vitest/esbuild übersetzt, ohne Typprüfung; dann bekannte Grenze).
+**Vorbedingung für spec-to-tests und implement (Admin-PR des Menschen am geschützten Satz; kein
+Agent dieser Kette fasst die Dateien an):**
 
-**Admin-PR Teil 2 (Workflow; Empfehlung 4 zur Reihenfolge):** neuer Job `image` in
-`.github/workflows/ci.yml`:
-
-- `runs-on: ubuntu-24.04-arm` (nativer arm64-Runner, für öffentliche Repos frei), kein QEMU.
-- Läuft auf jedem PR und jedem Push nach `main` (kein Pfadfilter, damit der Check nie hängt und
-  keine Filterlogik den Build still auslässt), `needs: [typecheck, lint, test]`.
-- `docker/setup-buildx-action`, `docker/build-push-action` mit `platforms: linux/arm64`,
-  Cache `type=gha`; Aktionen auf Commit-SHAs gepinnt wie im übrigen `ci.yml`.
-- Nach dem Build: `pnpm install --frozen-lockfile`, dann
-  `CARRERA_IMAGE=… CARRERA_TAG=… pnpm exec vitest run --config vitest.container.config.ts`
-  gegen das eben gebaute Image (geladen mit `load: true`).
-- Nur bei Push nach `main` und nur wenn die Container-Tests grün sind: Login bei ghcr.io mit
-  `GITHUB_TOKEN`, Push als `ghcr.io/tmogdans/carrera-planer:latest` und `:<voller Commit-SHA>`,
-  Labels `org.opencontainers.image.source` (verknüpft das Paket mit dem Repo) und
-  `org.opencontainers.image.revision`. `permissions: packages: write` nur für diesen Job.
-- Danach einmalig von Hand: Paket auf ghcr.io auf **öffentlich** stellen (Empfehlung 5).
+1. `.devloop/config.json`: `smoke.tiers` wird `["T1", "T2", "T3"]` (dauerhaft, Entscheidung 4).
+2. `.devloop/managed-tests.json`: `globs` bekommt `"deploy/**/*.test.ts"`. Sonst dürfte implement
+   die Container-Tests schreiben, die seine eigene Arbeit prüfen.
+3. Neue Datei `vitest.container.config.ts` im Wurzelverzeichnis (dort typprüft `tsconfig.json` sie
+   über `*.config.ts`): `test.include: ["deploy/**/*.test.ts"]`, `exclude` wie in
+   `vitest.config.ts`, **kein** `passWithNoTests`, `testTimeout` und `hookTimeout` je 120 000 ms
+   (Container-Start), `fileParallelism: false` (ein Docker-Daemon, feste Host-Ports). Die
+   Standard-`vitest.config.ts` bleibt bei `src/**`, damit `pnpm test` kein Docker braucht.
+4. `.devloop/protected-globs.json`: Eintrag `"vitest.container.config.ts"`;
+   `.github/CODEOWNERS`: Zeile `/vitest.container.config.ts  @TMogdans`.
+5. `tsconfig.json`: `include` wird `["src", "deploy", "*.config.ts"]`, damit `pnpm typecheck` die
+   Container-Tests prüft.
+6. `.github/workflows/ci.yml`, Job `escape-hatches`: Semgrep läuft über `src deploy` statt `src`.
+7. `.github/workflows/ci.yml`, neuer Job `image`:
+   - `runs-on: ubuntu-24.04-arm` (nativer arm64-Runner, für öffentliche Repos frei), kein QEMU;
+     `needs: [typecheck, lint, test]`; läuft auf jedem PR und jedem Push nach `main`, ohne
+     Pfadfilter (als Required Check nie „pending“).
+   - **Wächter statt Job-Bedingung.** `hashFiles()` steht in GitHub Actions in `jobs.<id>.if`
+     **nicht** zur Verfügung (dort nur die Kontexte `github`, `needs`, `vars`, `inputs` und die
+     Statusfunktionen), und vor dem Checkout gäbe es ohnehin keine Dateien. Tragfähig ist die Form
+     des bestehenden Jobs `mutation`: Der Job läuft immer, ein Schritt nach dem Checkout setzt eine
+     Ausgabe, alle folgenden Schritte hängen an `if: steps.scope.outputs.run == 'true'`. Regel des
+     Schritts: Fehlen `Dockerfile` **und** `deploy/docker-compose.yml`, `run=false` mit Meldung
+     „noch kein Image (M4 nicht umgesetzt)“, Exit 0. Gibt es genau eine der beiden Dateien,
+     **scheitert** der Schritt (Exit 1): Halb gelöscht oder halb geliefert ist ein Fehler, kein
+     Grund zum Überspringen. Gibt es beide, `run=true`. Die Container-Tests selbst stehen nicht in
+     der Regel, denn der Tests-PR landet vor implement mit Platzhaltern auf `main`.
+   - Bei `run=true`: `docker/setup-buildx-action`, `docker/build-push-action` mit
+     `platforms: linux/arm64`, `load: true`, Tag `carrera-planer:ci`, Cache `type=gha`; danach
+     `pnpm/action-setup`, `actions/setup-node` (`.nvmrc`), `pnpm install --frozen-lockfile` und
+     `CARRERA_IMAGE=carrera-planer CARRERA_TAG=ci pnpm exec vitest run --config
+     vitest.container.config.ts`.
+   - Nur bei `push` nach `main`, nur bei `run=true` und nur nach grünen Container-Tests: Login bei
+     `ghcr.io` mit `GITHUB_TOKEN`, Push als `ghcr.io/tmogdans/carrera-planer:latest` und
+     `:${{ github.sha }}`, Labels `org.opencontainers.image.source` (verknüpft das Paket mit dem
+     Repo) und `org.opencontainers.image.revision`. `permissions: contents: read, packages: write`
+     nur für diesen Job.
+   - Aktionen auf Commit-SHAs gepinnt wie im übrigen `ci.yml`.
+8. Nach dem ersten Push (Mensch, einmalig): Paket `carrera-planer` auf ghcr.io auf **öffentlich**
+   stellen (Entscheidung 5).
 
 ## Akzeptanzkriterien
 
@@ -130,7 +150,7 @@ Wirkungsprobe daneben.
   Image, dessen Startbefehl durch einen Node-Prozess ohne Server ersetzt ist
   (`--entrypoint node … -e "setInterval(()=>{},1e9)"`), wird `unhealthy`; der Test darf dafür
   `--health-interval` und `--health-retries` verkürzen, aber nicht den Prüfbefehl ersetzen.
-  Ebenso ein Container mit `CARRERA_ALLOWED_HOSTS=rezepte.local`: Er wird `healthy` (die
+  Ebenso ein Container mit `CARRERA_ALLOWED_HOSTS=rezepte.fritz.box`: Er wird `healthy` (die
   Erlaubtliste aus M3b schließt `127.0.0.1:<P>` immer ein).
 - **REQ-IMG-6** [When] **Beenden.** `docker stop` (SIGTERM, Frist 10 s) beendet den Container
   mit Exit-Code 0 (`State.ExitCode`) binnen 5 s, gemessen vom Aufruf bis zur Rückkehr. Ein Layout
@@ -139,10 +159,12 @@ Wirkungsprobe daneben.
   Ebenso nach `docker restart`.
 - **REQ-IMG-7** [If/Then] **Host-Prüfung durch den veröffentlichten Port** (Befund M3b:
   der Host-Header trägt den äußeren Port). Container mit `-p 8080:8080` und
-  `CARRERA_ALLOWED_HOSTS=rezepte.local`: Anfragen an den Host-Port mit `Host: rezepte.local:8080`
+  `CARRERA_ALLOWED_HOSTS=rezepte.fritz.box`: Anfragen an den Host-Port mit
+  `Host: rezepte.fritz.box:8080`
   → 200; mit `Host: evil.example:8080` → 421 `FremderHost`, Körper ohne Layoutnamen (vorher ein
-  Layout „Oval“ angelegt); mit `Host: rezepte.local` (ohne Port) → 421. Derselbe Container ohne
-  `CARRERA_ALLOWED_HOSTS`: `Host: rezepte.local:8080` → 421, `Host: localhost:8080` → 200.
+  Layout „Oval“ angelegt); mit `Host: rezepte.fritz.box` (ohne Port) → 421; mit
+  `Host: rezepte.local:8080` (nicht eingetragen) → 421. Derselbe Container ohne
+  `CARRERA_ALLOWED_HOSTS`: `Host: rezepte.fritz.box:8080` → 421, `Host: localhost:8080` → 200.
 
 ### Compose-Datei (`deploy/docker-compose.yml`)
 
@@ -158,7 +180,7 @@ Wirkungsprobe daneben.
   Nachweis Rückweg: Mit `CARRERA_TAG` auf ein zweites, lokal getaggtes Image läuft der Container
   danach mit dessen Image-ID (`docker inspect`, Feld `Image`); die Daten bleiben.
 - **REQ-CMP-3** [Where] Die Compose-Datei setzt `restart: unless-stopped`, ein Speicherlimit
-  (vorläufig **384 MiB**, endgültiger Wert nach der Messung am Zielgerät, „Zur Abnahme“ Punkt 3)
+  (vorläufig **384 MiB**, endgültiger Wert nach der Regel aus Empfehlung 10, Entscheidung 1)
   und eine Begrenzung der Container-Logs (`json-file`, `max-size` 1 MB, `max-file` 3), damit die
   SD-Karte nicht volläuft. Nachweis: im laufenden Container zeigt `/sys/fs/cgroup/memory.max`
   das Limit in Byte (Wirkung der cgroup, nicht nur der Datei); `docker inspect` zeigt
@@ -216,7 +238,7 @@ Wirkungsprobe daneben.
 
 ## Prüfarchitektur
 
-- **Container-Tests** (`deploy/*.test.ts`, managed nach Admin-PR Teil 1) laufen nur über
+- **Container-Tests** (`deploy/*.test.ts`, managed ab Admin-PR) laufen nur über
   `pnpm exec vitest run --config vitest.container.config.ts`, nicht in `pnpm test`. Sie bauen kein
   Image, sondern nehmen `CARRERA_IMAGE`/`CARRERA_TAG`. **Fehlt die Variable oder das Image oder
   läuft kein Docker, scheitern sie mit Meldung; sie überspringen nie** (kein bedingtes Skip).
@@ -237,7 +259,7 @@ Wirkungsprobe daneben.
   laufendem Server nur die Hauptdatei); Startprüfung entfernt; Startprüfung nur auf die Datei,
   nicht auf das Verzeichnis.
 
-## Empfehlungen (mit Gegenrede)
+## Empfehlungen (mit Gegenrede; Stand der Entscheidung im Abschnitt „Entscheidungen“)
 
 1. **Basis-Image `node:22-bookworm-slim` für Build- und Laufzeit-Stufe** (Rezepte-App:
    `node:22-alpine` zum Bauen, `distroless/nodejs22-debian12:nonroot` zur Laufzeit).
@@ -251,7 +273,7 @@ Wirkungsprobe daneben.
      läuft schon so auf dem Gerät. Healthcheck und Sicherung brauchen keine Shell im Container
      (beide laufen über Node bzw. auf dem Host), technisch ginge es also. Preis: keine Shell zur
      Fehlersuche und Zahlen nicht auf genau diesem Image gemessen. Ein Wechsel später ist nur das
-     `FROM` der Laufzeit-Stufe plus erneuter Messung. → „Zur Abnahme“ Punkt 1.
+     `FROM` der Laufzeit-Stufe plus erneuter Messung. Entschieden: bookworm-slim.
    - Pinnen: Tag `node:22-bookworm-slim` mit Digest (`@sha256:…`), damit ein Rebuild nicht still
      eine andere Node-Version bringt; Aktualisieren ist eine bewusste Änderung.
 2. **Nativ auf arm64 bauen, nicht per QEMU** (Rezepte-App: amd64-Runner mit QEMU und
@@ -271,17 +293,15 @@ Wirkungsprobe daneben.
      `CARRERA_ALLOWED_HOSTS` den äußeren Port tragen, ein stiller Fehler mit 421. Ein eigener Name
      (`carrera.local`) bräuchte einen Avahi-Alias auf dem Host und spart den Port trotzdem nicht,
      solange Port 80 der Rezepte-App gehört; ein Proxy auf Port 80 griffe in deren Betrieb ein.
-   - Gegenrede: `http://rezepte.local:8080` ist ein unschöner Name für einen Streckenplaner.
+   - Gegenrede: `http://rezepte.fritz.box:8080` ist ein unschöner Name für einen Streckenplaner.
      Ein Proxy (z. B. Caddy) vor beiden Apps wäre eine eigene, spätere Änderung.
-4. **Reihenfolge der Admin-PRs.** Teil 1 vor implement. Teil 2 (Workflow-Job) als Admin-PR **auf
-   dem implement-Branch** aufsetzen, sodass sein CI-Lauf Image-Build und Container-Tests auf dem
-   gemeinsamen Stand zeigt; implement-PR zuerst mergen, Teil 2 direkt danach.
-   - Grund: Käme der Job vor dem `Dockerfile` nach `main`, wäre `main` rot, bis implement landet.
-     Ein Job, der bei fehlendem `Dockerfile` mit 0 endet, wäre ein bedingtes Überspringen.
-   - Gegenrede: Der implement-PR selbst hat dann keinen CI-Lauf der Container-Tests, nur den
-     lokalen Lauf von Critic und Smoke plus den Lauf auf PR Teil 2. Alternative: der Mensch
-     schiebt den Workflow-Commit auf den implement-Branch (ein PR, aber geschützte und
-     ungeschützte Änderungen gemischt im selben Review).
+4. **Reihenfolge der Admin-PRs.** *Abgelöst durch Entscheidung 3:* Der Entwurf schlug den
+   Workflow-Job nach implement vor, weil ein Job vor dem `Dockerfile` `main` rot machen würde und
+   ein bedingtes Überspringen eine Fluchttür sei. Entschieden ist: Job vorab, mit Wächter
+   (Vorbedingung 7). **Restrisiko:** Werden `Dockerfile` und Compose-Datei *zusammen* gelöscht,
+   endet der Job grün ohne Build. Das ist ein großer, im Review sichtbarer Diff, kein stiller
+   Fehler; als bekannte Grenze geführt. Wer es enger will, entfernt die Leerfall-Regel per
+   Admin-PR, sobald M4 auf `main` ist (Folge-Issue).
 5. **Paket auf ghcr.io öffentlich** (Rezepte-App: privat, Token `read:packages` auf dem Raspi).
    - Grund: Das Repo ist öffentlich, das Image enthält nichts, was nicht im Repo steht (geprüft
      durch REQ-IMG-1: keine Datenbank, kein `.git`). Auf dem Raspi liegt dann kein Token.
@@ -297,7 +317,7 @@ Wirkungsprobe daneben.
      ändert `src/server` in einem Deploy-Meilenstein. Ohne die Änderung bliebe der Nachweis bei
      Doku plus Schreibprobe im Smoke; die spätere Rücksicherung bliebe ungeschützt.
      Auch ein Entrypoint, der als root `chown` ausführt und dann die Rechte abgibt, wäre möglich,
-     bringt aber einen root-Start und `gosu`/`su-exec` ins Image. → „Zur Abnahme“ Punkt 2.
+     bringt aber einen root-Start und `gosu`/`su-exec` ins Image. Entschieden: aufnehmen.
 7. **Sicherung: Stopp, Kopie, Start, als Skript in M4; Automatik als Folge-Issue.**
    - Grund: Bei laufender WAL ist eine Dateikopie der Hauptdatei nicht konsistent. Nach sauberem
      Stopp (gemessen ~2 s) schreibt SQLite die WAL zurück, die Kopie ist konsistent; wenige
@@ -345,7 +365,7 @@ REQ-MESS-1. Die Entscheidungsregeln stehen **vor** der Messung fest:
   (`docker inspect -f '{{.State.Pid}}'`), vor und nach jedem Profil; dazu
   `/sys/fs/cgroup/memory.peak` im Container. Gemeldet wird das **Maximum**, nicht ein Mittel.
 - Zeiten: Ausgabe von REQ-MESS-1, je Vorgang **Maximum** und Median.
-- **Schwellen Profil „typisch“** (vorgeschlagen, „Zur Abnahme“ Punkt 4): `GET /api/layouts`
+- **Schwellen Profil „typisch“** (entschieden, Entscheidung 1): `GET /api/layouts`
   Maximum ≤ 1000 ms, `GET /api/layouts/{name}` und `PUT` je Maximum ≤ 500 ms, VmHWM ≤ 50 % des
   Speicherlimits. Wird eine Schwelle gerissen, wird die Liste (Übersicht ohne Volldekodierung,
   Befund Kritik Runde 2) **vor Teil B** umgebaut; dafür ein Issue, das Teil B blockiert.
@@ -370,26 +390,27 @@ fake-hwclock auf Raspberry Pi OS) und springt vorwärts, sobald NTP greift. Bis 
   `docker.service` nach `time-sync.target`): Ohne Netz würde der Dienst dann gar nicht starten.
   Als bekannte Grenze geführt.
 
-## Erreichbarkeit
+## Erreichbarkeit (Entscheidung 2)
 
-- Im Heimnetz: `http://rezepte.local:8080` (mDNS) und `http://<LAN-IP>:8080`; die LAN-IP ist im
-  Router fest vergeben (wie bei der Rezepte-App). Beide Namen stehen in `CARRERA_ALLOWED_HOSTS`
-  in der Datei `.env` neben der Compose-Datei auf dem Raspi (nicht im Repo: sie enthält die
-  LAN-IP).
-- Per VPN: mDNS (`.local`) geht in der Regel nicht durch einen VPN-Tunnel (Multicast). Von
-  unterwegs funktioniert nur ein Name, den der DNS im Tunnel auflöst, oder die LAN-IP, sofern der
-  Tunnel das Heimnetz routet. Welcher VPN es ist und was er routet, ist offen („Zur Abnahme“
-  Punkt 5).
+- **Kanonische Adresse: `http://rezepte.fritz.box:8080`**, im Heimnetz und per VPN gleich. Das
+  Heim-VPN ist das WireGuard-VPN der Fritzbox; dessen Clients nutzen den DNS der Fritzbox, und dort
+  löst `<Name des Raspi>.fritz.box` auf (die Rezepte-App läuft so schon unter
+  `rezepte.fritz.box`). Eine Adresse für alle Geräte heißt auch: **ein** `localStorage`-Ursprung
+  bis Teil B (siehe unten).
+- `CARRERA_ALLOWED_HOSTS` in der Datei `.env` neben der Compose-Datei auf dem Raspi (nicht im
+  Repo): `rezepte.fritz.box` als erster Eintrag, dazu als **Notwege** `rezepte.local` und die
+  `<LAN-IP>` (im Router fest vergeben, wie bei der Rezepte-App). Die Doku nennt die Notwege mit dem
+  Hinweis auf den getrennten `localStorage`.
+- mDNS (`rezepte.local`) geht durch WireGuard in der Regel nicht, weil Multicast nicht geroutet
+  wird; es bleibt Notweg im Heimnetz.
 - **Falle bis Teil B: getrennte Daten je Adresse.** Die Oberfläche speichert bis Teil B im
   `localStorage` des Browsers (`src/web/ui/browser.ts:15`), und der ist je **Herkunft** getrennt:
-  `rezepte.local:8080` und `<LAN-IP>:8080` sehen auf demselben Gerät verschiedene gespeicherte
-  Layouts und verschiedene Bestände. Empfehlung: eine kanonische Adresse für alle Geräte, die auch
-  per VPN funktioniert (vermutlich die LAN-IP), die andere nur als Notweg. Teil B löst das, weil
-  die Daten dann auf dem Server liegen. M4 macht den Planer im Heimnetz **erreichbar**,
-  geräteübergreifend wird er erst mit Teil B.
+  `rezepte.fritz.box:8080`, `rezepte.local:8080` und `<LAN-IP>:8080` sehen auf demselben Gerät
+  verschiedene gespeicherte Layouts und Bestände. Deshalb die eine kanonische Adresse. M4 macht
+  den Planer im Heimnetz **erreichbar**, geräteübergreifend wird er erst mit Teil B.
 - IPv6: Der Server lauscht bei `0.0.0.0` nur auf IPv4 (Smoke M3b). Docker nimmt veröffentlichte
-  Ports auf dem Host auch über IPv6 an und reicht sie an den Container weiter; löst `rezepte.local`
-  auf einem Gerät zuerst zu IPv6 auf, muss das trotzdem gehen (Smoke „Nach dem Deploy“).
+  Ports auf dem Host auch über IPv6 an und reicht sie an den Container weiter; löst ein Name auf
+  einem Gerät zuerst zu IPv6 auf, muss das trotzdem gehen (Smoke „Nach dem Deploy“).
 
 ## Nicht-Ziele (M4)
 
@@ -413,27 +434,28 @@ fake-hwclock auf Raspberry Pi OS) und springt vorwärts, sobald NTP greift. Bis 
 - Uhr nach dem Booten (Abschnitt oben).
 - Getrennte `localStorage`-Daten je Adresse bis Teil B (Abschnitt „Erreichbarkeit“).
 - Sicherung auf derselben SD-Karte (Empfehlung 7).
-- Container-Tests ohne Typprüfung, falls `tsconfig.json` nicht um `deploy` erweitert wird.
+- **Fremde VPNs:** In einem VPN mit eigenem Resolver (z. B. Firmen-VPN) löst `*.fritz.box` nicht
+  auf. Dann bleibt `rezepte.local` bzw. die `<LAN-IP>`, jeweils mit eigenem `localStorage` bis
+  Teil B.
+- **Wächter im Job `image`:** Werden `Dockerfile` und Compose-Datei zusammen gelöscht, endet der
+  Job grün ohne Build (Empfehlung 4).
 
-## Zur Abnahme — offen
+## Entscheidungen
 
-1. **Basis-Image:** `node:22-bookworm-slim` für die Laufzeit (Empfehlung) oder distroless wie die
-   Rezepte-App?
-2. **REQ-DATA-1 (Server-Startprüfung, Tier T2)** aufnehmen oder streichen (dann T1, nur Doku und
-   Smoke-Schreibprobe)? Empfehlung: aufnehmen.
-3. **Speicherlimit:** vorläufig 384 MiB, endgültig nach der Regel in Empfehlung 10. Einverstanden?
-4. **Schwellen am Zielgerät** (Profil „typisch“, 40 × 200 Elemente): Liste ≤ 1000 ms, Einzel-GET
-   und PUT ≤ 500 ms im Maximum, VmHWM ≤ 50 % des Limits. Passt das Profil zu euren realen
-   Strecken, passen die Schwellen?
-5. **VPN:** Welcher VPN ist „das Heim-VPN“, routet er das Heimnetz, und welcher Name wird darin
-   aufgelöst? Davon hängt ab, welche Adresse kanonisch wird und was in
-   `CARRERA_ALLOWED_HOSTS` steht.
-6. **Reihenfolge Admin-PR Teil 2** wie Empfehlung 4 (auf dem implement-Branch, danach mergen) oder
-   der Workflow-Commit direkt auf den implement-Branch?
-7. **ghcr-Paket öffentlich** (Empfehlung 5) oder privat mit Token auf dem Raspi wie bei der
-   Rezepte-App?
-8. **Smoke trotz T2:** `smoke.tiers` enthält T2 nicht. Den Smoke für M4 ausdrücklich anstoßen
-   (Empfehlung) oder `smoke.tiers` per Admin-PR um T2 ergänzen?
+Laut Rückmeldung an die Kette vom 2026-11-25:
+
+1. **Angenommen:** Empfehlungen 1 (Laufzeit `node:22-bookworm-slim`), 2 (nativ arm64), 3 (Port
+   8080:8080, kein eigener Name, kein Proxy), 5 (Paket öffentlich), 6 (REQ-DATA-1 bleibt, Tier T2),
+   7 (Sicherung per Skript in M4, Automatik als Folge-Issue vor Teil B), 8 (Deploy von Hand),
+   9 (kein TLS), 10 (Speicherlimit vorläufig 384 MiB mit der Regel daraus); Profil „typisch“ mit
+   den vorgeschlagenen Schwellen.
+2. **Heim-VPN = WireGuard der Fritzbox; kanonische Adresse `rezepte.fritz.box:8080`** für
+   Heimnetz und VPN. `rezepte.local` und die LAN-IP nur als dokumentierte Notwege. Die VPN-Probe
+   am Gerät gehört zur Abnahme („Nach dem Deploy“ Punkt 5). In der Spec stehen nur Platzhalter,
+   keine IP.
+3. **Workflow-Job `image` vor implement**, mit Wächter auf Schritt-Ebene (Vorbedingung 7); ein
+   gemeinsamer Admin-PR für alle Vorbedingungen. Empfehlung 4 ist abgelöst.
+4. **`smoke.tiers` bekommt dauerhaft T2** (Vorbedingung 1).
 
 ## Smoke
 
@@ -458,7 +480,7 @@ docker build -t carrera-planer:test .
 mkdir -p /tmp/carrera-m4 && cd /tmp/carrera-m4
 cp <repo>/deploy/docker-compose.yml <repo>/deploy/backup.sh .
 mkdir data
-printf 'CARRERA_IMAGE=carrera-planer\nCARRERA_TAG=test\nCARRERA_ALLOWED_HOSTS=rezepte.local,<LAN-IP des Rechners>\n' > .env
+printf 'CARRERA_IMAGE=carrera-planer\nCARRERA_TAG=test\nCARRERA_ALLOWED_HOSTS=rezepte.fritz.box,<LAN-IP des Rechners>\n' > .env
 docker compose up -d
 ```
 
@@ -496,18 +518,20 @@ Nur auf dem echten Raspi nachweisbar. Der Deploy ist eine Handlung des Menschen 
 1. **Image da.** Nach dem Merge zeigt ghcr.io `carrera-planer:latest` und `:<SHA>`;
    `docker pull` auf dem Raspi klappt ohne Anmeldung (falls öffentlich).
 2. **Erst-Deploy.** Verzeichnis anlegen, `data/` als Raspi-Benutzer anlegen (UID 1000),
-   Compose-Datei, `backup.sh` und `.env` (mit `CARRERA_ALLOWED_HOSTS=rezepte.local,<LAN-IP>`)
+   Compose-Datei, `backup.sh` und `.env`
+   (mit `CARRERA_ALLOWED_HOSTS=rezepte.fritz.box,rezepte.local,<LAN-IP>`)
    hinlegen, `docker compose pull && docker compose up -d` → `healthy`. Die Rezepte-App auf Port
    80 läuft unverändert weiter.
 3. **Speicherlimit greift.** `docker exec <container> cat /sys/fs/cgroup/memory.max` → das Limit
    in Byte, nicht `max`. Sonst: Speicher-cgroup im Kernel aus; der Mensch entscheidet, ob sie
    eingeschaltet wird (Kernel-Kommandozeile), oder das Limit bleibt wirkungslos und kommt als
    bekannte Grenze in den PR.
-4. **Geräte.** Laptop, Tablet und Handy öffnen die kanonische Adresse → der Planer erscheint;
-   `rezepte.local:8080` auf mindestens einem Handy (mDNS-Unterstützung unterscheidet sich je
-   Gerät). Ein anderer Name auf dieselbe IP → 421.
-5. **VPN.** Von außerhalb (Handy im Mobilfunk mit VPN) die kanonische Adresse → der Planer
-   erscheint.
+4. **Geräte.** Laptop, Tablet und Handy öffnen `http://rezepte.fritz.box:8080` → der Planer
+   erscheint. Notwege `rezepte.local:8080` und `<LAN-IP>:8080` laden ebenfalls (mDNS-Unterstützung
+   unterscheidet sich je Gerät). Ein nicht eingetragener Name auf dieselbe IP → 421.
+5. **VPN (Abnahme, Entscheidung 2).** Handy im Mobilfunk, verbunden über das WireGuard-VPN der
+   Fritzbox: `http://rezepte.fritz.box:8080` → der Planer erscheint. Gegenprobe:
+   `rezepte.local:8080` im selben Zustand lädt nicht (erwartet, Multicast im Tunnel).
 6. **Messung am Zielgerät** nach dem gleichnamigen Abschnitt, beide Profile; Ergebnis mit
    Maximum in den PR bzw. in ein Issue, Entscheidung „Liste umbauen vor Teil B: ja/nein“ nach der
    vorab festgelegten Regel.
