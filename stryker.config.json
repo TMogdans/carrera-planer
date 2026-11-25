@@ -15,7 +15,8 @@
     "src/web/editor/**/*.ts",
     "src/server/**/*.ts",
     "!src/**/*.test.ts",
-    "!src/**/index.ts"
+    "!src/**/index.ts",
+    "!src/server/main.ts"
   ],
   "ignorePatterns": ["dist", "coverage", "reports"],
   "reporters": ["html", "clear-text", "progress"],
