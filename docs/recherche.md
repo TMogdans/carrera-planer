@@ -21,7 +21,8 @@ Folge für den Rechenkern:
 - Nur 90°-Kurven: alle Anschlusspunkte liegen exakt auf einem 57-mm-Raster.
 - 45°-Kurven bringen √2 hinein und brechen das Raster. Exakt bleibt es mit Koordinaten der Form
   `a + b·√2` (a, b rational) — „geschlossen" ist dann ein exakter Vergleich, keine Toleranz.
-- Toleranz der Steckverbindungen: keine Quelle gefunden.
+- Toleranz der Steckverbindungen: keine Quelle gefunden, auch nicht auf go143.de. Eigene Messungen
+  stehen in #27.
 - Raster 57 mm = halbe Schienenbreite. Passt auch zu einspurigen Streckenelementen, die es laut
   Nutzer gibt (nicht im Bestand, Teile noch nicht identifiziert).
 
@@ -55,6 +56,43 @@ Alle GO!!!-Strecken- und Zubehörartikel von carrera-toys.com (154 Seiten, Stand
 
 Kopierfehler auf CT, nicht übernehmen: 61645 nennt „30°" (gemeint 45°), 61609 nennt „4 Teile,
 161 mm" (gemeint 2 × 228 mm), 61617 nennt „Gefälle 45°" (gemeint Kurvenwinkel).
+
+## Fanseite go143.de
+
+Geprüft 2026-11-25: „Joe's Carrera GO!!! Fanpage“, Maße auf
+<https://www.go143.de/technische-daten-der-go/>. Die Seite sagt nicht, ob sie selbst gemessen
+oder von Carrera übernommen hat. Sicherheit deshalb mittel, außer wo eigene Messungen dazu passen.
+
+**Bestätigt unsere Werte:**
+
+- Spurabstand 60 mm (schließt die Lücke „Spurabstand unbekannt“).
+- Kurve 1/90°: Durchmesser innen 228, außen 456 mm → Mittellinie R1 = 171 mm.
+  Kurve 2/45°: innen 456, außen 684 mm → R2 = 285 mm.
+- Slotlängen passen zu Bögen mit Spuren bei R ± 30 mm (Abweichung höchstens 3,4 mm):
+
+  | Kurve | Slot außen / innen (Seite) | gerechnet |
+  |---|---|---|
+  | 1/90° | 314 / 224 | 315,7 / 221,5 |
+  | 1/45° | 157 / 112 | 157,9 / 110,7 |
+  | 2/45° | 244 / 198 | 247,4 / 200,3 |
+
+- Längen: Gerade 342, ⅓-Gerade 114 (auch Anschluss und Rundenzähler), Spurwechsel und
+  Engstelle 228, Kreuzung 342 × 114.
+- Die 100-mm-Gerade heißt dort „Ausgleichsgerade“, gebraucht „beim Verbauen von diagonalen
+  Streckenführungen“.
+
+**Neu:**
+
+- Looping: ein Teil 284 mm, gesamt 1136 mm (= 4 × 284, also je Spur). Ob Bogenlänge oder Sehne,
+  sagt die Seite nicht; daraus folgt ein Looping-Radius von etwa 181 mm (Bogen) oder 201 mm (Sehne).
+  Nicht nachgemessen (#1).
+- Flyover: 190 mm je Teil (nicht im Bestand).
+- Steilkurven: „entsprechen weitgehend denen der entsprechenden Normalkurven“, keine Zahlen.
+  Spricht für R1 bei der Steilkurve 1/45°, ersetzt keine Messung.
+- Weiche: Slots innen 342 und 298 mm, außen 342 und 344 mm.
+
+**Nicht auf der Seite:** Steckverbindungs-Toleranz, Steilkehre, achtstellige Artikelnummern
+(nur die alten Set-Nummern 60100–60300), die 171-mm-Gerade, ein Streckenplaner.
 
 ## Bestand (Mach 8 + Ausbauset 1 + Ausbauset 3)
 
@@ -111,8 +149,8 @@ Kein kostenloser Browser-Editor speziell für GO!!! gefunden.
 ## Offene Lücken
 
 1. R2/R3 nur abgeleitet (nicht im Bestand, daher unkritisch).
-2. Spurabstand Mitte–Mitte unbekannt.
-3. Radius der Steilkurven unbekannt.
+2. Spurabstand 60 mm laut go143.de, nicht nachgemessen.
+3. Radius der Steilkurven unbekannt (go143.de: „weitgehend“ wie Normalkurven).
 4. Maße von Loop, Steilkehre (Lage des Ausgangs relativ zum Eingang), Brücke, Sprungschanze,
    Wireless-Anschluss fehlen.
 5. Streckenlänge Mach 8 (5,3 m laut CT) nicht nachgerechnet.
