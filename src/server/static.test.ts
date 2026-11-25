@@ -205,7 +205,7 @@ const withBuild = (h: Harness): void => {
 };
 
 describe("Statische Dateien", () => {
-  test.skip("[REQ-SRV-2] unter / die index.html aus CARRERA_STATIC als text/html, auf dem Port der API", async () => {
+  test("[REQ-SRV-2] unter / die index.html aus CARRERA_STATIC als text/html, auf dem Port der API", async () => {
     const h = await startHarness();
     withBuild(h);
     const r = await h.call("GET", "/");
@@ -219,7 +219,7 @@ describe("Statische Dateien", () => {
     expect((await h.call("GET", "/api/status")).json()).toStrictEqual({ status: "ok" });
   });
 
-  test.skip("[REQ-SRV-2] gebaute Dateien mit passendem Content-Type und unverändertem Inhalt", async () => {
+  test("[REQ-SRV-2] gebaute Dateien mit passendem Content-Type und unverändertem Inhalt", async () => {
     const h = await startHarness();
     withBuild(h);
     const js = await h.call("GET", "/assets/index-AbC123.js");
@@ -236,7 +236,7 @@ describe("Statische Dateien", () => {
     expect(svg.text).toBe(SVG);
   });
 
-  test.skip("[REQ-SRV-2] Pfade außerhalb von CARRERA_STATIC sind nicht erreichbar: /../package.json, /%2e%2e/package.json → 404", async () => {
+  test("[REQ-SRV-2] Pfade außerhalb von CARRERA_STATIC sind nicht erreichbar: /../package.json, /%2e%2e/package.json → 404", async () => {
     const h = await startHarness();
     withBuild(h);
     for (const path of [
@@ -257,7 +257,7 @@ describe("Statische Dateien", () => {
     expect((await h.call("GET", "/assets/index-AbC123.js")).status).toBe(200);
   });
 
-  test.skip("[REQ-SRV-2] fehlt das Verzeichnis: Start trotzdem mit Warnung, / antwortet 404 mit „Frontend nicht gebaut (pnpm build)“, die API läuft", async () => {
+  test("[REQ-SRV-2] fehlt das Verzeichnis: Start trotzdem mit Warnung, / antwortet 404 mit „Frontend nicht gebaut (pnpm build)“, die API läuft", async () => {
     const missing = join(tmpdir(), `carrera-m3b-fehlt-${process.pid}-${Date.now()}`);
     const h = await startHarness({ CARRERA_STATIC: missing });
     const all = [...h.out, ...h.err];
@@ -278,7 +278,7 @@ describe("Statische Dateien", () => {
     ).toBe(201);
   });
 
-  test.skip("[REQ-SRV-2] Gegenprobe zur Warnung: ist das Verzeichnis vorhanden, warnt der Start nicht und / liefert die index.html", async () => {
+  test("[REQ-SRV-2] Gegenprobe zur Warnung: ist das Verzeichnis vorhanden, warnt der Start nicht und / liefert die index.html", async () => {
     const h = await startHarness();
     // Testnachtrag: die Warnung darf nur kommen, wenn das Verzeichnis fehlt (Mutant „immer warnen“)
     expect(

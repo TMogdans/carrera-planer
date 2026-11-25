@@ -239,7 +239,7 @@ const countStatus = (rs: ReadonlyArray<Reply>, s: number): number =>
 // ---------------------------------------------------------------------------------------------
 
 describe("Wettlauf", () => {
-  test.skip("[REQ-API-14] 10 gleichzeitige PUT mit derselben Version auf dasselbe Layout: genau eine 200, neun 409, Version + 1, Inhalt des Gewinners", async () => {
+  test("[REQ-API-14] 10 gleichzeitige PUT mit derselben Version auf dasselbe Layout: genau eine 200, neun 409, Version + 1, Inhalt des Gewinners", async () => {
     const h = await startHarness();
     for (let round = 0; round < ROUNDS; round++) {
       const name = `Rennen ${round}`;
@@ -259,7 +259,7 @@ describe("Wettlauf", () => {
     }
   });
 
-  test.skip("[REQ-API-14] 10 gleichzeitige PUT mit Version 0 auf einen neuen Namen: genau eine 201, neun 409, Version 1", async () => {
+  test("[REQ-API-14] 10 gleichzeitige PUT mit Version 0 auf einen neuen Namen: genau eine 201, neun 409, Version 1", async () => {
     const h = await startHarness();
     for (let round = 0; round < ROUNDS; round++) {
       const name = `Neu ${round}`;
@@ -278,7 +278,7 @@ describe("Wettlauf", () => {
     expect(list).toHaveLength(ROUNDS);
   });
 
-  test.skip("[REQ-API-14] 10 gleichzeitige PUT /api/bestand mit derselben Version: genau eine 200, neun 409, Version + 1, Inhalt des Gewinners", async () => {
+  test("[REQ-API-14] 10 gleichzeitige PUT /api/bestand mit derselben Version: genau eine 200, neun 409, Version + 1, Inhalt des Gewinners", async () => {
     const h = await startHarness();
     for (let round = 0; round < ROUNDS; round++) {
       const rs = await Promise.all(
@@ -298,7 +298,7 @@ describe("Wettlauf", () => {
     }
   });
 
-  test.skip("[REQ-API-14] gleichzeitiges PUT und DELETE mit derselben Version: genau eine gewinnt, der Zustand passt zum Gewinner", async () => {
+  test("[REQ-API-14] gleichzeitiges PUT und DELETE mit derselben Version: genau eine gewinnt, der Zustand passt zum Gewinner", async () => {
     const h = await startHarness();
     let putWins = 0;
     let deleteWins = 0;
@@ -459,7 +459,7 @@ const runCommand = async (h: Harness, m: Model, c: Command, step: string): Promi
 };
 
 describe("Eigenschaft", () => {
-  test.skip("[REQ-API-15] beliebige Folgen aus Anlegen, Ändern, Löschen und Bestand-Schreiben: GET liefert den Inhalt, Version + 1 je Erfolg, Ablehnungen ändern nichts", async () => {
+  test("[REQ-API-15] beliebige Folgen aus Anlegen, Ändern, Löschen und Bestand-Schreiben: GET liefert den Inhalt, Version + 1 je Erfolg, Ablehnungen ändern nichts", async () => {
     await FastCheck.assert(
       FastCheck.asyncProperty(
         FastCheck.array(commandArb, { minLength: 1, maxLength: 12 }),

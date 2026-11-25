@@ -213,7 +213,7 @@ const thousand = (run: number) => ({
 });
 
 describe("Leistung", () => {
-  test.skip("[REQ-SARCH-3] Layout mit 1000 Elementen: PUT plus GET höchstens 100 ms im Maximum über 20 Durchläufe", async () => {
+  test("[REQ-SARCH-3] Layout mit 1000 Elementen: PUT plus GET höchstens 100 ms im Maximum über 20 Durchläufe", async () => {
     const h = await startHarness();
     const times: number[] = [];
     for (let run = 0; run < RUNS; run++) {
@@ -239,7 +239,7 @@ describe("Leistung", () => {
     expect(max).toBeLessThanOrEqual(100);
   });
 
-  test.skip("[REQ-SARCH-3] PUT /api/bestand mit allen Katalogteilen höchstens 50 ms im Maximum über 20 Durchläufe", async () => {
+  test("[REQ-SARCH-3] PUT /api/bestand mit allen Katalogteilen höchstens 50 ms im Maximum über 20 Durchläufe", async () => {
     const h = await startHarness();
     expect(CATALOG.length).toBeGreaterThan(10);
     const times: number[] = [];

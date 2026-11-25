@@ -369,7 +369,7 @@ const rawColumnValues = (dbPath: string): unknown[] =>
 // ---------------------------------------------------------------------------------------------
 
 describe("Neue Datenbank", () => {
-  test.skip("[REQ-DB-1] Pfad ohne Datei und ohne Verzeichnis: Verzeichnis und Datei entstehen, Tabellen sind eingerichtet, stdout nennt Pfad und „neu angelegt“", async () => {
+  test("[REQ-DB-1] Pfad ohne Datei und ohne Verzeichnis: Verzeichnis und Datei entstehen, Tabellen sind eingerichtet, stdout nennt Pfad und „neu angelegt“", async () => {
     const dir = newDir();
     const dbPath = join(dir, "neu", "tief", "carrera.sqlite");
     expect(existsSync(join(dir, "neu"))).toBe(false);
@@ -402,7 +402,7 @@ describe("Neue Datenbank", () => {
     }
   });
 
-  test.skip("[REQ-DB-1] vorhandene Datei: kein „neu angelegt“ beim zweiten Start (Gegenprobe)", async () => {
+  test("[REQ-DB-1] vorhandene Datei: kein „neu angelegt“ beim zweiten Start (Gegenprobe)", async () => {
     const h = await startHarness();
     expect(h.out.some((l) => l.includes("neu angelegt"))).toBe(true);
     await putLayout(h, "Oval", 0, OVAL);
@@ -418,7 +418,7 @@ describe("Neue Datenbank", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Neustart", () => {
-  test.skip("[REQ-DB-2] nach Beenden und Neustart mit derselben Datei: dieselben Layouts mit Versionen, updatedAt und Inhalten und derselbe Bestand", async () => {
+  test("[REQ-DB-2] nach Beenden und Neustart mit derselben Datei: dieselben Layouts mit Versionen, updatedAt und Inhalten und derselbe Bestand", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);
     await putLayout(h, "Oval", 1, ACHT);
@@ -453,7 +453,7 @@ describe("Neustart", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Kaputte oder fremde Datei", () => {
-  test.skip("[REQ-DB-3] keine SQLite-Datenbank: Start scheitert mit Pfad auf stderr, Datei Byte für Byte unverändert", async () => {
+  test("[REQ-DB-3] keine SQLite-Datenbank: Start scheitert mit Pfad auf stderr, Datei Byte für Byte unverändert", async () => {
     const dir = newDir();
     const staticDir = join(dir, "static");
     mkdirSync(staticDir);
@@ -470,7 +470,7 @@ describe("Kaputte oder fremde Datei", () => {
     }
   });
 
-  test.skip("[REQ-DB-3] nicht lesbare Datei: Start scheitert mit Pfad auf stderr, Datei unverändert", async () => {
+  test("[REQ-DB-3] nicht lesbare Datei: Start scheitert mit Pfad auf stderr, Datei unverändert", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);
     await h.stop();
@@ -487,7 +487,7 @@ describe("Kaputte oder fremde Datei", () => {
     expect(readFileSync(h.dbPath).equals(bytes)).toBe(true);
   });
 
-  test.skip("[REQ-DB-3] Datei mit einer Migration, die dieser Server nicht kennt: kein Start, Meldung mit Pfad, Datei unverändert, kein leerer Ersatz", async () => {
+  test("[REQ-DB-3] Datei mit einer Migration, die dieser Server nicht kennt: kein Start, Meldung mit Pfad, Datei unverändert, kein leerer Ersatz", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);
     await h.stop();
@@ -538,7 +538,7 @@ describe("Kaputte oder fremde Datei", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Gespeicherter Inhalt besteht sein Schema nicht", () => {
-  test.skip("[REQ-DB-4] kaputtes Layout: GET 500 GespeichertUngueltig mit Ziel, Version und Grund; Liste zeigt es mit defekt; Wert bleibt beim Lesen unverändert", async () => {
+  test("[REQ-DB-4] kaputtes Layout: GET 500 GespeichertUngueltig mit Ziel, Version und Grund; Liste zeigt es mit defekt; Wert bleibt beim Lesen unverändert", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, EMPTY_FOR_OVAL);
     await putLayout(h, "Oval", 1, OVAL);
@@ -574,7 +574,7 @@ describe("Gespeicherter Inhalt besteht sein Schema nicht", () => {
     expect(rawColumnValues(h.dbPath)).toContain('{"x":1}');
   });
 
-  test.skip("[REQ-DB-4] kein JSON im gespeicherten Inhalt: ebenfalls 500 GespeichertUngueltig und defekt in der Liste", async () => {
+  test("[REQ-DB-4] kein JSON im gespeicherten Inhalt: ebenfalls 500 GespeichertUngueltig und defekt in der Liste", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);
     await h.stop();
@@ -588,7 +588,7 @@ describe("Gespeicherter Inhalt besteht sein Schema nicht", () => {
     expect(typeof (list[0] as Record<string, unknown>).defekt).toBe("string");
   });
 
-  test.skip("[REQ-DB-4] Reparatur: PUT und DELETE mit der Version aus der Fehlerantwort wirken normal", async () => {
+  test("[REQ-DB-4] Reparatur: PUT und DELETE mit der Version aus der Fehlerantwort wirken normal", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);
     await putLayout(h, "Zweites", 0, ACHT);
@@ -616,7 +616,7 @@ describe("Gespeicherter Inhalt besteht sein Schema nicht", () => {
     expect((await h.call("DELETE", "/api/layouts/Oval?version=1")).status).toBe(409);
   });
 
-  test.skip("[REQ-DB-4] kaputter Bestand: GET 500 GespeichertUngueltig mit Ziel bestand; PUT mit der Version aus der Antwort repariert", async () => {
+  test("[REQ-DB-4] kaputter Bestand: GET 500 GespeichertUngueltig mit Ziel bestand; PUT mit der Version aus der Antwort repariert", async () => {
     const h = await startHarness();
     await h.call("PUT", "/api/bestand", { body: { expectedVersion: 0, inventory: BESTAND } });
     await h.stop();

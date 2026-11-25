@@ -191,7 +191,7 @@ afterEach(async () => {
 });
 
 describe("Einstellungen", () => {
-  test.skip("[REQ-SRV-1] nach dem Start steht auf stdout eine Zeile mit Adresse, Datenbankpfad und wirksamer Erlaubtliste", async () => {
+  test("[REQ-SRV-1] nach dem Start steht auf stdout eine Zeile mit Adresse, Datenbankpfad und wirksamer Erlaubtliste", async () => {
     const h = await startHarness({ CARRERA_ALLOWED_HOSTS: "rezepte.local, pi.local:9000" });
     const P = h.port;
     const expected = [
@@ -209,7 +209,7 @@ describe("Einstellungen", () => {
     expect((await h.call("GET", "/api/status", { host: "pi.local:9000" })).status).toBe(200);
   });
 
-  test.skip("[REQ-SRV-1] ungültiger Port (kein ganzzahliger Wert 1–65535) bricht den Start mit Meldung ab; es lauscht nichts", async () => {
+  test("[REQ-SRV-1] ungültiger Port (kein ganzzahliger Wert 1–65535) bricht den Start mit Meldung ab; es lauscht nichts", async () => {
     const api = await loadServer();
     for (const value of ["0", "65536", "70000", "-1", "80.5", "abc", "8080abc", "0x1F90"]) {
       const dir = mkdtempSync(join(tmpdir(), "carrera-m3b-port-"));
@@ -284,7 +284,7 @@ const effective = (c: ResolvedConfig) => ({
 });
 
 describe("Vorgabewerte", () => {
-  test.skip("[REQ-SRV-1] resolveConfig ohne Umgebungsvariablen: 0.0.0.0, 8080, data/carrera-planer.sqlite, dist", async () => {
+  test("[REQ-SRV-1] resolveConfig ohne Umgebungsvariablen: 0.0.0.0, 8080, data/carrera-planer.sqlite, dist", async () => {
     const { resolveConfig } = await loadConfig();
     expect(effective(resolveConfig({}))).toStrictEqual(DEFAULTS);
     // fehlende und ausdrücklich undefinierte Variablen sind dasselbe
@@ -301,7 +301,7 @@ describe("Vorgabewerte", () => {
     ).toStrictEqual(DEFAULTS);
   });
 
-  test.skip("[REQ-SRV-1] resolveConfig: jede Variable überschreibt genau ihre Vorgabe, die anderen bleiben", async () => {
+  test("[REQ-SRV-1] resolveConfig: jede Variable überschreibt genau ihre Vorgabe, die anderen bleiben", async () => {
     const { resolveConfig } = await loadConfig();
     const cases: ReadonlyArray<readonly [Env, Partial<typeof DEFAULTS>]> = [
       [{ CARRERA_HOST: "127.0.0.1" }, { host: "127.0.0.1" }],
