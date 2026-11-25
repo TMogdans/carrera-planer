@@ -7,7 +7,8 @@
  *
  * Schlüssel: `carrera-planer:bestand` (Bestand als JSON des mit `InventorySchema` kodierten
  * Dokuments; die Kodierung ist für dieses Schema die Identität), `carrera-planer:bestand:defekt:<ISO-UTC>[-n]` (kaputte Bestände),
- * `carrera-planer:modus` (zuletzt gewählter Modus). Keiner beginnt mit einem Layout-Präfix aus M2.
+ * `carrera-planer:modus` (zuletzt gewählter Modus), `carrera-planer:beschriftung` (Schalter „Namen“,
+ * `an`/`aus`, Spec plan-beschriftung-symbole REQ-LBL-5). Keiner beginnt mit einem Layout-Präfix aus M2.
  */
 import { ParseResult, Schema } from "effect";
 import { InventorySchema } from "../../schema/index.js";
@@ -38,6 +39,10 @@ function inventoryDefectPrefix(): string {
 
 function modeKey(): string {
   return "carrera-planer:modus";
+}
+
+function labelsKey(): string {
+  return "carrera-planer:beschriftung";
 }
 
 type Parsed =
@@ -78,6 +83,8 @@ export function createPlannerSession(deps: {
   });
   let inventory: Inventory = {};
   let mode: Mode = "sandbox";
+  /** Schalter „Namen“ (REQ-LBL-5); ohne gespeicherten Wert an. */
+  let labels = true;
   /**
    * Kaputter Bestand im Speicher, der nicht verschoben wurde (Start: REQ-BEST-5; Abgleich:
    * REQ-BEST-10): in dieser Sitzung nicht überschreiben, bis ein Abgleich einen gültigen Wert liest.
@@ -172,6 +179,19 @@ export function createPlannerSession(deps: {
     }
   }, undefined);
 
+  // Schalter „Namen“ (REQ-LBL-5) wie der Modus: ungültiger Wert meldet sich und bleibt stehen.
+  attempt(() => {
+    const raw = storage.getItem(labelsKey());
+    if (raw === "an" || raw === "aus") labels = raw === "an";
+    else if (raw !== null) {
+      messages.push({
+        kind: "beschriftungUngueltig",
+        value: raw,
+        text: `Der gespeicherte Wert „${raw}“ für den Schalter „Namen“ ist ungültig; die Namen sind an.`,
+      });
+    }
+  }, undefined);
+
   /** Ergebnis einer Bestandsänderung übernehmen: Abweisung melden, sonst übernehmen und sichern. */
   const change = (partId: string, r: InventoryChange): void => {
     if (!r.ok) {
@@ -205,6 +225,14 @@ export function createPlannerSession(deps: {
     setMode(next: Mode): void {
       mode = next;
       attempt(() => storage.setItem(modeKey(), next), undefined);
+    },
+    get labels() {
+      return labels;
+    },
+    /** Kein Befehl (REQ-LBL-6): weder Folge noch Verlauf noch Arbeitsstand ändern sich. */
+    setLabels(on: boolean): void {
+      labels = on;
+      attempt(() => storage.setItem(labelsKey(), on ? "an" : "aus"), undefined);
     },
     setCount: (partId: string, input: string) =>
       change(partId, logic.setCount(catalog, inventory, partId, input)),

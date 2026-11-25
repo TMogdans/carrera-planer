@@ -59,7 +59,7 @@ const thousand: Elements = Array.from({ length: 100 }, (_, k) =>
   ),
 ).flat();
 
-test.skip("[REQ-PARCH-3] 1000 Elemente: Variante und Ort aller Elemente höchstens 16 ms im Maximum über 20 Durchläufe", async () => {
+test("[REQ-PARCH-3] 1000 Elemente: Variante und Ort aller Elemente höchstens 16 ms im Maximum über 20 Durchläufe", async () => {
   const api = (await import(/* @vite-ignore */ LABELS_MODULE)) as LabelsApi;
   const D = await loadDrawing();
   expect(thousand).toHaveLength(1000);

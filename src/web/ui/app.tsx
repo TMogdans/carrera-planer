@@ -2,7 +2,8 @@
  * Oberfläche M2 (Spec M2, REQ-UI-1 bis -11): Zeichenfläche, Teileleiste, Auswahlleiste,
  * Statusleiste, Werkzeugleiste, Speichern/Laden-Dialog und Meldungen. Ab M3a (Spec M3a,
  * REQ-BUI-1 bis -6) dazu Modus-Schalter, Bestandsdialog, Leiste mit Restzähler im Modus „Bestand“
- * und die Einkaufsliste. Alle Regeln liegen in der Editor-Logik (src/web/editor); hier wird nur
+ * und die Einkaufsliste. Ab plan-beschriftung-symbole der Schalter „Namen“ (REQ-LBL-7) und
+ * Namen und Symbole im Plan (über `Canvas`/`PlanContent`). Alle Regeln liegen in der Editor-Logik (src/web/editor); hier wird nur
  * dargestellt und bedient.
  */
 import { render } from "preact";
@@ -39,6 +40,7 @@ import { browserClock, browserStorage, isTextInput, onLocalStorageChange } from 
 import { Canvas, type EndMark } from "./canvas.js";
 import { StorageDialog } from "./dialog.js";
 import { InventoryDialog } from "./inventory-dialog.js";
+import { LabelsToggle } from "./labels-toggle.js";
 import { ShoppingDialog } from "./shopping-dialog.js";
 import { type Box, boundsOf, fitBox, follow, type View } from "./view.js";
 
@@ -274,6 +276,13 @@ function App({ session }: { readonly session: PlannerSession }) {
           <button type="button" onClick={doFit} title="Einpassen">
             ⤢<span class="label">Einpassen</span>
           </button>
+          <LabelsToggle
+            on={session.labels}
+            onToggle={() => {
+              session.setLabels(!session.labels);
+              rerender();
+            }}
+          />
           <button type="button" onClick={() => run({ type: "new" })} title="Neu">
             ＋<span class="label">Neu</span>
           </button>
@@ -328,6 +337,9 @@ function App({ session }: { readonly session: PlannerSession }) {
       )}
 
       <Canvas
+        catalog={catalog}
+        elements={elements}
+        labelsOn={session.labels}
         shapes={derived.shapes}
         crossingIds={derived.crossingIds}
         selectedId={state.selection}

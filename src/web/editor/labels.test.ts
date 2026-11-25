@@ -244,7 +244,7 @@ const withName = (catalog: Catalog, id: string, name: string): Catalog =>
 // ---------------------------------------------------------------------------------------------
 
 describe("Beschriftungstext", () => {
-  test.skip("[REQ-LBL-1] echter Katalog: voller Name und Kurzform genau wie die Tabelle „Begriffe“", async () => {
+  test("[REQ-LBL-1] echter Katalog: voller Name und Kurzform genau wie die Tabelle „Begriffe“", async () => {
     const api = await loadLabels();
     for (const [id, full, short] of WITH_SHORT) {
       expect({ id, texts: api.labelTexts(CATALOG, id) }).toEqual({ id, texts: { full, short } });
@@ -261,7 +261,7 @@ describe("Beschriftungstext", () => {
     );
   });
 
-  test.skip("[REQ-LBL-1] voller Name ist bei jedem Katalogeintrag das Feld name; unbekannte ID ohne Text", async () => {
+  test("[REQ-LBL-1] voller Name ist bei jedem Katalogeintrag das Feld name; unbekannte ID ohne Text", async () => {
     const api = await loadLabels();
     for (const entry of CATALOG) {
       expect(api.labelTexts(CATALOG, entry.id)?.full).toBe(entry.name);
@@ -269,7 +269,7 @@ describe("Beschriftungstext", () => {
     expect(api.labelTexts(CATALOG, "gibt-es-nicht")).toBeUndefined();
   });
 
-  test.skip("[REQ-LBL-1] Wirkungsnachweis mit verfälschtem Katalog: Gerade 999 und Kurve X", async () => {
+  test("[REQ-LBL-1] Wirkungsnachweis mit verfälschtem Katalog: Gerade 999 und Kurve X", async () => {
     const api = await loadLabels();
     const D = await loadDrawing();
     const fake = withName(withName(CATALOG, "gerade-114", "Gerade 999"), "engstelle", "Kurve X");
@@ -290,7 +290,7 @@ describe("Beschriftungstext", () => {
     expect(short.map((e) => [e.variant, e.text])).toEqual([["kurz", "999"]]);
   });
 
-  test.skip("[REQ-LBL-1] Kurzform nur bei „Gerade “ und „Kurve “ als erstem Wort", async () => {
+  test("[REQ-LBL-1] Kurzform nur bei „Gerade “ und „Kurve “ als erstem Wort", async () => {
     const api = await loadLabels();
     const cases: ReadonlyArray<readonly [string, string | undefined]> = [
       ["Gerade 12", "12"],
@@ -317,7 +317,7 @@ describe("Beschriftungstext", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Platzregel", () => {
-  test.skip("[REQ-LBL-2] Breitenschätzung: 7,5 px je Codepoint, ° und ü zählen je 1", async () => {
+  test("[REQ-LBL-2] Breitenschätzung: 7,5 px je Codepoint, ° und ü zählen je 1", async () => {
     const api = await loadLabels();
     expect(api.textWidth("100")).toBe(22.5);
     expect(api.textWidth("Gerade 100")).toBe(75);
@@ -334,7 +334,7 @@ describe("Platzregel", () => {
     );
   });
 
-  test.skip("[REQ-LBL-2] Tabelle der Spec: Gerade 100/342, Kurve 1/45°, Kreuzung, Rundenzähler, Anschlussstück bei s = 0,15 / 0,4 / 1,14", async () => {
+  test("[REQ-LBL-2] Tabelle der Spec: Gerade 100/342, Kurve 1/45°, Kreuzung, Rundenzähler, Anschlussstück bei s = 0,15 / 0,4 / 1,14", async () => {
     const api = await loadLabels();
     const D = await loadDrawing();
     const shapes = D.drawing(CATALOG, TABLE_SCENE);
@@ -346,7 +346,7 @@ describe("Platzregel", () => {
     }
   });
 
-  test.skip("[REQ-LBL-2] Grenzfälle eingeschlossen: Gerade 100 bei s = 0,224 keine, 0,225 kurz, 0,749 kurz, 0,75 voll", async () => {
+  test("[REQ-LBL-2] Grenzfälle eingeschlossen: Gerade 100 bei s = 0,224 keine, 0,225 kurz, 0,749 kurz, 0,75 voll", async () => {
     const api = await loadLabels();
     const D = await loadDrawing();
     const elements: Elements = [{ id: "a", part: "gerade-100" }];
@@ -363,7 +363,7 @@ describe("Platzregel", () => {
     expect(api.labelVariant(CATALOG, "gerade-100", 74.999, true)).toBe("kurz");
   });
 
-  test.skip("[REQ-LBL-2] Symbolteile: Symbol + Name ab 20 + B, nur Symbol ab 16 px, darunter keine", async () => {
+  test("[REQ-LBL-2] Symbolteile: Symbol + Name ab 20 + B, nur Symbol ab 16 px, darunter keine", async () => {
     const api = await loadLabels();
     // Rundenzähler: 20 + 90 = 110
     expect(api.labelVariant(CATALOG, "rundenzaehler", 110, true)).toBe("symbolUndName");
@@ -382,7 +382,7 @@ describe("Platzregel", () => {
     expect(api.labelVariant(CATALOG, "kreuzung", 1000, false)).toBe("keine");
   });
 
-  test.skip("[REQ-LBL-2] Eigenschaft: Variante folgt der Regel für jedes platzierbare Teil, jeden Platz und beide Schalterstellungen", async () => {
+  test("[REQ-LBL-2] Eigenschaft: Variante folgt der Regel für jedes platzierbare Teil, jeden Platz und beide Schalterstellungen", async () => {
     const api = await loadLabels();
     const thresholds = PLACEABLE_IDS.flatMap((id) => {
       const name = CATALOG.find((e) => e.id === id)?.name ?? "";
@@ -407,7 +407,7 @@ describe("Platzregel", () => {
     );
   });
 
-  test.skip("[REQ-LBL-2] Eigenschaft: wächst der Platz (bzw. s), wird die Variante nie kleiner", async () => {
+  test("[REQ-LBL-2] Eigenschaft: wächst der Platz (bzw. s), wird die Variante nie kleiner", async () => {
     const api = await loadLabels();
     fc.assert(
       fc.property(
@@ -426,7 +426,7 @@ describe("Platzregel", () => {
     );
   });
 
-  test.skip("[REQ-LBL-2] labelPlan rechnet P als Sehne · s und nimmt Variante und Text daraus (Eigenschaft über fehlerfreie Folgen)", async () => {
+  test("[REQ-LBL-2] labelPlan rechnet P als Sehne · s und nimmt Variante und Text daraus (Eigenschaft über fehlerfreie Folgen)", async () => {
     const api = await loadLabels();
     const D = await loadDrawing();
     fc.assert(
@@ -467,7 +467,7 @@ describe("Platzregel", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Ort der Beschriftung", () => {
-  test.skip("[REQ-LBL-3] Beispiele aus der Startpose: Gerade 342, Kurve 1/90° links und rechts, Kreuzung", async () => {
+  test("[REQ-LBL-3] Beispiele aus der Startpose: Gerade 342, Kurve 1/90° links und rechts, Kreuzung", async () => {
     const api = await loadLabels();
     const D = await loadDrawing();
     const h = (171 * Math.SQRT2) / 2;
@@ -500,7 +500,7 @@ describe("Ort der Beschriftung", () => {
     expect(-171 + h).toBeCloseTo(-50.08, 2);
   });
 
-  test.skip("[REQ-LBL-3] Eigenschaft: Ort ist Streckenmitte bzw. Bogenpunkt gleichen Abstands zu Anfang und Ende", async () => {
+  test("[REQ-LBL-3] Eigenschaft: Ort ist Streckenmitte bzw. Bogenpunkt gleichen Abstands zu Anfang und Ende", async () => {
     const api = await loadLabels();
     const D = await loadDrawing();
     fc.assert(
@@ -545,11 +545,11 @@ describe("Keine Beschriftung", () => {
     return plan.map((e) => e.id);
   };
 
-  test.skip("[REQ-LBL-4] Querung über einer Kreuzung bekommt nichts, alle übrigen Elemente der Acht je einen Eintrag", async () => {
+  test("[REQ-LBL-4] Querung über einer Kreuzung bekommt nichts, alle übrigen Elemente der Acht je einen Eintrag", async () => {
     expect(await idsOf(ACHT)).toEqual(["e1", "e2", "e3", "e4", "e5", "e7", "e8", "e9", "e10"]);
   });
 
-  test.skip("[REQ-LBL-4] importiertes [steilkehre, gerade-342] liefert nichts; [gerade-342, looping] nur die Gerade", async () => {
+  test("[REQ-LBL-4] importiertes [steilkehre, gerade-342] liefert nichts; [gerade-342, looping] nur die Gerade", async () => {
     expect(
       await idsOf([
         { id: "a", part: "steilkehre" },
@@ -564,7 +564,7 @@ describe("Keine Beschriftung", () => {
     ).toEqual(["a"]);
   });
 
-  test.skip("[REQ-LBL-4] Teile mit fehlenden Maßen und alles dahinter bekommen nichts", async () => {
+  test("[REQ-LBL-4] Teile mit fehlenden Maßen und alles dahinter bekommen nichts", async () => {
     expect(
       await idsOf([
         { id: "a", part: "gerade-342" },
@@ -582,7 +582,7 @@ describe("Keine Beschriftung", () => {
     ).toEqual(["a", "b"]);
   });
 
-  test.skip("[REQ-LBL-4] Eigenschaft: Einträge genau für die gezeichneten Teil-Elemente vor dem ersten Fehler, in Folgereihenfolge", async () => {
+  test("[REQ-LBL-4] Eigenschaft: Einträge genau für die gezeichneten Teil-Elemente vor dem ersten Fehler, in Folgereihenfolge", async () => {
     const api = await loadLabels();
     const D = await loadDrawing();
     fc.assert(
@@ -605,7 +605,7 @@ describe("Keine Beschriftung", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Symbolzuordnung", () => {
-  test.skip("[REQ-SYM-1] Zuordnung je Katalog-ID; jede andere ID ohne Symbol", async () => {
+  test("[REQ-SYM-1] Zuordnung je Katalog-ID; jede andere ID ohne Symbol", async () => {
     const api = await loadLabels();
     expect(api.symbolOf("rundenzaehler")).toBe("zielflagge");
     expect(api.symbolOf("anschlussstueck")).toBe("stecker");
@@ -623,7 +623,7 @@ describe("Symbolzuordnung", () => {
     }
   });
 
-  test.skip("[REQ-SYM-1] Wirkungsnachweis mit verfälschtem Katalog: rundenzaehler als Gerade 342 behält die Zielflagge, gerade-114 namens Rundenzähler bekommt keine", async () => {
+  test("[REQ-SYM-1] Wirkungsnachweis mit verfälschtem Katalog: rundenzaehler als Gerade 342 behält die Zielflagge, gerade-114 namens Rundenzähler bekommt keine", async () => {
     const api = await loadLabels();
     const D = await loadDrawing();
     const fake: Catalog = CATALOG.map(
@@ -656,7 +656,7 @@ describe("Symbolzuordnung", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Katalog unberührt", () => {
-  test.skip("[REQ-PARCH-2] die Beschriftungslogik liest den Katalog nur: eingefrorener Katalog, Ergebnis wie mit dem echten, echter Katalog danach unverändert", async () => {
+  test("[REQ-PARCH-2] die Beschriftungslogik liest den Katalog nur: eingefrorener Katalog, Ergebnis wie mit dem echten, echter Katalog danach unverändert", async () => {
     const api = await loadLabels();
     const D = await loadDrawing();
     const before = JSON.stringify(CATALOG);

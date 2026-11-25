@@ -71,7 +71,7 @@ const OVAL_COMMANDS: ReadonlyArray<Command> = OVAL.map((el) =>
 );
 
 describe("Schalter speichern", () => {
-  test.skip("[REQ-LBL-5] ohne Schlüssel: an, ohne Meldung und ohne Schreiben", async () => {
+  test("[REQ-LBL-5] ohne Schlüssel: an, ohne Meldung und ohne Schreiben", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const s = open(api, storage);
@@ -81,7 +81,7 @@ describe("Schalter speichern", () => {
     expect(storage.data.has(LABELS_KEY)).toBe(false);
   });
 
-  test.skip("[REQ-LBL-5] jedes Umschalten schreibt sofort an/aus; eine neue Sitzung auf demselben Speicher übernimmt es", async () => {
+  test("[REQ-LBL-5] jedes Umschalten schreibt sofort an/aus; eine neue Sitzung auf demselben Speicher übernimmt es", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const s = open(api, storage);
@@ -108,7 +108,7 @@ describe("Schalter speichern", () => {
     }
   });
 
-  test.skip("[REQ-LBL-5] gespeichert „aus“ beim Start: aus, ohne Meldung und ohne Schreiben", async () => {
+  test("[REQ-LBL-5] gespeichert „aus“ beim Start: aus, ohne Meldung und ohne Schreiben", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage({ [LABELS_KEY]: "aus" });
     const s = open(api, storage);
@@ -117,7 +117,7 @@ describe("Schalter speichern", () => {
     expect(writesSince(storage, 0)).toEqual([]);
   });
 
-  test.skip("[REQ-LBL-5] ungültiger Wert: an, Meldung nennt den Wert, Wert bleibt bis zum Umschalten unverändert", async () => {
+  test("[REQ-LBL-5] ungültiger Wert: an, Meldung nennt den Wert, Wert bleibt bis zum Umschalten unverändert", async () => {
     const api = await loadPlannerSession();
     for (const value of ["vielleicht", "", "AN", "true", "aus ", "{}"]) {
       const storage = new MemoryStorage({ [LABELS_KEY]: value });
@@ -144,7 +144,7 @@ describe("Schalter speichern", () => {
     }
   });
 
-  test.skip("[REQ-LBL-5] Schreiben scheitert: Zustand ändert sich trotzdem, Meldung speicherFehler, keine Ausnahme", async () => {
+  test("[REQ-LBL-5] Schreiben scheitert: Zustand ändert sich trotzdem, Meldung speicherFehler, keine Ausnahme", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const s = open(api, storage);
@@ -162,7 +162,7 @@ describe("Schalter speichern", () => {
     expect(s.state.elements).toHaveLength(1);
   });
 
-  test.skip("[REQ-LBL-5] der Schlüssel erscheint weder in der Layout-Liste noch in einer Defekt-Liste", async () => {
+  test("[REQ-LBL-5] der Schlüssel erscheint weder in der Layout-Liste noch in einer Defekt-Liste", async () => {
     const api = await loadPlannerSession();
     const m2 = await loadSession();
     for (const value of ["aus", "an", "vielleicht"]) {
@@ -187,7 +187,7 @@ describe("Schalter speichern", () => {
 });
 
 describe("Umschalten ist kein Befehl", () => {
-  test.skip("[REQ-LBL-6] Oval bauen, umschalten, Rückgängig: das letzte Teil verschwindet, der Schalter bleibt", async () => {
+  test("[REQ-LBL-6] Oval bauen, umschalten, Rückgängig: das letzte Teil verschwindet, der Schalter bleibt", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const s = open(api, storage);
@@ -208,7 +208,7 @@ describe("Umschalten ist kein Befehl", () => {
     expect(s.labels).toBe(true);
   });
 
-  test.skip("[REQ-LBL-6] Umschalten ändert weder Folge, Auswahl, Aktion noch Verlauf und schreibt den Arbeitsstand nicht", async () => {
+  test("[REQ-LBL-6] Umschalten ändert weder Folge, Auswahl, Aktion noch Verlauf und schreibt den Arbeitsstand nicht", async () => {
     const api = await loadPlannerSession();
     const m2 = await loadSession();
     const storage = new MemoryStorage();
@@ -238,7 +238,7 @@ describe("Umschalten ist kein Befehl", () => {
     expect(s.state.elements).toEqual(before.elements.slice(0, 5));
   });
 
-  test.skip("[REQ-LBL-6] ein Export enthält kein Feld zur Beschriftung und ist vor und nach dem Umschalten gleich", async () => {
+  test("[REQ-LBL-6] ein Export enthält kein Feld zur Beschriftung und ist vor und nach dem Umschalten gleich", async () => {
     const api = await loadPlannerSession();
     const storage = new MemoryStorage();
     const s = open(api, storage);

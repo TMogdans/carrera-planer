@@ -550,7 +550,7 @@ const symbolsById = (flat: ReadonlyArray<Flat>, id: string): Flat[] =>
 // ---------------------------------------------------------------------------------------------
 
 describe("Schalter „Namen“", () => {
-  test.skip("[REQ-LBL-7] Knopf „Namen“: aria-pressed zeigt den Zustand, Antippen schaltet um, Text als ausblendbares Label neben einem Zeichen", async () => {
+  test("[REQ-LBL-7] Knopf „Namen“: aria-pressed zeigt den Zustand, Antippen schaltet um, Text als ausblendbares Label neben einem Zeichen", async () => {
     const { LabelsToggle } = await loadToggle();
     for (const on of [true, false]) {
       let calls = 0;
@@ -580,7 +580,7 @@ describe("Schalter „Namen“", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Beschriftung in der SVG-Ausgabe", () => {
-  test.skip("[REQ-LBL-8] je Element genau ein Textelement mit genau dem Text der Variante (Tabelle REQ-LBL-2), sonst keins", async () => {
+  test("[REQ-LBL-8] je Element genau ein Textelement mit genau dem Text der Variante (Tabelle REQ-LBL-2), sonst keins", async () => {
     for (const [s, rows] of TABLE) {
       const { flat } = await render(TABLE_SCENE, s, true);
       for (const [id, e] of Object.entries(rows)) {
@@ -595,7 +595,7 @@ describe("Beschriftung in der SVG-Ausgabe", () => {
     }
   });
 
-  test.skip("[REQ-LBL-8] Ort, waagerecht zentriert, senkrecht mittig; reine Verschiebung und 12 px Schrift bei s = 0,15 / 1 / 20", async () => {
+  test("[REQ-LBL-8] Ort, waagerecht zentriert, senkrecht mittig; reine Verschiebung und 12 px Schrift bei s = 0,15 / 1 / 20", async () => {
     for (const s of [0.15, 0.4, 1, 1.14, 20]) {
       const scene = await render(TABLE_SCENE, s, true);
       const texts = labelTexts(scene.flat);
@@ -616,7 +616,7 @@ describe("Beschriftung in der SVG-Ausgabe", () => {
     }
   });
 
-  test.skip("[REQ-LBL-8] Schalter aus: kein Beschriftungs-Textelement, bei keinem Maßstab", async () => {
+  test("[REQ-LBL-8] Schalter aus: kein Beschriftungs-Textelement, bei keinem Maßstab", async () => {
     for (const s of [0.15, 0.4, 1.14, 20]) {
       const { flat } = await render(TABLE_SCENE, s, false);
       expect(labelTexts(flat)).toEqual([]);
@@ -637,7 +637,7 @@ describe("Ebenen", () => {
   const LOWER = ["band", "crossway", "querung", "selected"];
   const UPPER = ["target", "hot-port", "start", "end-arrow", "error-mark"];
 
-  test.skip("[REQ-LBL-9] Beschriftungen und Symbole nach Bändern, Querwegen, Querungen und Auswahl, vor allen Marken", async () => {
+  test("[REQ-LBL-9] Beschriftungen und Symbole nach Bändern, Querwegen, Querungen und Auswahl, vor allen Marken", async () => {
     const extra: Partial<PlanContentProps> = {
       selectedId: "e5",
       targets: [{ x: 10, y: 20 }],
@@ -672,7 +672,7 @@ describe("Ebenen", () => {
     expect(lastLabel, "Beschriftungen vor den Marken").toBeLessThan(firstUpper);
   });
 
-  test.skip("[REQ-LBL-9] jede Beschriftung und jedes Symbol liegt unter data-id ihres Elements; das ausgewählte behält seine", async () => {
+  test("[REQ-LBL-9] jede Beschriftung und jedes Symbol liegt unter data-id ihres Elements; das ausgewählte behält seine", async () => {
     const expected: Readonly<Record<string, string>> = {
       e1: "Kreuzung",
       e2: "Kurve 1/90°",
@@ -700,7 +700,7 @@ describe("Ebenen", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Gesten", () => {
-  test.skip("[REQ-LBL-10] Beschriftungen und Symbole tragen keine eigenen Ereignis-Handler (Tipp, Ziehen und Mausrad bleiben bei der Zeichenfläche)", async () => {
+  test("[REQ-LBL-10] Beschriftungen und Symbole tragen keine eigenen Ereignis-Handler (Tipp, Ziehen und Mausrad bleiben bei der Zeichenfläche)", async () => {
     for (const [elements, s] of [
       [TABLE_SCENE, 1.14],
       [SYMBOL_SCENE, 0.4],
@@ -724,7 +724,7 @@ describe("Gesten", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Symbole", () => {
-  test.skip("[REQ-SYM-2] genau ein Symbol je Symbolteil mit Variante nur Symbol / Symbol + Name, auch bei ausgeschaltetem Schalter; keins bei anderen Teilen", async () => {
+  test("[REQ-SYM-2] genau ein Symbol je Symbolteil mit Variante nur Symbol / Symbol + Name, auch bei ausgeschaltetem Schalter; keins bei anderen Teilen", async () => {
     for (const on of [true, false]) {
       for (const s of [0.15, 0.4, 1.14, 20]) {
         const { flat } = await render(SYMBOL_SCENE, s, on);
@@ -746,7 +746,7 @@ describe("Symbole", () => {
     expect(symbolRoots(enough.flat)).toHaveLength(1);
   });
 
-  test.skip("[REQ-SYM-2] Plakette 16 × 16 px ohne Drehung bei jedem s; nur Symbol: mittig auf dem Ort; alle Formen auf der Plakette", async () => {
+  test("[REQ-SYM-2] Plakette 16 × 16 px ohne Drehung bei jedem s; nur Symbol: mittig auf dem Ort; alle Formen auf der Plakette", async () => {
     for (const s of [0.15, 0.4, 1, 1.14, 20]) {
       const scene = await render(SYMBOL_SCENE, s, false);
       for (const root of symbolRoots(scene.flat)) {
@@ -776,7 +776,7 @@ describe("Symbole", () => {
     }
   });
 
-  test.skip("[REQ-SYM-2] Symbol + Name: Zeile W = 20 + B um den Ort zentriert, Plakette links, Textanfang bei x − W/2 + 20, keine Überlappung", async () => {
+  test("[REQ-SYM-2] Symbol + Name: Zeile W = 20 + B um den Ort zentriert, Plakette links, Textanfang bei x − W/2 + 20, keine Überlappung", async () => {
     for (const s of [1.14, 20]) {
       const scene = await render(SYMBOL_SCENE, s, true);
       const ids = Object.keys(FULL_NAMES);
@@ -813,7 +813,7 @@ describe("Symbole", () => {
     }
   });
 
-  test.skip("[REQ-SYM-3] die vier Symbole unterscheiden sich in der Form (Geometrie ohne Farbe); beide Spurwechsel haben dasselbe Zeichen", async () => {
+  test("[REQ-SYM-3] die vier Symbole unterscheiden sich in der Form (Geometrie ohne Farbe); beide Spurwechsel haben dasselbe Zeichen", async () => {
     for (const s of [0.4, 1.14]) {
       const scene = await render(SYMBOL_SCENE, s, false);
       type Sig = ReadonlyArray<readonly [string, ReadonlyArray<ScreenPoint>]>;
@@ -864,7 +864,7 @@ describe("Symbole", () => {
     }
   });
 
-  test.skip("[REQ-SYM-4] jedes Symbol trägt genau ein title mit dem vollen Namen, auch wenn der Schalter aus ist oder der Name nicht passt", async () => {
+  test("[REQ-SYM-4] jedes Symbol trägt genau ein title mit dem vollen Namen, auch wenn der Schalter aus ist oder der Name nicht passt", async () => {
     for (const on of [true, false]) {
       for (const s of [0.15, 0.4, 1.14]) {
         const { flat } = await render(SYMBOL_SCENE, s, on);
@@ -883,7 +883,7 @@ describe("Symbole", () => {
     }
   });
 
-  test.skip("[REQ-SYM-5] Symbole im Code gezeichnet: kein image, kein foreignObject, keine externen Verweise, kein Netzaufruf beim Zeichnen", async () => {
+  test("[REQ-SYM-5] Symbole im Code gezeichnet: kein image, kein foreignObject, keine externen Verweise, kein Netzaufruf beim Zeichnen", async () => {
     const saved = globalThis.fetch;
     let fetches = 0;
     globalThis.fetch = (() => {
