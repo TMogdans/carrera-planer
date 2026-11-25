@@ -235,7 +235,7 @@ const within = <T>(p: Promise<T>, ms: number): Promise<T | "zeitueberschreitung"
 const settle = () => new Promise((res) => setTimeout(res, 200));
 
 describe("Beenden mit hängenden Verbindungen", () => {
-  test.skip("[REQ-SRV-5] close() löst binnen 5 s auf, obwohl ein Client mitten im Körper hängt (Content-Length 1000, 22 Byte gesendet)", async () => {
+  test("[REQ-SRV-5] close() löst binnen 5 s auf, obwohl ein Client mitten im Körper hängt (Content-Length 1000, 22 Byte gesendet)", async () => {
     const h = await startHarness();
     const put = await h.call("PUT", "/api/layouts/Oval", {
       body: { expectedVersion: 0, layout: OVAL },
@@ -266,7 +266,7 @@ describe("Beenden mit hängenden Verbindungen", () => {
     expect((await h.call("GET", "/api/layouts/Neu")).status).toBe(404);
   }, 20_000);
 
-  test.skip("[REQ-SRV-5] close() löst binnen 5 s auf bei halb gesendeten Kopfzeilen und ruhender Keep-Alive-Verbindung", async () => {
+  test("[REQ-SRV-5] close() löst binnen 5 s auf bei halb gesendeten Kopfzeilen und ruhender Keep-Alive-Verbindung", async () => {
     const h = await startHarness();
     expect(
       (await h.call("PUT", "/api/layouts/Oval", { body: { expectedVersion: 0, layout: OVAL } }))

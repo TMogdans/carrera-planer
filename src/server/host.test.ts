@@ -349,7 +349,7 @@ const expect421 = (r: Reply, host: string | null, label: string): void => {
 const ALLOWED_EXAMPLE = { CARRERA_ALLOWED_HOSTS: "rezepte.local,192.168.178.113" };
 
 describe("Host-Prüfung", () => {
-  test.skip("[REQ-SRV-7] fremder Host: GET auf Liste, Layout, Bestand und Startseite → 421 FremderHost, Körper ohne Oval, Teilenamen und index.html", async () => {
+  test("[REQ-SRV-7] fremder Host: GET auf Liste, Layout, Bestand und Startseite → 421 FremderHost, Körper ohne Oval, Teilenamen und index.html", async () => {
     const h = await prepared(ALLOWED_EXAMPLE);
     const foreign = `evil.example:${h.port}`;
     for (const path of [
@@ -377,7 +377,7 @@ describe("Host-Prüfung", () => {
     expect(index.text).toContain(INDEX_MARKER);
   });
 
-  test.skip("[REQ-SRV-7] fremder Host: PUT Layout, PUT Bestand und DELETE → 421, Datenbank danach genau wie vorher; Gegenprobe mit erlaubtem Host wirkt", async () => {
+  test("[REQ-SRV-7] fremder Host: PUT Layout, PUT Bestand und DELETE → 421, Datenbank danach genau wie vorher; Gegenprobe mit erlaubtem Host wirkt", async () => {
     const h = await prepared(ALLOWED_EXAMPLE);
     const foreign = `evil.example:${h.port}`;
     const raw = rawSnapshot(h.dbPath);
@@ -415,7 +415,7 @@ describe("Host-Prüfung", () => {
     expect((await h.call("GET", "/api/bestand")).json()).toMatchObject({ version: 2 });
   });
 
-  test.skip("[REQ-SRV-7] Beispiel: erlaubt rezepte.local:P, REZEPTE.local:P, 192.168.178.113:P, localhost:P, 127.0.0.1:P, [::1]:P", async () => {
+  test("[REQ-SRV-7] Beispiel: erlaubt rezepte.local:P, REZEPTE.local:P, 192.168.178.113:P, localhost:P, 127.0.0.1:P, [::1]:P", async () => {
     const h = await prepared(ALLOWED_EXAMPLE);
     const P = h.port;
     for (const host of [
@@ -434,7 +434,7 @@ describe("Host-Prüfung", () => {
     }
   });
 
-  test.skip("[REQ-SRV-7] Beispiel: abgelehnt rezepte.local (Port 80), evil.example:P, 192.168.178.113 mit fremdem Port, localhost ohne Port oder mit fremdem Port", async () => {
+  test("[REQ-SRV-7] Beispiel: abgelehnt rezepte.local (Port 80), evil.example:P, 192.168.178.113 mit fremdem Port, localhost ohne Port oder mit fremdem Port", async () => {
     const h = await prepared(ALLOWED_EXAMPLE);
     const P = h.port;
     const other = P === 9999 ? 9998 : 9999;
@@ -460,7 +460,7 @@ describe("Host-Prüfung", () => {
     expect((await h.call("GET", "/api/layouts", { host: `rezepte.local:${P}` })).status).toBe(200);
   });
 
-  test.skip("[REQ-SRV-7] fehlende Host-Kopfzeile (HTTP/1.0 und HTTP/1.1) → 421 FremderHost mit host null", async () => {
+  test("[REQ-SRV-7] fehlende Host-Kopfzeile (HTTP/1.0 und HTTP/1.1) → 421 FremderHost mit host null", async () => {
     const h = await prepared(ALLOWED_EXAMPLE);
     for (const req of [
       "GET /api/status HTTP/1.0\r\n\r\n",
@@ -483,7 +483,7 @@ describe("Host-Prüfung", () => {
     expect(ok.body).toContain("Oval");
   });
 
-  test.skip("[REQ-SRV-7] die Prüfung kommt vor Routing, Körperlesen und Dateisystem: unbekannte Route, zu großer Körper, falscher Content-Type, Pfad außerhalb → 421", async () => {
+  test("[REQ-SRV-7] die Prüfung kommt vor Routing, Körperlesen und Dateisystem: unbekannte Route, zu großer Körper, falscher Content-Type, Pfad außerhalb → 421", async () => {
     const h = await prepared(ALLOWED_EXAMPLE);
     const foreign = `evil.example:${h.port}`;
     const big = Buffer.alloc(2 * 1024 * 1024, " ");
@@ -519,7 +519,7 @@ describe("Host-Prüfung", () => {
     ).toBe(400);
   });
 
-  test.skip("[REQ-SRV-7] Host-Angabe ohne Port meint Port 80: ein Eintrag mit :80 erlaubt sie, ein Eintrag mit P nicht", async () => {
+  test("[REQ-SRV-7] Host-Angabe ohne Port meint Port 80: ein Eintrag mit :80 erlaubt sie, ein Eintrag mit P nicht", async () => {
     // Testnachtrag 2
     const h = await prepared({ CARRERA_ALLOWED_HOSTS: "pi.local:80" });
     const P = h.port;
@@ -531,7 +531,7 @@ describe("Host-Prüfung", () => {
     expect421(await h.call("GET", "/api/status", { host: "localhost" }), "localhost", "localhost");
   });
 
-  test.skip("[REQ-SRV-7] 421 kommt, ohne auf den Körper zu warten: Client kündigt 1000 Byte an und sendet nur 22", async () => {
+  test("[REQ-SRV-7] 421 kommt, ohne auf den Körper zu warten: Client kündigt 1000 Byte an und sendet nur 22", async () => {
     // Testnachtrag 2: die Prüfung steht vor dem Körperlesen; sonst hinge die Antwort.
     const h = await prepared(ALLOWED_EXAMPLE);
     const head = (host: string) =>
@@ -541,7 +541,7 @@ describe("Host-Prüfung", () => {
     expect(await firstStatus(h.port, head(`localhost:${h.port}`), 500)).toBe("zeitueberschreitung");
   });
 
-  test.skip("[REQ-SRV-7] Einträge mit Port gelten genau so, ohne Port mit P; Leerraum am Rand wird entfernt", async () => {
+  test("[REQ-SRV-7] Einträge mit Port gelten genau so, ohne Port mit P; Leerraum am Rand wird entfernt", async () => {
     const h = await prepared({ CARRERA_ALLOWED_HOSTS: "  pi.local:9000 , Tablet.Local  " });
     const P = h.port;
     expect((await h.call("GET", "/api/status", { host: "pi.local:9000" })).status).toBe(200);
@@ -552,7 +552,7 @@ describe("Host-Prüfung", () => {
     }
   });
 
-  test.skip("[REQ-SRV-7] ohne CARRERA_ALLOWED_HOSTS gilt nur die Vorgabe-Liste: localhost:P, 127.0.0.1:P, [::1]:P", async () => {
+  test("[REQ-SRV-7] ohne CARRERA_ALLOWED_HOSTS gilt nur die Vorgabe-Liste: localhost:P, 127.0.0.1:P, [::1]:P", async () => {
     const h = await prepared();
     const P = h.port;
     for (const host of [`localhost:${P}`, `127.0.0.1:${P}`, `[::1]:${P}`]) {
@@ -568,7 +568,7 @@ describe("Host-Prüfung", () => {
     }
   });
 
-  test.skip("[REQ-SRV-7] CARRERA_HOST 0.0.0.0 erweitert die Liste nicht: Host 0.0.0.0:P → 421", async () => {
+  test("[REQ-SRV-7] CARRERA_HOST 0.0.0.0 erweitert die Liste nicht: Host 0.0.0.0:P → 421", async () => {
     const h = await prepared({ CARRERA_HOST: "0.0.0.0" });
     const P = h.port;
     expect421(
@@ -579,7 +579,7 @@ describe("Host-Prüfung", () => {
     expect((await h.call("GET", "/api/layouts", { host: `localhost:${P}` })).status).toBe(200);
   });
 
-  test.skip("[REQ-SRV-7] CARRERA_HOST mit bestimmter Adresse (LAN-IP des Rechners) erlaubt <Adresse>:P; ohne diese Einstellung 421", async () => {
+  test("[REQ-SRV-7] CARRERA_HOST mit bestimmter Adresse (LAN-IP des Rechners) erlaubt <Adresse>:P; ohne diese Einstellung 421", async () => {
     const lan = Object.values(networkInterfaces())
       .flat()
       .find((i) => i !== undefined && i.family === "IPv4" && !i.internal)?.address;
@@ -610,7 +610,7 @@ describe("Host-Prüfung", () => {
     );
   });
 
-  test.skip("[REQ-SRV-7] ungültiger Eintrag in CARRERA_ALLOWED_HOSTS bricht den Start mit Meldung ab; es lauscht nichts", async () => {
+  test("[REQ-SRV-7] ungültiger Eintrag in CARRERA_ALLOWED_HOSTS bricht den Start mit Meldung ab; es lauscht nichts", async () => {
     const api = await loadServer();
     for (const value of [
       "a,,b",

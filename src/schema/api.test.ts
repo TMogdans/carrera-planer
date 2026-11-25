@@ -100,7 +100,7 @@ const PUT_INVENTORY = { expectedVersion: 3, inventory: INVENTORY };
 // ---------------------------------------------------------------------------------------------
 
 describe("Layoutname", () => {
-  test.skip("[REQ-API-1] angenommen: Oval, Acht / groß, a:b, 100%, Umlaute und genau 200 Zeichen", () => {
+  test("[REQ-API-1] angenommen: Oval, Acht / groß, a:b, 100%, Umlaute und genau 200 Zeichen", () => {
     for (const name of [
       "Oval",
       "Acht / groß",
@@ -117,7 +117,7 @@ describe("Layoutname", () => {
     }
   });
 
-  test.skip("[REQ-API-1] abgewiesen: leer, nur Leerraum, Leerraum am Rand, über 200 Zeichen, kein String", () => {
+  test("[REQ-API-1] abgewiesen: leer, nur Leerraum, Leerraum am Rand, über 200 Zeichen, kein String", () => {
     for (const name of [
       "",
       " ",
@@ -140,7 +140,7 @@ describe("Layoutname", () => {
     }
   });
 
-  test.skip("[REQ-API-1] der Name wird beim Dekodieren nicht verändert (kein stilles Trimmen)", () => {
+  test("[REQ-API-1] der Name wird beim Dekodieren nicht verändert (kein stilles Trimmen)", () => {
     const decoded = Schema.decodeUnknownEither(schemaOf("LayoutNameSchema"))(" Oval");
     expect(Either.isLeft(decoded)).toBe(true);
     expect(Schema.decodeUnknownSync(schemaOf("LayoutNameSchema"))("Acht / groß")).toBe(
@@ -154,7 +154,7 @@ describe("Layoutname", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Stände und Anfragen", () => {
-  test.skip("[REQ-API-2] gültige Werte werden angenommen und unverändert zurückkodiert", () => {
+  test("[REQ-API-2] gültige Werte werden angenommen und unverändert zurückkodiert", () => {
     const cases: ReadonlyArray<readonly [string, unknown]> = [
       ["LayoutSummarySchema", SUMMARY],
       ["LayoutSummarySchema", { ...SUMMARY, defekt: "schemaVersion: erwartet 1" }],
@@ -172,7 +172,7 @@ describe("Stände und Anfragen", () => {
     }
   });
 
-  test.skip("[REQ-API-2] Untergrenzen der Version: Übersicht und Layout-Stand ab 1, Bestand ab 0, Anfragen ab 0", () => {
+  test("[REQ-API-2] Untergrenzen der Version: Übersicht und Layout-Stand ab 1, Bestand ab 0, Anfragen ab 0", () => {
     expect(accepts("LayoutSummarySchema", { ...SUMMARY, version: 0 })).toBe(false);
     expect(accepts("LayoutStateSchema", { ...LAYOUT_STATE, version: 0 })).toBe(false);
     expect(accepts("LayoutStateSchema", { ...LAYOUT_STATE, version: 1 })).toBe(true);
@@ -183,7 +183,7 @@ describe("Stände und Anfragen", () => {
     );
   });
 
-  test.skip("[REQ-API-2] negative, gebrochene und als Text geschriebene Versionen werden abgewiesen", () => {
+  test("[REQ-API-2] negative, gebrochene und als Text geschriebene Versionen werden abgewiesen", () => {
     for (const bad of [-1, 1.5, "1", "0", Number.NaN, Number.POSITIVE_INFINITY, null]) {
       expect(accepts("LayoutSummarySchema", { ...SUMMARY, version: bad }), String(bad)).toBe(false);
       expect(accepts("LayoutStateSchema", { ...LAYOUT_STATE, version: bad }), String(bad)).toBe(
@@ -204,7 +204,7 @@ describe("Stände und Anfragen", () => {
     }
   });
 
-  test.skip("[REQ-API-2] unbekannte Zusatzfelder werden abgewiesen, auch im eingebetteten Layout bzw. Bestand", () => {
+  test("[REQ-API-2] unbekannte Zusatzfelder werden abgewiesen, auch im eingebetteten Layout bzw. Bestand", () => {
     expect(accepts("LayoutSummarySchema", { ...SUMMARY, layout: OVAL })).toBe(false);
     expect(accepts("LayoutSummarySchema", { ...SUMMARY, zusatz: 1 })).toBe(false);
     expect(accepts("LayoutStateSchema", { ...LAYOUT_STATE, zusatz: 1 })).toBe(false);
@@ -222,7 +222,7 @@ describe("Stände und Anfragen", () => {
     ).toBe(false);
   });
 
-  test.skip("[REQ-API-2] ein fehlendes Pflichtfeld wird abgewiesen", () => {
+  test("[REQ-API-2] ein fehlendes Pflichtfeld wird abgewiesen", () => {
     const cases: ReadonlyArray<readonly [string, Record<string, unknown>, ReadonlyArray<string>]> =
       [
         ["LayoutSummarySchema", SUMMARY, ["name", "version", "updatedAt"]],
@@ -238,7 +238,7 @@ describe("Stände und Anfragen", () => {
     }
   });
 
-  test.skip("[REQ-API-2] eingebettetes Layout und eingebetteter Bestand werden mit LayoutSchema bzw. InventorySchema geprüft", () => {
+  test("[REQ-API-2] eingebettetes Layout und eingebetteter Bestand werden mit LayoutSchema bzw. InventorySchema geprüft", () => {
     const dupIds = {
       schemaVersion: 1,
       elements: [
@@ -278,7 +278,7 @@ describe("Stände und Anfragen", () => {
     ).toBe(true);
   });
 
-  test.skip("[REQ-API-2] der Name in Übersicht und Stand folgt REQ-API-1", () => {
+  test("[REQ-API-2] der Name in Übersicht und Stand folgt REQ-API-1", () => {
     for (const bad of ["", " Oval", "a".repeat(201), 7]) {
       expect(accepts("LayoutSummarySchema", { ...SUMMARY, name: bad })).toBe(false);
       expect(accepts("LayoutStateSchema", { ...LAYOUT_STATE, name: bad })).toBe(false);
@@ -286,7 +286,7 @@ describe("Stände und Anfragen", () => {
     expect(accepts("LayoutStateSchema", { ...LAYOUT_STATE, name: "Acht / groß" })).toBe(true);
   });
 
-  test.skip("[REQ-API-2] updatedAt ist ISO 8601 in UTC mit Millisekunden und Z; beim Bestand auch null", () => {
+  test("[REQ-API-2] updatedAt ist ISO 8601 in UTC mit Millisekunden und Z; beim Bestand auch null", () => {
     for (const good of [T, "1999-01-01T00:00:00.000Z", new Date(0).toISOString()]) {
       expect(accepts("LayoutSummarySchema", { ...SUMMARY, updatedAt: good }), good).toBe(true);
       expect(accepts("LayoutStateSchema", { ...LAYOUT_STATE, updatedAt: good }), good).toBe(true);
@@ -320,7 +320,7 @@ describe("Stände und Anfragen", () => {
     expect(accepts("LayoutStateSchema", { ...LAYOUT_STATE, updatedAt: null })).toBe(false);
   });
 
-  test.skip("[REQ-API-2] defekt ist optional und, wenn vorhanden, ein Grund als Zeichenkette", () => {
+  test("[REQ-API-2] defekt ist optional und, wenn vorhanden, ein Grund als Zeichenkette", () => {
     expect(accepts("LayoutSummarySchema", SUMMARY)).toBe(true);
     expect(accepts("LayoutSummarySchema", { ...SUMMARY, defekt: "Zusatzfeld x" })).toBe(true);
     expect(accepts("LayoutSummarySchema", { ...SUMMARY, defekt: 1 })).toBe(false);
@@ -328,7 +328,7 @@ describe("Stände und Anfragen", () => {
     expect(accepts("LayoutSummarySchema", { ...SUMMARY, defekt: null })).toBe(false);
   });
 
-  test.skip("[REQ-API-2] Eigenschaft: Kodieren und Dekodieren eines gültigen Werts ergibt denselben Wert", () => {
+  test("[REQ-API-2] Eigenschaft: Kodieren und Dekodieren eines gültigen Werts ergibt denselben Wert", () => {
     for (const name of [
       "LayoutNameSchema",
       "LayoutSummarySchema",
@@ -354,7 +354,7 @@ describe("Stände und Anfragen", () => {
     }
   });
 
-  test.skip("[REQ-API-2] LayoutSchema und InventorySchema bleiben die aus M1/M3a: Stand und Anfrage betten genau sie ein", () => {
+  test("[REQ-API-2] LayoutSchema und InventorySchema bleiben die aus M1/M3a: Stand und Anfrage betten genau sie ein", () => {
     const base = schemaModule as unknown as {
       readonly LayoutSchema: Schema.Schema<Layout, unknown>;
       readonly InventorySchema: Schema.Schema<Inventory, unknown>;
@@ -420,7 +420,7 @@ const ERRORS: ReadonlyArray<readonly [string, ReadonlyArray<Record<string, unkno
 ];
 
 describe("Fehlerformen", () => {
-  test.skip("[REQ-API-3] jede Fehlerform dekodiert ihre JSON-Form mit _tag und kodiert sie unverändert zurück", () => {
+  test("[REQ-API-3] jede Fehlerform dekodiert ihre JSON-Form mit _tag und kodiert sie unverändert zurück", () => {
     for (const [name, values] of ERRORS) {
       for (const value of values) {
         expect(accepts(name, value), `${name} ${JSON.stringify(value)}`).toBe(true);
@@ -429,7 +429,7 @@ describe("Fehlerformen", () => {
     }
   });
 
-  test.skip("[REQ-API-3] Zusatzfelder, fremder oder fehlender _tag und fehlende Pflichtfelder werden abgewiesen", () => {
+  test("[REQ-API-3] Zusatzfelder, fremder oder fehlender _tag und fehlende Pflichtfelder werden abgewiesen", () => {
     for (const [name, values] of ERRORS) {
       const value = values[0] as Record<string, unknown>;
       expect(accepts(name, { ...value, zusatz: 1 }), `${name} mit Zusatzfeld`).toBe(false);
@@ -441,7 +441,7 @@ describe("Fehlerformen", () => {
     }
   });
 
-  test.skip("[REQ-API-3] Feldtypen: Versionen ganzzahlig, aktuell nur Layout-Stand, Bestands-Stand oder null, host Text oder null", () => {
+  test("[REQ-API-3] Feldtypen: Versionen ganzzahlig, aktuell nur Layout-Stand, Bestands-Stand oder null, host Text oder null", () => {
     const konflikt = { _tag: "VersionKonflikt", expectedVersion: 3, aktuell: null };
     expect(accepts("VersionKonflikt", { ...konflikt, expectedVersion: -1 })).toBe(false);
     expect(accepts("VersionKonflikt", { ...konflikt, expectedVersion: 1.5 })).toBe(false);
@@ -464,7 +464,7 @@ describe("Fehlerformen", () => {
     expect(accepts("ServerFehler", { _tag: "ServerFehler", text: null })).toBe(false);
   });
 
-  test.skip("[REQ-API-3] Eigenschaft: Kodieren und Dekodieren jeder Fehlerform ergibt denselben Wert", () => {
+  test("[REQ-API-3] Eigenschaft: Kodieren und Dekodieren jeder Fehlerform ergibt denselben Wert", () => {
     for (const [name] of ERRORS) {
       const schema = schemaOf(name);
       FastCheck.assert(

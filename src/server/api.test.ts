@@ -360,7 +360,7 @@ const putLayout = (h: Harness, name: string, expectedVersion: number, layout: un
 // ---------------------------------------------------------------------------------------------
 
 describe("Status", () => {
-  test.skip("[REQ-SRV-3] GET /api/status antwortet 200 {status: ok} als JSON, sobald startServer erfüllt ist", async () => {
+  test("[REQ-SRV-3] GET /api/status antwortet 200 {status: ok} als JSON, sobald startServer erfüllt ist", async () => {
     const h = await startHarness();
     const r = await h.call("GET", "/api/status");
     expect(r.status).toBe(200);
@@ -374,7 +374,7 @@ describe("Status", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Layoutliste", () => {
-  test.skip("[REQ-API-5] leere Datenbank: GET /api/layouts liefert 200 und []", async () => {
+  test("[REQ-API-5] leere Datenbank: GET /api/layouts liefert 200 und []", async () => {
     const h = await startHarness();
     const r = await h.call("GET", "/api/layouts");
     expect(r.status).toBe(200);
@@ -382,7 +382,7 @@ describe("Layoutliste", () => {
     expect(r.json()).toStrictEqual([]);
   });
 
-  test.skip("[REQ-API-5] Übersicht ohne Inhalt, sortiert mit localeCompare „de“ ohne Rücksicht auf Groß-/Kleinschreibung", async () => {
+  test("[REQ-API-5] Übersicht ohne Inhalt, sortiert mit localeCompare „de“ ohne Rücksicht auf Groß-/Kleinschreibung", async () => {
     const h = await startHarness();
     const names = ["zebra", "Oval", "apfel", "Ärger", "kreis", "Bär", "Acht"];
     const created = new Map<string, { version: number; updatedAt: string }>();
@@ -423,7 +423,7 @@ describe("Layoutliste", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Anlegen", () => {
-  test.skip("[REQ-API-6] PUT mit expectedVersion 0 auf neuen Namen: 201, Version 1, updatedAt; GET liefert genau dieses Layout", async () => {
+  test("[REQ-API-6] PUT mit expectedVersion 0 auf neuen Namen: 201, Version 1, updatedAt; GET liefert genau dieses Layout", async () => {
     const h = await startHarness();
     const before = Date.now();
     const r = await putLayout(h, "Oval", 0, OVAL);
@@ -449,7 +449,7 @@ describe("Anlegen", () => {
     });
   });
 
-  test.skip("[REQ-API-6] Acht / groß, kodiert Acht%20%2F%20gro%C3%9F, wird angelegt und unter genau diesem Namen gelistet und geladen", async () => {
+  test("[REQ-API-6] Acht / groß, kodiert Acht%20%2F%20gro%C3%9F, wird angelegt und unter genau diesem Namen gelistet und geladen", async () => {
     const h = await startHarness();
     const path = "/api/layouts/Acht%20%2F%20gro%C3%9F";
     expect(`/api/layouts/${enc("Acht / groß")}`).toBe(path);
@@ -463,7 +463,7 @@ describe("Anlegen", () => {
     expect(g.json()).toMatchObject({ name: "Acht / groß", version: 1, layout: ACHT });
   });
 
-  test.skip("[REQ-API-6] weitere Sonderzeichen im Namen: a:b, 100%, Umlaute, 200 Zeichen", async () => {
+  test("[REQ-API-6] weitere Sonderzeichen im Namen: a:b, 100%, Umlaute, 200 Zeichen", async () => {
     const h = await startHarness();
     const names = ["a:b", "100%", "Große Schleife", "x?y#z&w=1", "a".repeat(200)];
     for (const n of names) {
@@ -477,7 +477,7 @@ describe("Anlegen", () => {
     expect(list.map((s) => s.name).sort()).toEqual([...names].sort());
   });
 
-  test.skip("[REQ-API-6] der Name im Pfad wird nicht still getrimmt: %20Oval und Oval%20 → 400, nichts angelegt", async () => {
+  test("[REQ-API-6] der Name im Pfad wird nicht still getrimmt: %20Oval und Oval%20 → 400, nichts angelegt", async () => {
     const h = await startHarness();
     for (const path of ["/api/layouts/%20Oval", "/api/layouts/Oval%20", "/api/layouts/%09Oval"]) {
       const r = await h.call("PUT", path, { body: { expectedVersion: 0, layout: OVAL } });
@@ -499,7 +499,7 @@ describe("Anlegen", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Ändern", () => {
-  test.skip("[REQ-API-7] PUT mit passender Version ersetzt den Inhalt: 200, Version genau + 1, updatedAt ≥ alt", async () => {
+  test("[REQ-API-7] PUT mit passender Version ersetzt den Inhalt: 200, Version genau + 1, updatedAt ≥ alt", async () => {
     const h = await startHarness();
     const v1 = (await putLayout(h, "Oval", 0, OVAL)).json() as { updatedAt: string };
     const r2 = await putLayout(h, "Oval", 1, ACHT);
@@ -534,7 +534,7 @@ describe("Ändern", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Konflikt beim Schreiben", () => {
-  test.skip("[REQ-API-8] expectedVersion 0 bei vorhandenem Namen: 409 mit vollständigem Stand, Datenbank unverändert", async () => {
+  test("[REQ-API-8] expectedVersion 0 bei vorhandenem Namen: 409 mit vollständigem Stand, Datenbank unverändert", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);
     const stand = (await h.call("GET", "/api/layouts/Oval")).json();
@@ -548,7 +548,7 @@ describe("Konflikt beim Schreiben", () => {
     expect(await apiSnapshot(h)).toStrictEqual(api);
   });
 
-  test.skip("[REQ-API-8] expectedVersion 3 bei Version 4: 409 mit Stand in Version 4, Datenbank unverändert", async () => {
+  test("[REQ-API-8] expectedVersion 3 bei Version 4: 409 mit Stand in Version 4, Datenbank unverändert", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);
     await putLayout(h, "Oval", 1, ACHT);
@@ -572,7 +572,7 @@ describe("Konflikt beim Schreiben", () => {
     expect(rawSnapshot(h.dbPath)).toEqual(raw);
   });
 
-  test.skip("[REQ-API-8] expectedVersion 2 bei gelöschtem Layout: 409 mit aktuell null, nichts neu angelegt", async () => {
+  test("[REQ-API-8] expectedVersion 2 bei gelöschtem Layout: 409 mit aktuell null, nichts neu angelegt", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);
     await putLayout(h, "Oval", 1, ACHT);
@@ -594,7 +594,7 @@ describe("Konflikt beim Schreiben", () => {
     expect((again.json() as { version: number }).version).toBe(1);
   });
 
-  test.skip("[REQ-API-8] expectedVersion ≥ 1 auf einen Namen, den es nie gab: 409 mit aktuell null", async () => {
+  test("[REQ-API-8] expectedVersion ≥ 1 auf einen Namen, den es nie gab: 409 mit aktuell null", async () => {
     const h = await startHarness();
     const r = await putLayout(h, "Nie", 1, OVAL);
     expect(r.status).toBe(409);
@@ -609,7 +609,7 @@ describe("Konflikt beim Schreiben", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Lesen", () => {
-  test.skip("[REQ-API-9] GET liefert 200 mit dem Stand; unbekannter Name 404 NichtGefunden mit dem dekodierten Namen", async () => {
+  test("[REQ-API-9] GET liefert 200 mit dem Stand; unbekannter Name 404 NichtGefunden mit dem dekodierten Namen", async () => {
     const h = await startHarness();
     const c = (await putLayout(h, "Oval", 0, OVAL)).json() as { updatedAt: string };
     const g = await h.call("GET", "/api/layouts/Oval");
@@ -635,7 +635,7 @@ describe("Lesen", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Löschen", () => {
-  test.skip("[REQ-API-10] DELETE mit der Version auf dem Server: 204 ohne Körper, danach 404 und nicht mehr gelistet", async () => {
+  test("[REQ-API-10] DELETE mit der Version auf dem Server: 204 ohne Körper, danach 404 und nicht mehr gelistet", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);
     await putLayout(h, "Oval", 1, ACHT);
@@ -648,7 +648,7 @@ describe("Löschen", () => {
     expect(list.map((s) => s.name)).toEqual(["Bleibt"]);
   });
 
-  test.skip("[REQ-API-10] DELETE mit anderer Version: 409 mit aktuellem Stand, Datenbank unverändert", async () => {
+  test("[REQ-API-10] DELETE mit anderer Version: 409 mit aktuellem Stand, Datenbank unverändert", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);
     await putLayout(h, "Oval", 1, ACHT);
@@ -668,7 +668,7 @@ describe("Löschen", () => {
     expect(await apiSnapshot(h)).toStrictEqual(api);
   });
 
-  test.skip("[REQ-API-10] DELETE auf fehlenden Namen: 404 NichtGefunden, Datenbank unverändert", async () => {
+  test("[REQ-API-10] DELETE auf fehlenden Namen: 404 NichtGefunden, Datenbank unverändert", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);
     const raw = rawSnapshot(h.dbPath);
@@ -678,7 +678,7 @@ describe("Löschen", () => {
     expect(rawSnapshot(h.dbPath)).toEqual(raw);
   });
 
-  test.skip("[REQ-API-10] DELETE ohne oder mit ungültigem version: 400 UngueltigeAnfrage, Datenbank unverändert", async () => {
+  test("[REQ-API-10] DELETE ohne oder mit ungültigem version: 400 UngueltigeAnfrage, Datenbank unverändert", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);
     const raw = rawSnapshot(h.dbPath);
@@ -697,7 +697,7 @@ describe("Löschen", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Bestand", () => {
-  test.skip("[REQ-API-11] nie gespeichert: GET /api/bestand liefert Version 0, updatedAt null, leeren Bestand", async () => {
+  test("[REQ-API-11] nie gespeichert: GET /api/bestand liefert Version 0, updatedAt null, leeren Bestand", async () => {
     const h = await startHarness();
     const r = await h.call("GET", "/api/bestand");
     expect(r.status).toBe(200);
@@ -709,7 +709,7 @@ describe("Bestand", () => {
     });
   });
 
-  test.skip("[REQ-API-12] Beispiel: expectedVersion 0 mit unbekannter Teil-ID → 200, Version 1; GET liefert beide Einträge unverändert", async () => {
+  test("[REQ-API-12] Beispiel: expectedVersion 0 mit unbekannter Teil-ID → 200, Version 1; GET liefert beide Einträge unverändert", async () => {
     const h = await startHarness();
     const r = await h.call("PUT", "/api/bestand", {
       body: { expectedVersion: 0, inventory: BESTAND },
@@ -726,7 +726,7 @@ describe("Bestand", () => {
     });
   });
 
-  test.skip("[REQ-API-12] passende Version: 200 und Version + 1; Konflikt: 409 mit aktuellem Bestands-Stand, Datenbank unverändert", async () => {
+  test("[REQ-API-12] passende Version: 200 und Version + 1; Konflikt: 409 mit aktuellem Bestands-Stand, Datenbank unverändert", async () => {
     const h = await startHarness();
     await h.call("PUT", "/api/bestand", { body: { expectedVersion: 0, inventory: BESTAND } });
     const next = { schemaVersion: 1, counts: { "gerade-342": 4 } };
@@ -755,7 +755,7 @@ describe("Bestand", () => {
     expect((await h.call("GET", "/api/bestand")).json()).toStrictEqual(stand);
   });
 
-  test.skip("[REQ-API-12] Konflikt auf nie gespeichertem Bestand: expectedVersion 1 → 409 mit Version-0-Stand", async () => {
+  test("[REQ-API-12] Konflikt auf nie gespeichertem Bestand: expectedVersion 1 → 409 mit Version-0-Stand", async () => {
     const h = await startHarness();
     const r = await h.call("PUT", "/api/bestand", {
       body: { expectedVersion: 1, inventory: BESTAND },
@@ -827,7 +827,7 @@ describe("Ungültige Anfragen", () => {
     ["JSON-null", "null", null],
   ];
 
-  test.skip("[REQ-API-13] PUT /api/layouts mit ungültigem Körper: 400 UngueltigeAnfrage mit Grund aus der Schema-Prüfung, Datenbank unverändert", async () => {
+  test("[REQ-API-13] PUT /api/layouts mit ungültigem Körper: 400 UngueltigeAnfrage mit Grund aus der Schema-Prüfung, Datenbank unverändert", async () => {
     const h = await prepared();
     const raw = rawSnapshot(h.dbPath);
     const api = await apiSnapshot(h);
@@ -848,7 +848,7 @@ describe("Ungültige Anfragen", () => {
     expect(await apiSnapshot(h)).toStrictEqual(api);
   });
 
-  test.skip("[REQ-API-13] PUT /api/bestand mit ungültigem Körper: 400 UngueltigeAnfrage, Datenbank unverändert", async () => {
+  test("[REQ-API-13] PUT /api/bestand mit ungültigem Körper: 400 UngueltigeAnfrage, Datenbank unverändert", async () => {
     const h = await prepared();
     const raw = rawSnapshot(h.dbPath);
     const api = await apiSnapshot(h);
@@ -895,7 +895,7 @@ describe("Ungültige Anfragen", () => {
     expect(await apiSnapshot(h)).toStrictEqual(api);
   });
 
-  test.skip("[REQ-API-13] ungültiger Name im Pfad: 400 UngueltigeAnfrage, Datenbank unverändert", async () => {
+  test("[REQ-API-13] ungültiger Name im Pfad: 400 UngueltigeAnfrage, Datenbank unverändert", async () => {
     const h = await prepared();
     const raw = rawSnapshot(h.dbPath);
     for (const name of [" Oval", "Oval ", "a".repeat(201)]) {
@@ -910,7 +910,7 @@ describe("Ungültige Anfragen", () => {
     expect(rawSnapshot(h.dbPath)).toEqual(raw);
   });
 
-  test.skip("[REQ-API-13] 415 kommt, ohne auf den Körper zu warten: Client kündigt 1000 Byte an und sendet nur 22", async () => {
+  test("[REQ-API-13] 415 kommt, ohne auf den Körper zu warten: Client kündigt 1000 Byte an und sendet nur 22", async () => {
     // Testnachtrag 2: der Content-Type wird vor dem Körperlesen geprüft; sonst hinge die Antwort.
     const h = await startHarness();
     const head = (type: string, path: string) =>
@@ -924,7 +924,7 @@ describe("Ungültige Anfragen", () => {
     expect((await h.call("GET", "/api/layouts")).json()).toStrictEqual([]);
   });
 
-  test.skip("[REQ-API-13] Content-Type außer application/json bei PUT: 415, Datenbank unverändert", async () => {
+  test("[REQ-API-13] Content-Type außer application/json bei PUT: 415, Datenbank unverändert", async () => {
     const h = await prepared();
     const raw = rawSnapshot(h.dbPath);
     const layoutBody = JSON.stringify({ expectedVersion: 1, layout: ACHT });
@@ -950,7 +950,7 @@ describe("Ungültige Anfragen", () => {
     });
   });
 
-  test.skip("[REQ-API-13] Körper über 1 MiB: 413 ZuGross, Datenbank unverändert; genau 1 MiB wird noch angenommen", async () => {
+  test("[REQ-API-13] Körper über 1 MiB: 413 ZuGross, Datenbank unverändert; genau 1 MiB wird noch angenommen", async () => {
     const h = await prepared();
     const raw = rawSnapshot(h.dbPath);
     const MiB = 1024 * 1024;
@@ -982,7 +982,7 @@ describe("Ungültige Anfragen", () => {
     });
   });
 
-  test.skip("[REQ-API-13] nichts wird still bereinigt: ein gültiges Layout mit Zusatzfeld in einem Element wird abgewiesen, nicht gekürzt gespeichert", async () => {
+  test("[REQ-API-13] nichts wird still bereinigt: ein gültiges Layout mit Zusatzfeld in einem Element wird abgewiesen, nicht gekürzt gespeichert", async () => {
     const h = await prepared();
     const r = await putLayout(h, "Oval", 1, {
       schemaVersion: 1,
@@ -1001,7 +1001,7 @@ describe("Ungültige Anfragen", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Unbekannte Pfade und Methoden", () => {
-  test.skip("[REQ-API-16] unbekannter Pfad unter /api/: 404 als JSON, nie die Startseite", async () => {
+  test("[REQ-API-16] unbekannter Pfad unter /api/: 404 als JSON, nie die Startseite", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);
     for (const path of [
@@ -1021,7 +1021,7 @@ describe("Unbekannte Pfade und Methoden", () => {
     }
   });
 
-  test.skip("[REQ-API-16] bekannte Route mit falscher Methode: 404 oder 405 als JSON, nie die Startseite", async () => {
+  test("[REQ-API-16] bekannte Route mit falscher Methode: 404 oder 405 als JSON, nie die Startseite", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);
     for (const [method, path] of [
@@ -1047,7 +1047,7 @@ describe("Unbekannte Pfade und Methoden", () => {
 });
 
 describe("Keine CORS-Freigabe", () => {
-  test.skip("[REQ-API-17] OPTIONS mit fremdem Origin und Access-Control-Request-Method PUT: keine Access-Control-Allow-*-Kopfzeile", async () => {
+  test("[REQ-API-17] OPTIONS mit fremdem Origin und Access-Control-Request-Method PUT: keine Access-Control-Allow-*-Kopfzeile", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);
     for (const path of ["/api/bestand", "/api/layouts/Oval", "/api/layouts", "/"]) {
@@ -1066,7 +1066,7 @@ describe("Keine CORS-Freigabe", () => {
     }
   });
 
-  test.skip("[REQ-API-17] gewöhnliche Anfragen mit fremdem Origin bekommen ebenfalls keine Access-Control-Allow-Origin-Kopfzeile", async () => {
+  test("[REQ-API-17] gewöhnliche Anfragen mit fremdem Origin bekommen ebenfalls keine Access-Control-Allow-Origin-Kopfzeile", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);
     const headers = { origin: "http://fremd.example" };
@@ -1090,7 +1090,7 @@ describe("Keine CORS-Freigabe", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Unerwarteter Fehler", () => {
-  test.skip("[REQ-SRV-4] scheitert die Datenbank unter einer Anfrage: 500 ServerFehler ohne Stacktrace, Fehler auf stderr, nächste Anfrage normal", async () => {
+  test("[REQ-SRV-4] scheitert die Datenbank unter einer Anfrage: 500 ServerFehler ohne Stacktrace, Fehler auf stderr, nächste Anfrage normal", async () => {
     const h = await startHarness();
     expect((await putLayout(h, "Oval", 0, OVAL)).status).toBe(201);
     // Unerwarteten Fehler auslösen: die Nutztabellen unter dem laufenden Server wegbenennen
@@ -1141,7 +1141,7 @@ describe("Zeilen in der Datenbank", () => {
   const hasJson = (row: Row, value: unknown): boolean =>
     Object.values(row).some((v) => deepEqual(jsonOf(v), value));
 
-  test.skip("[REQ-DB-5] je Layout genau eine Zeile mit Name, Version, updatedAt und dem Layout als JSON-Text", async () => {
+  test("[REQ-DB-5] je Layout genau eine Zeile mit Name, Version, updatedAt und dem Layout als JSON-Text", async () => {
     const h = await startHarness();
     const a = (
       await h.call("PUT", "/api/layouts/Acht%20%2F%20gro%C3%9F", {
@@ -1177,7 +1177,7 @@ describe("Zeilen in der Datenbank", () => {
     expect(rowsWithValue(allRows(h.dbPath), "Acht / groß")).toHaveLength(1);
   });
 
-  test.skip("[REQ-DB-5] Bestand: höchstens eine Zeile mit Version, updatedAt und dem Bestand als JSON-Text", async () => {
+  test("[REQ-DB-5] Bestand: höchstens eine Zeile mit Version, updatedAt und dem Bestand als JSON-Text", async () => {
     const h = await startHarness();
     const isInventoryRow = (r: TableRow): boolean =>
       Object.values(r.row).some((v) => {
@@ -1214,7 +1214,7 @@ describe("Zeilen in der Datenbank", () => {
     expect(hasUpdatedAt(row, b2.updatedAt)).toBe(true);
   });
 
-  test.skip("[REQ-SARCH-2] Prüfweg: echter Port, echte SQLite-Datei; ein über HTTP angelegtes Layout steht in der Datei und übersteht den Neustart", async () => {
+  test("[REQ-SARCH-2] Prüfweg: echter Port, echte SQLite-Datei; ein über HTTP angelegtes Layout steht in der Datei und übersteht den Neustart", async () => {
     const h = await startHarness();
     expect((await putLayout(h, "Oval", 0, OVAL)).status).toBe(201);
     await h.stop();

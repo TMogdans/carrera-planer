@@ -249,7 +249,7 @@ afterEach(async () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Start", () => {
-  test.skip("[REQ-SRV-1] pnpm start (nach pnpm build:server) startet den Server; Startzeile mit Adresse, Datenbankpfad und Erlaubtliste", async () => {
+  test("[REQ-SRV-1] pnpm start (nach pnpm build:server) startet den Server; Startzeile mit Adresse, Datenbankpfad und Erlaubtliste", async () => {
     const dir = newDir();
     const env = await envIn(dir);
     const P = env.CARRERA_PORT as string;
@@ -275,7 +275,7 @@ describe("Start", () => {
     expect(await exitWithin(r, 10_000)).not.toBe("zeitueberschreitung");
   }, 30_000);
 
-  test.skip("[REQ-SRV-1] ohne CARRERA_DB und CARRERA_STATIC wirken data/carrera-planer.sqlite und dist relativ zum Arbeitsverzeichnis (ohne Port 8080)", async () => {
+  test("[REQ-SRV-1] ohne CARRERA_DB und CARRERA_STATIC wirken data/carrera-planer.sqlite und dist relativ zum Arbeitsverzeichnis (ohne Port 8080)", async () => {
     // Testnachtrag: Wirkung der Pfad-Vorgaben am Kindprozess, cwd = tmp-Verzeichnis. Host und Port
     // sind gesetzt, damit der Test nicht an 8080 hängt; deren Vorgaben prüfen resolveConfig
     // (config.test.ts) und der Vorgabe-Test unten.
@@ -312,7 +312,7 @@ describe("Start", () => {
     expect(second.out()).not.toContain("neu angelegt");
   }, 40_000);
 
-  test.skip("[REQ-SRV-1] Vorgaben ohne Umgebungsvariablen: 0.0.0.0:8080, data/carrera-planer.sqlite und dist relativ zum Arbeitsverzeichnis, Erlaubtliste localhost:8080", async () => {
+  test("[REQ-SRV-1] Vorgaben ohne Umgebungsvariablen: 0.0.0.0:8080, data/carrera-planer.sqlite und dist relativ zum Arbeitsverzeichnis, Erlaubtliste localhost:8080", async () => {
     expect(await portIsFree(8080), "Testvoraussetzung: Port 8080 ist frei").toBe(true);
     const cwd = newDir();
     const r = startMain({}, cwd);
@@ -341,7 +341,7 @@ describe("Start", () => {
     expect(await exitWithin(r, 5_000)).toEqual({ code: 0, signal: null });
   }, 30_000);
 
-  test.skip("[REQ-SRV-1] ungültiger Port bricht mit Exit-Code ≠ 0 und Meldung ab", async () => {
+  test("[REQ-SRV-1] ungültiger Port bricht mit Exit-Code ≠ 0 und Meldung ab", async () => {
     for (const port of ["70000", "0", "abc"]) {
       const dir = newDir();
       const env = await envIn(dir);
@@ -354,7 +354,7 @@ describe("Start", () => {
     }
   }, 40_000);
 
-  test.skip("[REQ-SRV-1] ungültiger Eintrag in CARRERA_ALLOWED_HOSTS bricht mit Exit-Code ≠ 0 und Meldung ab", async () => {
+  test("[REQ-SRV-1] ungültiger Eintrag in CARRERA_ALLOWED_HOSTS bricht mit Exit-Code ≠ 0 und Meldung ab", async () => {
     const dir = newDir();
     const env = await envIn(dir);
     const r = startMain({ ...env, CARRERA_ALLOWED_HOSTS: "http://x" });
@@ -371,7 +371,7 @@ describe("Start", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Beenden", () => {
-  test.skip("[REQ-SRV-5] SIGTERM mit einem Client, der mitten im Körper hängt: Exit-Code 0 binnen 5 s, bestätigte Änderung in der Datei", async () => {
+  test("[REQ-SRV-5] SIGTERM mit einem Client, der mitten im Körper hängt: Exit-Code 0 binnen 5 s, bestätigte Änderung in der Datei", async () => {
     // Testnachtrag 2: Content-Length 1000, nur 22 Byte gesendet; der Client schweigt danach.
     const dir = newDir();
     const env = await envIn(dir);
@@ -401,7 +401,7 @@ describe("Beenden", () => {
   }, 30_000);
 
   for (const signal of ["SIGTERM", "SIGINT"] as const) {
-    test.skip(`[REQ-SRV-5] ${signal}: Exit-Code 0 ohne Signal als Todesursache binnen 5 s, auch mit offener Keep-Alive-Verbindung; bestätigte Änderungen stehen danach in der Datei`, async () => {
+    test(`[REQ-SRV-5] ${signal}: Exit-Code 0 ohne Signal als Todesursache binnen 5 s, auch mit offener Keep-Alive-Verbindung; bestätigte Änderungen stehen danach in der Datei`, async () => {
       const dir = newDir();
       const env = await envIn(dir);
       const P = Number(env.CARRERA_PORT);
@@ -453,7 +453,7 @@ describe("Beenden", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Datenbank am Prozess", () => {
-  test.skip("[REQ-DB-1] neue Datei: Verzeichnis und Datei entstehen, Standardausgabe nennt Pfad und „neu angelegt“", async () => {
+  test("[REQ-DB-1] neue Datei: Verzeichnis und Datei entstehen, Standardausgabe nennt Pfad und „neu angelegt“", async () => {
     const dir = newDir();
     const env = await envIn(dir);
     const dbPath = env.CARRERA_DB as string;
@@ -471,7 +471,7 @@ describe("Datenbank am Prozess", () => {
     expect((await call(Number(env.CARRERA_PORT), "GET", "/api/layouts")).json()).toStrictEqual([]);
   }, 30_000);
 
-  test.skip("[REQ-DB-2] nach SIGTERM und Neustart mit derselben Datei: dieselben Layouts, Versionen, updatedAt, Inhalte und derselbe Bestand", async () => {
+  test("[REQ-DB-2] nach SIGTERM und Neustart mit derselben Datei: dieselben Layouts, Versionen, updatedAt, Inhalte und derselbe Bestand", async () => {
     const dir = newDir();
     const env = await envIn(dir);
     const P = Number(env.CARRERA_PORT);
@@ -500,7 +500,7 @@ describe("Datenbank am Prozess", () => {
     expect(second.out()).not.toContain("neu angelegt");
   }, 40_000);
 
-  test.skip("[REQ-DB-3] keine SQLite-Datei: Exit-Code ≠ 0, Fehlerausgabe mit Pfad, Datei Byte für Byte unverändert", async () => {
+  test("[REQ-DB-3] keine SQLite-Datei: Exit-Code ≠ 0, Fehlerausgabe mit Pfad, Datei Byte für Byte unverändert", async () => {
     const dir = newDir();
     const env = await envIn(dir);
     const dbPath = join(dir, "kaputt.sqlite");

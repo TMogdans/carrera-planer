@@ -265,7 +265,7 @@ type ClientFn = (request: unknown) => Effect.Effect<unknown, unknown>;
 type Client = Record<string, Record<string, ClientFn>>;
 
 describe("Vertrag am Draht", () => {
-  test.skip("[REQ-API-4] HttpApiClient aus CarreraApi: Anlegen, Ändern, Lesen, Liste und Löschen mit allen Beispielnamen aus REQ-API-1 gegen den echten Server", async () => {
+  test("[REQ-API-4] HttpApiClient aus CarreraApi: Anlegen, Ändern, Lesen, Liste und Löschen mit allen Beispielnamen aus REQ-API-1 gegen den echten Server", async () => {
     const api = await loadApi();
     const contract = contractOf(api);
     const h = await startHarness();
@@ -367,7 +367,7 @@ describe("Vertrag am Draht", () => {
     expect(JSON.parse(JSON.stringify(bestand.inventory))).toStrictEqual(BESTAND);
   }, 30_000);
 
-  test.skip("[REQ-API-4] jede Antwort am Draht ist im Vertrag deklariert: Statuscode je Endpunkt und Körper nach dem deklarierten Schema; gültige Anfragen passen zum Payload-Schema", async () => {
+  test("[REQ-API-4] jede Antwort am Draht ist im Vertrag deklariert: Statuscode je Endpunkt und Körper nach dem deklarierten Schema; gültige Anfragen passen zum Payload-Schema", async () => {
     const contract = contractOf(await loadApi());
     const h = await startHarness();
     const P = h.port;

@@ -230,7 +230,7 @@ afterEach(async () => {
 });
 
 describe("Dev-Proxy", () => {
-  test.skip("[REQ-SRV-6] pnpm dev leitet /api an den Server auf CARRERA_PORT weiter; beim Server kommt Host localhost:P an (changeOrigin)", async () => {
+  test("[REQ-SRV-6] pnpm dev leitet /api an den Server auf CARRERA_PORT weiter; beim Server kommt Host localhost:P an (changeOrigin)", async () => {
     const vite = (await import("vite")) as unknown as ViteApi;
     // Server mit Vorgabe-Host (0.0.0.0) wie bei pnpm start
     const h = await startHarness({ CARRERA_HOST: "0.0.0.0" });
@@ -264,7 +264,7 @@ describe("Dev-Proxy", () => {
     expect(direct.status).toBe(421);
   }, 30_000);
 
-  test.skip("[REQ-SRV-6] ohne CARRERA_PORT zielt der Proxy auf http://localhost:8080 mit changeOrigin", async () => {
+  test("[REQ-SRV-6] ohne CARRERA_PORT zielt der Proxy auf http://localhost:8080 mit changeOrigin", async () => {
     const vite = (await import("vite")) as unknown as ViteApi;
     const resolved = await withCarreraPort(undefined, () =>
       vite.resolveConfig({ configFile: VITE_CONFIG, logLevel: "silent" }, "serve"),

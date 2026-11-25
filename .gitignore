@@ -11,3 +11,9 @@ reports/
 # Claude Code: lokale, persönliche Konfiguration (nicht teilen)
 .claude/settings.local.json
 .claude/worktrees/
+
+# Server (M3b): Übersetzung und Datenbank
+dist-server/
+data/
+*.sqlite-wal
+*.sqlite-shm

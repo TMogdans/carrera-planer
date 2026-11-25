@@ -118,7 +118,7 @@ const withExtra = (v: unknown): unknown =>
   typeof v === "object" && v !== null && !Array.isArray(v) ? { ...v, zusatz: 1 } : v;
 
 describe("Unveränderte Schemas", () => {
-  test.skip("[REQ-SARCH-1] LayoutSchema, InventorySchema, CatalogEntrySchema und SetTemplateSchema verhalten sich wie auf dem Basisstand (Annehmen, Abweisen, Kodieren)", () => {
+  test("[REQ-SARCH-1] LayoutSchema, InventorySchema, CatalogEntrySchema und SetTemplateSchema verhalten sich wie auf dem Basisstand (Annehmen, Abweisen, Kodieren)", () => {
     for (const [name, frozen] of PAIRS) {
       const now = current[name];
       expect(now, `${name} wird weiter exportiert`).toBeDefined();

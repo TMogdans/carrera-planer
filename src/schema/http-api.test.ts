@@ -55,7 +55,7 @@ const LAYOUT_STATE = {
 };
 
 describe("Architektur des Datenvertrags", () => {
-  test.skip("[REQ-API-4] mit werfendem @effect/platform lädt src/schema/index.ts und dekodiert einen Layout-Stand; http-api.ts scheitert", async () => {
+  test("[REQ-API-4] mit werfendem @effect/platform lädt src/schema/index.ts und dekodiert einen Layout-Stand; http-api.ts scheitert", async () => {
     vi.resetModules();
     for (const m of PLATFORM_MODULES) {
       vi.doMock(m, () => {
@@ -86,7 +86,7 @@ describe("Architektur des Datenvertrags", () => {
     await expect(importFresh(HTTP_API_MODULE)).rejects.toThrow();
   });
 
-  test.skip("[REQ-API-4] http-api.ts lädt ohne Stub und enthält genau die Endpunkte der Tabelle „API M3b“", async () => {
+  test("[REQ-API-4] http-api.ts lädt ohne Stub und enthält genau die Endpunkte der Tabelle „API M3b“", async () => {
     const mod = await importFresh(HTTP_API_MODULE);
     const { HttpApi } = await import("@effect/platform");
     const api = mod.CarreraApi as Parameters<typeof HttpApi.reflect>[0] | undefined;
