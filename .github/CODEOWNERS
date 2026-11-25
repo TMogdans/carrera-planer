@@ -12,6 +12,7 @@
 /stryker.config.json        @TMogdans
 /vitest.config.ts           @TMogdans
 /vitest.mutation.config.ts  @TMogdans
+/vitest.container.config.ts @TMogdans
 /biome.json                 @TMogdans
 /tsconfig.json              @TMogdans
 /package.json               @TMogdans

@@ -17,5 +17,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "*.config.ts"]
+  "include": ["src", "deploy", "*.config.ts"]
 }
