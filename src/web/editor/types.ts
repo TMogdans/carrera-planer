@@ -250,7 +250,7 @@ export type InventoryMessage =
       readonly text: string;
     };
 
-export type PlannerMessage = EditorMessage | InventoryMessage;
+export type PlannerMessage = EditorMessage | InventoryMessage | LabelMessage;
 
 export type PlannerSession = Omit<Session, "messages"> & {
   readonly messages: ReadonlyArray<PlannerMessage>;
@@ -267,4 +267,44 @@ export type PlannerSession = Omit<Session, "messages"> & {
   deleteInventoryDefect(key: string): void;
   /** Änderung des Speichers von außen (anderes Tab; null = alles), REQ-BEST-10. */
   storageChanged(key: string | null): void;
+  /** Schalter „Namen“ (REQ-LBL-5): true = an. */
+  readonly labels: boolean;
+  /** Umschalten; kein Befehl, kein Verlaufseintrag (REQ-LBL-6). */
+  setLabels(on: boolean): void;
+};
+
+// ---------------------------------------------------------------------------------------------
+// Teilenamen und Symbole im Plan (Spec .specify/specs/plan-beschriftung-symbole/spec.md).
+// Spiegeln die Vertragstypen aus labels.test.ts und labels-session.test.ts; die Übereinstimmung
+// prüft `tsc` über `src/web/editor/index.ts`.
+// ---------------------------------------------------------------------------------------------
+
+/** Eigenes Symbol eines Katalogeintrags (REQ-SYM-1). */
+export type SymbolKind = "zielflagge" | "stecker" | "spurwechsel" | "engstelle";
+
+/** Variante der Platzregel (REQ-LBL-2): „nurSymbol“ = nur Symbol, „symbolUndName“ = Symbol + Name. */
+export type LabelVariant = "keine" | "kurz" | "voll" | "nurSymbol" | "symbolUndName";
+
+/** Voller Name und Kurzform (REQ-LBL-1). */
+export type LabelTexts = { readonly full: string; readonly short: string | undefined };
+
+/** Beschriftung eines gezeichneten Teil-Elements für eine Ansicht. */
+export type LabelEntry = {
+  readonly id: string;
+  readonly partId: string;
+  readonly variant: LabelVariant;
+  /** Bei „voll“ und „symbolUndName“ der volle Name, bei „kurz“ die Kurzform, sonst undefined. */
+  readonly text: string | undefined;
+  /** Voller Name (SVG-`<title>` der Symbole, REQ-SYM-4). */
+  readonly fullName: string;
+  readonly symbol: SymbolKind | undefined;
+  /** Ort (REQ-LBL-3) in Zeichenkoordinaten (mm, y nach unten). */
+  readonly at: ScreenPoint;
+};
+
+/** Ungültiger gespeicherter Wert des Schalters „Namen“ (REQ-LBL-5). */
+export type LabelMessage = {
+  readonly kind: "beschriftungUngueltig";
+  readonly value: string;
+  readonly text: string;
 };

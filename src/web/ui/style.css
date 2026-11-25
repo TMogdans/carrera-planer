@@ -234,6 +234,47 @@ button:disabled {
   pointer-events: none;
 }
 
+/* Namen und Symbole im Plan (plan-beschriftung-symbole, REQ-LBL-10, REQ-SYM-3): helle Füllung
+   mit dunklem Halo; Größen in Bildschirm-Pixeln (die Gruppe ist auf Bildschirmpixel
+   zurückskaliert). Tipp wählt das Element über data-id, Ziehen und Mausrad bleiben bei der Fläche. */
+.plan-label-text {
+  fill: #ffffff;
+  stroke: #111827;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+  font-weight: 600;
+}
+
+.symbol-plate {
+  fill: #ffffff;
+  stroke: #111827;
+  stroke-width: 1.5px;
+}
+
+.symbol-fill {
+  fill: #111827;
+  stroke: none;
+}
+
+.symbol-line {
+  fill: none;
+  stroke: #111827;
+  stroke-width: 1.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.symbol-line.symbol-strong {
+  stroke-width: 2px;
+}
+
+.labels-toggle[aria-pressed="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
 .selbar {
   grid-area: selbar;
   display: flex;

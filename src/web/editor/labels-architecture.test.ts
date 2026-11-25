@@ -93,7 +93,7 @@ const importFresh = async <T>(path: string): Promise<T> =>
 const LABELS_KEY = "carrera-planer:beschriftung";
 
 describe("Architektur", () => {
-  test.skip("[REQ-PARCH-1] Beschriftungslogik und Schalter laden und rechnen ohne Preact und ohne DOM-Globale", async () => {
+  test("[REQ-PARCH-1] Beschriftungslogik und Schalter laden und rechnen ohne Preact und ohne DOM-Globale", async () => {
     vi.resetModules();
     for (const m of PREACT_MODULES) {
       vi.doMock(m, () => {

@@ -4,12 +4,26 @@
  * zoomen nicht die Seite (`touch-action: none`).
  */
 import { useEffect, useRef } from "preact/hooks";
-import type { Centerline, ElementShape, ScreenPoint } from "../editor/index.js";
+import type { CatalogEntry, LayoutElement } from "../../core/index.js";
+import {
+  type Centerline,
+  type ElementShape,
+  type LabelEntry,
+  labelPlan,
+  type ScreenPoint,
+  SYMBOL_PX,
+  SYMBOL_ROW_PX,
+  textWidth,
+} from "../editor/index.js";
+import { PlanSymbol } from "./symbols.js";
 import { panBy, type View, zoomAt } from "./view.js";
 
 export type EndMark = { readonly at: ScreenPoint; readonly dir: number };
 
-type Props = {
+/** Inhalt der Zeichenfläche ohne `<svg>`-Hülle und ohne Gesten (hook-frei, prüfbar ohne DOM). */
+export type PlanContentProps = {
+  readonly catalog: ReadonlyArray<CatalogEntry>;
+  readonly elements: ReadonlyArray<LayoutElement>;
   readonly shapes: ReadonlyArray<ElementShape>;
   readonly crossingIds: ReadonlySet<string>;
   readonly selectedId: string | undefined;
@@ -18,6 +32,11 @@ type Props = {
   readonly end: EndMark | undefined;
   readonly errorAt: ScreenPoint | undefined;
   readonly view: View;
+  /** Schalter „Namen“ (REQ-LBL-5). */
+  readonly labelsOn: boolean;
+};
+
+type Props = PlanContentProps & {
   readonly onView: (v: View) => void;
   readonly onTap: (id: string | undefined) => void;
   readonly onSize: (width: number, height: number) => void;
@@ -155,78 +174,141 @@ export function Canvas(props: Props) {
     };
   }, []);
 
+  return (
+    <div class="canvas" ref={wrap}>
+      <svg ref={svg} class="canvas-svg" role="img" aria-label="Strecke">
+        <title>Strecke</title>
+        <PlanContent
+          catalog={props.catalog}
+          elements={props.elements}
+          shapes={props.shapes}
+          crossingIds={props.crossingIds}
+          selectedId={props.selectedId}
+          targets={props.targets}
+          hotPorts={props.hotPorts}
+          end={props.end}
+          errorAt={props.errorAt}
+          view={view}
+          labelsOn={props.labelsOn}
+        />
+      </svg>
+    </div>
+  );
+}
+
+/**
+ * Beschriftung und Symbol eines Elements (Spec plan-beschriftung-symbole, REQ-LBL-8, REQ-SYM-2):
+ * am Ort aus REQ-LBL-3, auf Bildschirmpixel zurückskaliert, nie gedreht. Die Gruppe trägt die
+ * Element-ID, damit ein Tipp darauf das Element auswählt (REQ-LBL-9); eigene Ereignis-Handler gibt
+ * es nicht, Ziehen und Mausrad bleiben bei der Zeichenfläche (REQ-LBL-10).
+ */
+function PlanLabel({ entry, px }: { readonly entry: LabelEntry; readonly px: number }) {
+  const { variant, symbol, text } = entry;
+  const row = variant === "symbolUndName";
+  // Zeile „Symbol + Name“: W = 20 + B, als Ganzes um den Ort zentriert.
+  const left = row ? -(SYMBOL_ROW_PX + textWidth(entry.fullName)) / 2 : -SYMBOL_PX / 2;
+  return (
+    <g
+      data-id={entry.id}
+      class="plan-label"
+      transform={`translate(${entry.at.x} ${entry.at.y}) scale(${px})`}
+    >
+      {symbol !== undefined && (
+        <PlanSymbol kind={symbol} name={entry.fullName} x={left} y={-SYMBOL_PX / 2} />
+      )}
+      {text !== undefined && (
+        <text
+          class="plan-label-text"
+          x={row ? left + SYMBOL_ROW_PX : 0}
+          y={0}
+          font-size={12}
+          text-anchor={row ? "start" : "middle"}
+          dominant-baseline="central"
+        >
+          {text}
+        </text>
+      )}
+    </g>
+  );
+}
+
+/**
+ * Inhalt der Zeichenfläche samt Ansichts-Transformation, ohne `<svg>`-Hülle und ohne Hooks.
+ * Ebenen von unten nach oben: Bänder (mit Querwegen), Querungen, Auswahl, Beschriftungen und
+ * Symbole (REQ-LBL-9), Zielmarken, hervorgehobene Queranschlüsse, Startmarke, Endpfeil,
+ * Fehlermarke.
+ */
+export function PlanContent(props: PlanContentProps) {
+  const { view } = props;
   const px = 1 / view.scale; // 1 Bildschirm-Pixel in mm
   const parts = props.shapes.filter((s) => !props.crossingIds.has(s.id));
   const crossings = props.shapes.filter((s) => props.crossingIds.has(s.id));
   const selected = props.shapes.find((s) => s.id === props.selectedId);
   const end = props.end;
+  const labels = labelPlan(
+    props.catalog,
+    props.elements,
+    props.shapes,
+    view.scale,
+    props.labelsOn,
+  ).filter((e) => e.variant !== "keine");
 
   return (
-    <div class="canvas" ref={wrap}>
-      <svg ref={svg} class="canvas-svg" role="img" aria-label="Strecke">
-        <title>Strecke</title>
-        <g transform={`matrix(${view.scale} 0 0 ${view.scale} ${view.tx} ${view.ty})`}>
-          {parts.map((s) => (
-            <g key={s.id} data-id={s.id} class="part">
-              <path class="band" d={bandPath(s)} vector-effect="non-scaling-stroke" />
-              {s.ports !== undefined && (
-                <path
-                  class="crossway"
-                  d={crosswayPath(s.ports.left, s.ports.right)}
-                  vector-effect="non-scaling-stroke"
-                />
-              )}
-              <path
-                class="centerline"
-                d={linePath(s.centerline)}
-                vector-effect="non-scaling-stroke"
-              />
-            </g>
-          ))}
-          {crossings.map((s) => (
-            <g key={s.id} data-id={s.id} class="part querung">
-              <path class="band" d={bandPath(s)} vector-effect="non-scaling-stroke" />
-              <path
-                class="centerline"
-                d={linePath(s.centerline)}
-                vector-effect="non-scaling-stroke"
-              />
-            </g>
-          ))}
-          {selected !== undefined && (
-            <path class="selected" d={bandPath(selected)} vector-effect="non-scaling-stroke" />
-          )}
-          {props.targets.map((t) => (
-            <circle
-              key={`t${t.x},${t.y}`}
-              class="target"
-              cx={t.x}
-              cy={t.y}
-              r={14 * px}
+    <g transform={`matrix(${view.scale} 0 0 ${view.scale} ${view.tx} ${view.ty})`}>
+      {parts.map((s) => (
+        <g key={s.id} data-id={s.id} class="part">
+          <path class="band" d={bandPath(s)} vector-effect="non-scaling-stroke" />
+          {s.ports !== undefined && (
+            <path
+              class="crossway"
+              d={crosswayPath(s.ports.left, s.ports.right)}
               vector-effect="non-scaling-stroke"
             />
-          ))}
-          {props.hotPorts.map((t) => (
-            <circle key={`h${t.x},${t.y}`} class="hot-port" cx={t.x} cy={t.y} r={18 * px} />
-          ))}
-          <circle class="start" cx={0} cy={0} r={7 * px} />
-          {end !== undefined && (
-            <path
-              class="end-arrow"
-              transform={`translate(${end.at.x} ${end.at.y}) rotate(${-end.dir * 45}) scale(${px})`}
-              d="M18 0L-6 -12L-6 12Z"
-            />
           )}
-          {props.errorAt !== undefined && (
-            <g transform={`translate(${props.errorAt.x} ${props.errorAt.y}) scale(${px})`}>
-              <circle class="error-mark" r={14} />
-              <text class="error-mark-text" text-anchor="middle" dy="5">
-                !
-              </text>
-            </g>
-          )}
+          <path class="centerline" d={linePath(s.centerline)} vector-effect="non-scaling-stroke" />
         </g>
-      </svg>
-    </div>
+      ))}
+      {crossings.map((s) => (
+        <g key={s.id} data-id={s.id} class="part querung">
+          <path class="band" d={bandPath(s)} vector-effect="non-scaling-stroke" />
+          <path class="centerline" d={linePath(s.centerline)} vector-effect="non-scaling-stroke" />
+        </g>
+      ))}
+      {selected !== undefined && (
+        <path class="selected" d={bandPath(selected)} vector-effect="non-scaling-stroke" />
+      )}
+      {labels.map((e) => (
+        <PlanLabel key={e.id} entry={e} px={px} />
+      ))}
+      {props.targets.map((t) => (
+        <circle
+          key={`t${t.x},${t.y}`}
+          class="target"
+          cx={t.x}
+          cy={t.y}
+          r={14 * px}
+          vector-effect="non-scaling-stroke"
+        />
+      ))}
+      {props.hotPorts.map((t) => (
+        <circle key={`h${t.x},${t.y}`} class="hot-port" cx={t.x} cy={t.y} r={18 * px} />
+      ))}
+      <circle class="start" cx={0} cy={0} r={7 * px} />
+      {end !== undefined && (
+        <path
+          class="end-arrow"
+          transform={`translate(${end.at.x} ${end.at.y}) rotate(${-end.dir * 45}) scale(${px})`}
+          d="M18 0L-6 -12L-6 12Z"
+        />
+      )}
+      {props.errorAt !== undefined && (
+        <g transform={`translate(${props.errorAt.x} ${props.errorAt.y}) scale(${px})`}>
+          <circle class="error-mark" r={14} />
+          <text class="error-mark-text" text-anchor="middle" dy="5">
+            !
+          </text>
+        </g>
+      )}
+    </g>
   );
 }
