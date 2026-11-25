@@ -13,6 +13,7 @@
     "src/catalog/**/*.ts",
     "src/schema/**/*.ts",
     "src/web/editor/**/*.ts",
+    "src/server/**/*.ts",
     "!src/**/*.test.ts",
     "!src/**/index.ts"
   ],
