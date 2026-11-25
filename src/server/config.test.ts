@@ -3,11 +3,11 @@
  * REQ-SRV-1 im Testprozess (Schnittstelle startServer wie in api.test.ts beschrieben): Startzeile
  * mit Adresse, Datenbankpfad und wirksamer Erlaubtliste; ungültiger Port bricht ab.
  *
- * Vorgabewerte (Testnachtrag): reine Funktion resolveConfig und Wirkung von Datenbankpfad und
- * statischem Verzeichnis relativ zum Arbeitsverzeichnis, siehe Abschnitt „Vorgabewerte“. Den Weg
- * über `pnpm build:server` und `pnpm start` prüft process.test.ts am echten Prozess.
+ * Vorgabewerte (Testnachtrag): reine Funktion resolveConfig, siehe Abschnitt „Vorgabewerte“.
+ * Die Wirkung relativ zum Arbeitsverzeichnis und den Weg über `pnpm build:server` und
+ * `pnpm start` prüft process.test.ts am echten Prozess.
  */
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import http from "node:http";
 import net from "node:net";
 import { tmpdir } from "node:os";
@@ -254,11 +254,10 @@ describe("Einstellungen", () => {
  *   dürfen relativ zum Arbeitsverzeichnis oder bereits aufgelöst sein; verglichen wird nach
  *   `path.resolve`. Weitere Felder (z. B. die Erlaubtliste) sind erlaubt. startServer nutzt sie.
  *
- * Warum zwei Formen: Host 0.0.0.0 und Port 8080 lassen sich im Testprozess nicht wirkend prüfen,
- * ohne an 8080 zu binden; dafür steht die reine Funktion. Datenbankpfad und statisches
- * Verzeichnis werden zusätzlich an der Wirkung geprüft: der echte Server startet mit einem
- * tmp-Verzeichnis als Arbeitsverzeichnis und ohne CARRERA_DB/CARRERA_STATIC; dann muss dort
- * `data/carrera-planer.sqlite` entstehen und `dist/index.html` ausgeliefert werden.
+ * Warum eine reine Funktion: Host 0.0.0.0 und Port 8080 lassen sich im Testprozess nicht wirkend
+ * prüfen, ohne an 8080 zu binden. Die Wirkung von Datenbankpfad und statischem Verzeichnis
+ * relativ zum Arbeitsverzeichnis prüft process.test.ts am Kindprozess (cwd = tmp-Verzeichnis);
+ * hier kein `process.chdir`, weil Stryker den Pool `threads` nutzt und chdir dort wirft.
  */
 type ResolvedConfig = {
   readonly host: string;
@@ -318,39 +317,6 @@ describe("Vorgabewerte", () => {
         ...DEFAULTS,
         ...changed,
       });
-    }
-  });
-
-  test.skip("[REQ-SRV-1] ohne CARRERA_DB und CARRERA_STATIC wirken data/carrera-planer.sqlite und dist relativ zum Arbeitsverzeichnis", async () => {
-    const cwd = mkdtempSync(join(tmpdir(), "carrera-m3b-cwd-"));
-    tmpDirs.push(cwd);
-    const marker = "Carrera-dist-im-Arbeitsverzeichnis-4b8e";
-    mkdirSync(join(cwd, "dist"));
-    writeFileSync(join(cwd, "dist", "index.html"), `<!doctype html><title>${marker}</title>`);
-    const before = process.cwd();
-    process.chdir(cwd);
-    try {
-      const h = await startHarness({ CARRERA_DB: undefined, CARRERA_STATIC: undefined });
-      const dbFile = join(cwd, "data", "carrera-planer.sqlite");
-      expect(existsSync(dbFile)).toBe(true);
-      expect(existsSync(h.dbPath)).toBe(false); // nicht der Pfad des Gerüsts
-      const put = await h.call("PUT", "/api/layouts/Oval", {
-        body: { expectedVersion: 0, layout: { schemaVersion: 1, elements: [] } },
-      });
-      expect(put.status).toBe(201);
-      await h.stop();
-      // die Änderung steht in genau dieser Datei
-      await h.restart();
-      expect((await h.call("GET", "/api/layouts/Oval")).status).toBe(200);
-      expect(readFileSync(dbFile).subarray(0, 16).toString("latin1")).toBe("SQLite format 3\0");
-
-      const index = await h.call("GET", "/");
-      expect(index.status).toBe(200);
-      expect(index.text).toContain(marker);
-      expect(index.text).not.toContain(INDEX_MARKER);
-      await h.stop();
-    } finally {
-      process.chdir(before);
     }
   });
 });
