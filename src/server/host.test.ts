@@ -129,6 +129,33 @@ const call = (
 
 const enc = encodeURIComponent;
 
+/**
+ * Rohe Teilanfrage senden und nur auf die Statuszeile warten (Testnachtrag 2). Liefert den
+ * Statuscode oder „zeitueberschreitung“, wenn binnen `ms` keine Antwort kommt.
+ */
+const firstStatus = (
+  port: number,
+  text: string,
+  ms: number,
+): Promise<number | "zeitueberschreitung"> =>
+  new Promise((resolve) => {
+    const socket = net.connect(port, "127.0.0.1");
+    let buf = "";
+    const done = (v: number | "zeitueberschreitung") => {
+      clearTimeout(timer);
+      socket.destroy();
+      resolve(v);
+    };
+    const timer = setTimeout(() => done("zeitueberschreitung"), ms);
+    socket.on("error", () => {});
+    socket.on("data", (c: Buffer) => {
+      buf += c.toString("latin1");
+      const end = buf.indexOf("\r\n");
+      if (end >= 0) done(Number(buf.slice(0, end).split(" ")[1]));
+    });
+    socket.once("connect", () => socket.write(text));
+  });
+
 type Harness = {
   readonly port: number;
   readonly dir: string;
@@ -490,6 +517,28 @@ describe("Host-Prüfung", () => {
         })
       ).status,
     ).toBe(400);
+  });
+
+  test.skip("[REQ-SRV-7] Host-Angabe ohne Port meint Port 80: ein Eintrag mit :80 erlaubt sie, ein Eintrag mit P nicht", async () => {
+    // Testnachtrag 2
+    const h = await prepared({ CARRERA_ALLOWED_HOSTS: "pi.local:80" });
+    const P = h.port;
+    for (const host of ["pi.local", "PI.local", "pi.local:80"]) {
+      expect((await h.call("GET", "/api/status", { host })).status, host).toBe(200);
+    }
+    expect421(await h.call("GET", "/api/status", { host: `pi.local:${P}` }), `pi.local:${P}`, "P");
+    // Gegenprobe: ohne :80 in der Liste ist der Host ohne Port fremd
+    expect421(await h.call("GET", "/api/status", { host: "localhost" }), "localhost", "localhost");
+  });
+
+  test.skip("[REQ-SRV-7] 421 kommt, ohne auf den Körper zu warten: Client kündigt 1000 Byte an und sendet nur 22", async () => {
+    // Testnachtrag 2: die Prüfung steht vor dem Körperlesen; sonst hinge die Antwort.
+    const h = await prepared(ALLOWED_EXAMPLE);
+    const head = (host: string) =>
+      `PUT /api/layouts/Neu HTTP/1.1\r\nHost: ${host}\r\nContent-Type: application/json\r\nContent-Length: 1000\r\n\r\n{"expectedVersion":0,"`;
+    expect(await firstStatus(h.port, head(`evil.example:${h.port}`), 2_000)).toBe(421);
+    // Gegenprobe: mit erlaubtem Host wartet der Server auf den Körper (keine Antwort binnen 500 ms)
+    expect(await firstStatus(h.port, head(`localhost:${h.port}`), 500)).toBe("zeitueberschreitung");
   });
 
   test.skip("[REQ-SRV-7] Einträge mit Port gelten genau so, ohne Port mit P; Leerraum am Rand wird entfernt", async () => {
