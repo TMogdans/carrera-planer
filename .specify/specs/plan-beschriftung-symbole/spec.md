@@ -411,9 +411,11 @@ Vor dem ersten Fall in den Entwicklerwerkzeugen `carrera-planer:beschriftung` l�
    (Auswahlleiste „Nr. 1: Gerade 342“), ihr Name bleibt über der Hervorhebung lesbar. Auf einem
    Namen ziehen → die Ansicht verschiebt sich, nichts wird ausgewählt.
 6. **Symbole.** Neu; Rundenzähler, Anschlussstück, Spurwechsel gerade, Engstelle, Spurwechselkurve,
-   Gerade 342, Kreuzung. Einpassen am Laptop: Rundenzähler mit Zielflagge, Anschlussstück mit
-   Stecker, beide Spurwechsel mit dem Spurwechsel-Zeichen, Engstelle mit der Taille, jeweils links
-   neben dem Namen, ohne sich zu überdecken; Gerade 342 und Kreuzung ohne Symbol, die Kreuzung mit
+   Gerade 342, Kreuzung. Einpassen am Laptop, dann hineinzoomen, bis alle fünf Symbolteile ihren
+   Namen zeigen (nach dem Einpassen allein reicht der Platz laut REQ-LBL-2 bei 1280 px Breite nicht
+   für jeden Namen; Nachschärfung nach dem Smoke, vom Menschen abgenommen): Rundenzähler mit
+   Zielflagge, Anschlussstück mit Stecker, beide Spurwechsel mit dem Spurwechsel-Zeichen, Engstelle
+   mit der Taille, jeweils links neben dem Namen, ohne sich zu überdecken; Gerade 342 und Kreuzung ohne Symbol, die Kreuzung mit
    ihrem Querweg. Hovern über einem Symbol zeigt den Namen.
 7. **Herauszoomen mit Symbolen.** Aus Fall 6 so weit herauszoomen, bis die Namen weg sind: die
    Symbole stehen allein und bleiben gleich groß; erst wenn das Teil kürzer als etwa 16 px ist,
