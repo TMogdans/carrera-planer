@@ -236,6 +236,28 @@ describe("Statische Dateien", () => {
     expect(svg.text).toBe(SVG);
   });
 
+  test("[REQ-SRV-2] ein Geschwisterverzeichnis mit gleichem Namensanfang (static-geheim neben static) ist nicht erreichbar", async () => {
+    // Testnachtrag 2: ein Präfixvergleich ohne Trennzeichen (`startsWith(root)` statt
+    // `startsWith(root + sep)`) ließe `<tmp>/static-geheim/…` als „innerhalb von <tmp>/static“ durch.
+    const h = await startHarness();
+    withBuild(h);
+    const sibling = `${h.staticDir}-geheim`;
+    mkdirSync(sibling);
+    writeFileSync(join(sibling, "x.txt"), SECRET);
+    const name = sibling.slice(h.dir.length + 1); // „static-geheim“
+    for (const path of [
+      `/..%2f${name}/x.txt`,
+      `/../${name}/x.txt`,
+      `/%2e%2e/${name}/x.txt`,
+      `/assets/..%2f..%2f${name}/x.txt`,
+    ]) {
+      const r = await h.call("GET", path);
+      expect(r.status, path).toBe(404);
+      expect(r.text, path).not.toContain(SECRET);
+    }
+    expect((await h.call("GET", "/assets/index-AbC123.js")).status).toBe(200);
+  });
+
   test("[REQ-SRV-2] Pfade außerhalb von CARRERA_STATIC sind nicht erreichbar: /../package.json, /%2e%2e/package.json → 404", async () => {
     const h = await startHarness();
     withBuild(h);

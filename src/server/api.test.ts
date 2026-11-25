@@ -143,6 +143,33 @@ const call = (
 
 const enc = encodeURIComponent;
 
+/**
+ * Rohe Teilanfrage senden und nur auf die Statuszeile warten (Testnachtrag 2). Liefert den
+ * Statuscode oder „zeitueberschreitung“, wenn binnen `ms` keine Antwort kommt.
+ */
+const firstStatus = (
+  port: number,
+  text: string,
+  ms: number,
+): Promise<number | "zeitueberschreitung"> =>
+  new Promise((resolve) => {
+    const socket = net.connect(port, "127.0.0.1");
+    let buf = "";
+    const done = (v: number | "zeitueberschreitung") => {
+      clearTimeout(timer);
+      socket.destroy();
+      resolve(v);
+    };
+    const timer = setTimeout(() => done("zeitueberschreitung"), ms);
+    socket.on("error", () => {});
+    socket.on("data", (c: Buffer) => {
+      buf += c.toString("latin1");
+      const end = buf.indexOf("\r\n");
+      if (end >= 0) done(Number(buf.slice(0, end).split(" ")[1]));
+    });
+    socket.once("connect", () => socket.write(text));
+  });
+
 type Harness = {
   readonly port: number;
   readonly dir: string;
@@ -881,6 +908,20 @@ describe("Ungültige Anfragen", () => {
       expect((await h.call("DELETE", `/api/layouts/${enc(name)}?version=1`)).status).toBe(400);
     }
     expect(rawSnapshot(h.dbPath)).toEqual(raw);
+  });
+
+  test("[REQ-API-13] 415 kommt, ohne auf den Körper zu warten: Client kündigt 1000 Byte an und sendet nur 22", async () => {
+    // Testnachtrag 2: der Content-Type wird vor dem Körperlesen geprüft; sonst hinge die Antwort.
+    const h = await startHarness();
+    const head = (type: string, path: string) =>
+      `PUT ${path} HTTP/1.1\r\nHost: localhost:${h.port}\r\nContent-Type: ${type}\r\nContent-Length: 1000\r\n\r\n{"expectedVersion":0,"`;
+    expect(await firstStatus(h.port, head("text/plain", "/api/layouts/Neu"), 2_000)).toBe(415);
+    expect(await firstStatus(h.port, head("text/plain", "/api/bestand"), 2_000)).toBe(415);
+    // Gegenprobe: mit application/json wartet der Server auf den Körper
+    expect(await firstStatus(h.port, head("application/json", "/api/layouts/Neu"), 500)).toBe(
+      "zeitueberschreitung",
+    );
+    expect((await h.call("GET", "/api/layouts")).json()).toStrictEqual([]);
   });
 
   test("[REQ-API-13] Content-Type außer application/json bei PUT: 415, Datenbank unverändert", async () => {

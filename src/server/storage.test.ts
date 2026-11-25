@@ -470,6 +470,26 @@ describe("Kaputte oder fremde Datei", () => {
     }
   });
 
+  test("[REQ-DB-3] vorhandene leere Datei (0 Byte): Start scheitert mit Pfad auf stderr, keine neue Datenbank darüber, Datei bleibt 0 Byte", async () => {
+    // Testnachtrag 2: SQLite selbst behandelt eine 0-Byte-Datei als leere Datenbank und würde sie
+    // still migrieren; die Spec verlangt, nie eine neue leere Datenbank über eine vorhandene Datei
+    // zu legen.
+    const dir = newDir();
+    const staticDir = join(dir, "static");
+    mkdirSync(staticDir);
+    const dbPath = join(dir, "leer.sqlite");
+    writeFileSync(dbPath, Buffer.alloc(0));
+    const env = await envFor(dbPath, staticDir);
+    const err = await failingStart(env);
+    expect(err).toContain(dbPath);
+    expect(readFileSync(dbPath).length).toBe(0);
+    expect(existsSync(`${dbPath}-wal`) ? readFileSync(`${dbPath}-wal`).length : 0).toBe(0);
+    // Gegenprobe: ein Pfad ohne Datei wird weiterhin neu angelegt
+    const fresh = join(dir, "neu.sqlite");
+    const h = await startHarness({ CARRERA_DB: fresh });
+    expect(h.out.some((l) => l.includes(fresh) && l.includes("neu angelegt"))).toBe(true);
+  });
+
   test("[REQ-DB-3] nicht lesbare Datei: Start scheitert mit Pfad auf stderr, Datei unverändert", async () => {
     const h = await startHarness();
     await putLayout(h, "Oval", 0, OVAL);

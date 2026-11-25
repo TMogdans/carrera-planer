@@ -371,6 +371,35 @@ describe("Start", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Beenden", () => {
+  test("[REQ-SRV-5] SIGTERM mit einem Client, der mitten im Körper hängt: Exit-Code 0 binnen 5 s, bestätigte Änderung in der Datei", async () => {
+    // Testnachtrag 2: Content-Length 1000, nur 22 Byte gesendet; der Client schweigt danach.
+    const dir = newDir();
+    const env = await envIn(dir);
+    const P = Number(env.CARRERA_PORT);
+    const r = startMain(env);
+    await ready(r, P);
+    const put = await call(P, "PUT", "/api/layouts/Oval", { expectedVersion: 0, layout: OVAL });
+    expect(put.status).toBe(201);
+    const socket = net.connect(P, "127.0.0.1");
+    socket.on("error", () => {});
+    socket.resume();
+    try {
+      await new Promise<void>((res) => socket.once("connect", () => res()));
+      socket.write(
+        `PUT /api/layouts/Neu HTTP/1.1\r\nHost: localhost:${P}\r\nContent-Type: application/json\r\nContent-Length: 1000\r\n\r\n{"expectedVersion":0,"`,
+      );
+      await new Promise((res) => setTimeout(res, 200));
+      const t0 = Date.now();
+      r.child.kill("SIGTERM");
+      const exit = await exitWithin(r, 5_000);
+      const ms = Date.now() - t0;
+      expect(exit, `nach ${ms} ms\n${r.out()}\n${r.err()}`).toEqual({ code: 0, signal: null });
+    } finally {
+      socket.destroy();
+    }
+    expect(fileContainsJson(env.CARRERA_DB as string, OVAL)).toBe(true);
+  }, 30_000);
+
   for (const signal of ["SIGTERM", "SIGINT"] as const) {
     test(`[REQ-SRV-5] ${signal}: Exit-Code 0 ohne Signal als Todesursache binnen 5 s, auch mit offener Keep-Alive-Verbindung; bestätigte Änderungen stehen danach in der Datei`, async () => {
       const dir = newDir();

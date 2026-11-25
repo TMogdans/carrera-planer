@@ -77,8 +77,14 @@ export const InventoryWrittenSchema = LayoutSummarySchema.pipe(
   Schema.pick("version", "updatedAt"),
 ).annotations(STRICT);
 
-/** Pfadparameter von `/api/layouts/{name}` (nach dem Prozent-Dekodieren). */
-export const LayoutPathSchema = Schema.Struct({ name: LayoutNameSchema }).annotations(STRICT);
+/**
+ * Pfadparameter von `/api/layouts/{name}`: kodiert ist der Name prozentkodiert
+ * (`encodeURIComponent`), dekodiert ein Layoutname nach REQ-API-1. So setzt ein Client aus
+ * `CarreraApi` auch „Acht / groß“ oder „100%“ richtig in den Pfad.
+ */
+export const LayoutPathSchema = Schema.Struct({
+  name: Schema.compose(Schema.StringFromUriComponent, LayoutNameSchema),
+}).annotations(STRICT);
 
 /** Abfrage von `DELETE /api/layouts/{name}?version=n`: genau `version`, ganzzahlig ab 1. */
 export const DeleteQuerySchema = Schema.Struct({

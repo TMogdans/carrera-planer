@@ -11,7 +11,7 @@
  * Einstieg für Tests: `startServer`; für den Prozess: `serve` (siehe `main.ts`).
  */
 import { once } from "node:events";
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import http from "node:http";
 import { dirname, extname, resolve, sep } from "node:path";
@@ -368,14 +368,7 @@ function api(sql: SqlClient.SqlClient, req: http.IncomingMessage, url: URL) {
     const item = path.startsWith(prefix) && !segment.includes("/");
     const withName = (f: (name: string) => Effect.Effect<Reply, Reply | SqlError.SqlError>) =>
       Effect.flatMap(
-        Either.mapLeft(
-          Schema.decodeUnknownEither(
-            Schema.Struct({ name: Schema.StringFromUriComponent }).pipe(
-              Schema.compose(LayoutPathSchema),
-            ),
-          )({ name: segment }),
-          invalid,
-        ),
+        Either.mapLeft(Schema.decodeUnknownEither(LayoutPathSchema)({ name: segment }), invalid),
         ({ name }) => f(name),
       );
     const routes: Record<string, Handler> = {
@@ -467,6 +460,13 @@ export function serve(env: Env, output: Output): Effect.Effect<void, unknown, Sc
   return Effect.gen(function* () {
     const config = resolveConfig(env);
     const existed = existsSync(config.db);
+    // SQLite nähme eine leere Datei still als neue Datenbank; über eine vorhandene Datei wird
+    // aber nie eine neue Datenbank gelegt (REQ-DB-3).
+    if (existed && statSync(config.db).size === 0) {
+      throw new Error(
+        `Datenbank ${config.db} nicht nutzbar: leere Datei (0 Byte), keine SQLite-Datenbank`,
+      );
+    }
     const sql = yield* openDatabase(config.db);
     if (!existed) output.stdout(`Datenbank ${config.db} neu angelegt`);
     if (!existsSync(config.staticDir)) {
@@ -485,7 +485,10 @@ export function serve(env: Env, output: Output): Effect.Effect<void, unknown, Sc
       }),
       () =>
         Effect.promise(() => {
+          // Keine neuen Verbindungen; ruhende schließt close() sofort. Wer nach 2 s noch mitten
+          // in einer Anfrage hängt, wird getrennt, damit das Beenden nie hängt (REQ-SRV-5).
           server.close();
+          setTimeout(() => server.closeAllConnections(), 2000).unref();
           return once(server, "close");
         }),
     );
