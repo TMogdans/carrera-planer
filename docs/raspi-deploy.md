@@ -96,24 +96,47 @@ die Zeile läuft `latest`.
 ```sh
 cd ~/carrera-planer
 # vollen SHA der bisherigen Version notieren (40 Zeichen; für einen späteren Rückweg)
-alt=$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$(docker compose ps -q carrera-planer)")
-echo "$alt"
-./backup.sh                 # immer vorher sichern
+alt=$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$(docker compose ps -aq carrera-planer)")
+[ -n "$alt" ] && echo "alt=$alt" || echo "HINWEIS: kein Container, alt leer (Revision von Hand ermitteln, siehe unten)"
+# immer vorher sichern; den Ordner notieren (für ein Rückspielen nach einem Rückweg)
+if ausgabe=$(./backup.sh); then sicherung=${ausgabe#Sicherung in }; echo "sicherung=$sicherung"; else echo "SICHERUNG GESCHEITERT: nicht weitermachen"; fi
 # einen früheren Rückweg aufheben: CARRERA_TAG entfernen, damit wieder latest gilt
 grep -v '^CARRERA_TAG=' .env > .env.neu; mv .env.neu .env
 docker compose pull
 docker compose up -d
-docker compose ps                # healthy
-# Prüfschritt: Revision des LAUFENDEN Containers
-neu=$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$(docker compose ps -q carrera-planer)")
-[ "$neu" != "$alt" ] && echo "NEU: $alt -> $neu" || echo "UNVERÄNDERT: läuft weiter $alt"
+# Prüfschritt: warten, bis der Healthcheck entschieden hat (höchstens 300 s), dann prüfen
+c=$(docker compose ps -aq carrera-planer); t=0
+while z=$(docker inspect --format '{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}} {{.RestartCount}} {{index .Config.Labels "org.opencontainers.image.revision"}}' "$c" 2>&1) && [ "$t" -lt 300 ]; do
+  case "$z" in "running starting 0 "*) sleep 2; t=$((t + 2)) ;; *) break ;; esac
+done
+echo "nach ${t}s: Zustand Health Neustarts Revision = $z"
+case "$z" in
+  "running healthy 0 $alt") echo "UNVERÄNDERT: läuft weiter $alt" ;;
+  "running healthy 0 "?*) echo "NEU: $alt -> ${z##* }" ;;
+  *) echo "FEHLER: Update nicht gesund angelaufen ($z)" ;;
+esac
 ```
+
+`alt` wird auch bei gestopptem Dienst gelesen (`ps -a`). Leer bleibt es nur, wenn es gar keinen
+Container gibt; dann den SHA der zuletzt gelaufenen Version unter Packages suchen (Abschnitt „Welche
+Version läuft?“), sonst fehlt er für einen Rückweg. `sicherung` ist der Ordner unter `backup/`, den
+ein späteres Rückspielen braucht.
+
+Der Prüfschritt wartet, solange der Container läuft, `starting` meldet und nicht neu gestartet
+wurde. Er hört auf bei `healthy`, `unhealthy`, einem Neustart oder einem anderen Zustand
+(`restarting`, `exited`), spätestens nach 300 s. Ein gesunder Start braucht wenige Sekunden. Die
+Obergrenze kommt aus dem Healthcheck im Image: 30 s Startphase, danach Prüfung alle 60 s mit bis zu
+10 s Timeout, `unhealthy` erst nach 3 Fehlschlägen, also nach bis zu rund 240 s. Ein Absturz zeigt
+sich sofort als Neustart. Erfolg meldet er nur bei `running healthy 0` **und** passender Revision.
 
 Erwartet ist der volle SHA des neuesten `main`-Builds, also die Version mit Tag `latest` unter
 GitHub → Packages → `carrera-planer`. `$neu` muss genau dieser SHA sein, mindestens aber anders als
 `$alt`.
 
 Passt es nicht:
+- **`FEHLER`**: Die Zeile nennt Zustand, Health, Neustarts und Revision. `docker compose logs --tail 50
+  carrera-planer` lesen und die Ursache unter „Fehlerbilder“ suchen. Läuft die neue Version nicht
+  stabil, Rückweg auf `$alt`.
 - **`UNVERÄNDERT`** und unter Packages trägt `latest` denselben SHA wie `$alt`: Es gibt keine neuere
   Version, nichts zu tun.
 - **`UNVERÄNDERT`** obwohl es eine neuere Version gibt, oder **`NEU`** mit einem anderen SHA als
@@ -121,8 +144,6 @@ Passt es nicht:
   `docker compose pull` und `docker compose up -d` lesen (z. B. `denied`, `manifest unknown`, kein
   Netz), Ursache beheben, Update wiederholen. Steht `CARRERA_TAG` noch in `.env`
   (`grep CARRERA_TAG .env`), hat das Entfernen nicht gewirkt.
-- **`docker compose ps` zeigt `Restarting`**: Die neue Version läuft nicht stabil; siehe
-  Fehlerbilder, notfalls Rückweg auf `$alt`.
 
 Ohne das Entfernen von `CARRERA_TAG` zöge ein Update nach einem Rückweg still weiter die alte
 Version, und `docker compose ps` zeigte trotzdem `healthy`.
@@ -156,13 +177,27 @@ ziel=<voller 40-stelliger Commit-SHA>
 grep -v '^CARRERA_TAG=' .env > .env.neu; mv .env.neu .env
 echo "CARRERA_TAG=$ziel" >> .env
 docker compose up -d
-docker compose ps                # healthy
-# Prüfschritt: Revision des LAUFENDEN Containers
-ist=$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$(docker compose ps -q carrera-planer)")
-[ "$ist" = "$ziel" ] && echo "OK: läuft $ist" || echo "FALSCH: läuft $ist, Ziel $ziel"
+# Prüfschritt: warten, bis der Healthcheck entschieden hat (höchstens 300 s), dann prüfen
+c=$(docker compose ps -aq carrera-planer); t=0
+while z=$(docker inspect --format '{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}} {{.RestartCount}} {{index .Config.Labels "org.opencontainers.image.revision"}}' "$c" 2>&1) && [ "$t" -lt 300 ]; do
+  case "$z" in "running starting 0 "*) sleep 2; t=$((t + 2)) ;; *) break ;; esac
+done
+echo "nach ${t}s: Zustand Health Neustarts Revision = $z"
+case "$z" in
+  "running healthy 0 $ziel") echo "OK: läuft $ziel" ;;
+  *) echo "FALSCH: Ziel $ziel, ist $z" ;;
+esac
 ```
 
-Meldet der Prüfschritt `FALSCH`, läuft die bisherige Version weiter. Meist hat `up -d` mit
+Der Prüfschritt wartet wie beim Update (Abschnitt „Update“) und meldet `OK` nur bei
+`running healthy 0` und Revision = Ziel. Bei `FALSCH` zuerst die Revision in der Zeile ansehen:
+
+- **Revision = Ziel, aber nicht `running healthy 0`** (z. B. `restarting`, Neustarts > 0,
+  `unhealthy`): Die Zielversion läuft, aber nicht stabil. `docker compose logs --tail 50
+  carrera-planer` lesen. Steht dort „unbekannte Migration“, hat die neuere Version die Datenbank
+  schon migriert: Sicherung zurückspielen (unten), mit dem beim Update notierten Ordner
+  `$sicherung`. Sonst siehe „Fehlerbilder“.
+- **Revision ≠ Ziel:** Die bisherige Version läuft weiter. Meist hat `up -d` mit
 `manifest unknown` bzw. `not found` abgebrochen: Der SHA ist gekürzt, vertippt, oder zu diesem
 Commit gibt es kein Image. Vollen SHA einer vorhandenen Version suchen (siehe oben) und den Rückweg
 damit wiederholen. Will man doch auf der laufenden Version bleiben, die falsche Zeile wieder
@@ -173,14 +208,21 @@ Zurück auf die aktuelle Version geht es mit dem Abschnitt „Update“; er entf
 wieder.
 
 Hat die neuere Version die Datenbank migriert, startet die ältere darauf nicht (sie meldet eine
-unbekannte Migration). Dann zuerst die Sicherung von vor dem Update zurückspielen:
+unbekannte Migration, der Container startet immer wieder neu). Dann die Sicherung von vor dem Update
+zurückspielen. `sicherung` ist der beim Update notierte Ordner (z. B. `backup/20261126-133004`);
+ist die Variable nicht mehr gesetzt, vorher `sicherung=backup/<Ordner>` mit dem jüngsten Ordner von
+vor dem Update setzen. Fehlt die Sicherung, bricht die Kette vor dem Löschen ab:
 
 ```sh
-docker compose stop
-rm -f data/carrera-planer.sqlite*
-cp -p backup/<Ordner>/carrera-planer.sqlite* data/
+cd ~/carrera-planer
+ls "${sicherung:?sicherung setzen, z. B. sicherung=backup/JJJJMMTT-HHMMSS}"/carrera-planer.sqlite &&
+  docker compose stop &&
+  rm -f data/carrera-planer.sqlite* &&
+  cp -p "$sicherung"/carrera-planer.sqlite* data/
 docker compose up -d
 ```
+
+Danach den Prüfschritt aus dem Rückweg-Block wiederholen (ab `# Prüfschritt`).
 
 Ohne `sudo` kopieren, damit die Dateien dem Raspi-Benutzer (UID 1000) gehören. Gehören sie root,
 startet der Server nicht und meldet „nicht beschreibbar“ (siehe unten).
