@@ -15,7 +15,15 @@
  * Signal gesetzt) und als PID 1 gar nicht. Den Lauf im Container prüft M4.
  */
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import http from "node:http";
 import { createRequire } from "node:module";
 import net from "node:net";
@@ -513,4 +521,97 @@ describe("Datenbank am Prozess", () => {
     expect(r.err()).toContain(dbPath);
     expect(readFileSync(dbPath, "utf8")).toBe("kaputt");
   }, 20_000);
+});
+
+// ---------------------------------------------------------------------------------------------
+// REQ-DATA-1 (Spec M4) am echten Prozess: Startprüfung „beschreibbar“, Exit-Code ≠ 0
+// ---------------------------------------------------------------------------------------------
+
+describe("Startprüfung beschreibbar am Prozess", () => {
+  test.skip("[REQ-DATA-1] Datei 0444, Verzeichnis 0555 ohne Datei, Verzeichnis 0555 mit beschreibbarer Datei: Exit-Code ≠ 0, Zeile mit Pfad und „nicht beschreibbar“ auf stderr, Datei Byte für Byte unverändert; Gegenprobe 0644/0755 startet, PUT 201", async () => {
+    expect(
+      process.getuid?.(),
+      "REQ-DATA-1: Der Test läuft als root; Dateirechte greifen dann nicht, die Startprüfung ist so nicht prüfbar",
+    ).not.toBe(0);
+    const dir = newDir();
+    const env = await envIn(dir);
+    const dbPath = env.CARRERA_DB as string;
+    const dbDir = join(dir, "daten");
+    // vom Server angelegte Datei mit einem bestätigten Layout
+    const first = startMain(env);
+    await ready(first, Number(env.CARRERA_PORT));
+    expect(
+      (
+        await call(Number(env.CARRERA_PORT), "PUT", "/api/layouts/Oval", {
+          expectedVersion: 0,
+          layout: OVAL,
+        })
+      ).status,
+    ).toBe(201);
+    first.child.kill("SIGTERM");
+    expect(await exitWithin(first, 5_000)).toEqual({ code: 0, signal: null });
+    const files = (): Record<string, string> =>
+      Object.fromEntries(
+        ["", "-wal", "-shm"]
+          .map((s) => `${dbPath}${s}`)
+          .filter((p) => existsSync(p))
+          .map((p) => [p, readFileSync(p).toString("base64")]),
+      );
+
+    const expectRefused = async (label: string, path: string): Promise<void> => {
+      const r = startMain({ ...env, CARRERA_DB: path, CARRERA_PORT: String(await freePort()) });
+      const exit = await exitWithin(r, 10_000);
+      expect(exit, `${label}\n${r.out()}\n${r.err()}`).not.toBe("zeitueberschreitung");
+      const { code } = exit as { code: number | null };
+      expect(code, label).not.toBe(0);
+      expect(code, label).not.toBeNull();
+      expect(
+        r
+          .err()
+          .split("\n")
+          .some((l) => l.includes(path) && l.includes("nicht beschreibbar")),
+        `${label}: Fehlerausgabe ohne Zeile mit ${path} und „nicht beschreibbar“:\n${r.err()}`,
+      ).toBe(true);
+    };
+
+    // Fall 1: Datei 0444
+    const before = files();
+    chmodSync(dbPath, 0o444);
+    try {
+      await expectRefused("Datei 0444", dbPath);
+    } finally {
+      chmodSync(dbPath, 0o644);
+    }
+    expect(files(), "Datei 0444").toStrictEqual(before);
+
+    // Fall 3: Verzeichnis 0555 mit beschreibbarer Datei
+    chmodSync(dbDir, 0o555);
+    try {
+      await expectRefused("Verzeichnis 0555 mit Datei", dbPath);
+    } finally {
+      chmodSync(dbDir, 0o755);
+    }
+    expect(files(), "Verzeichnis 0555 mit Datei").toStrictEqual(before);
+
+    // Fall 2: Verzeichnis 0555 ohne Datei
+    const emptyDir = join(dir, "leer");
+    mkdirSync(emptyDir);
+    const missing = join(emptyDir, "carrera.sqlite");
+    chmodSync(emptyDir, 0o555);
+    try {
+      await expectRefused("Verzeichnis 0555 ohne Datei", missing);
+      expect(existsSync(missing)).toBe(false);
+    } finally {
+      chmodSync(emptyDir, 0o755);
+    }
+
+    // Gegenprobe: dieselbe Datei 0644 im Verzeichnis 0755 startet, PUT 201
+    const P = await freePort();
+    const ok = startMain({ ...env, CARRERA_PORT: String(P) });
+    await ready(ok, P);
+    expect(
+      (await call(P, "PUT", "/api/layouts/Neu", { expectedVersion: 0, layout: OVAL })).status,
+    ).toBe(201);
+    expect(ok.err()).not.toContain("nicht beschreibbar");
+  }, 60_000);
 });
