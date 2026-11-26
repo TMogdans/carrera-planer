@@ -353,7 +353,7 @@ const sizes = (text: string): number[] => {
 
 describe("Compose-Datei", () => {
   for (const variant of ["nicht gesetzt", "leer"] as const) {
-    test.skip(`[REQ-CMP-1] CARRERA_ALLOWED_HOSTS ${variant}: docker compose up -d verweigert mit Meldung, die die Variable nennt, und es entsteht kein Container`, async () => {
+    test(`[REQ-CMP-1] CARRERA_ALLOWED_HOSTS ${variant}: docker compose up -d verweigert mit Meldung, die die Variable nennt, und es entsteht kein Container`, async () => {
       await require8080();
       const dotenv: Record<string, string> = { CARRERA_IMAGE: NAME, CARRERA_TAG: TAG };
       if (variant === "leer") dotenv.CARRERA_ALLOWED_HOSTS = "";
@@ -373,7 +373,7 @@ describe("Compose-Datei", () => {
   // REQ-CMP-2 Port 8080, ./data, Image aus CARRERA_IMAGE/CARRERA_TAG, Rückweg
   // -------------------------------------------------------------------------------------------
 
-  test.skip("[REQ-CMP-2] mit CARRERA_ALLOWED_HOSTS: Antwort auf Host-Port 8080, Datenbank in ./data, nach down und up -d unverändert; Image aus CARRERA_IMAGE:CARRERA_TAG", async () => {
+  test("[REQ-CMP-2] mit CARRERA_ALLOWED_HOSTS: Antwort auf Host-Port 8080, Datenbank in ./data, nach down und up -d unverändert; Image aus CARRERA_IMAGE:CARRERA_TAG", async () => {
     const d = deployment(baseEnv());
     const id = await up(d);
     expect((await call(8080, "GET", "/api/status")).json()).toStrictEqual({ status: "ok" });
@@ -398,7 +398,7 @@ describe("Compose-Datei", () => {
     expect(await snapshot(8080)).toStrictEqual(before);
   });
 
-  test.skip("[REQ-CMP-2] Rückweg: CARRERA_TAG auf ein zweites, lokal getaggtes Image, up -d läuft danach mit dessen Image-ID, die Daten bleiben", async () => {
+  test("[REQ-CMP-2] Rückweg: CARRERA_TAG auf ein zweites, lokal getaggtes Image, up -d läuft danach mit dessen Image-ID, die Daten bleiben", async () => {
     const d = deployment(baseEnv());
     const first = await up(d);
     await putLayout(8080, "Oval", 0);
@@ -424,7 +424,7 @@ describe("Compose-Datei", () => {
     expect(await snapshot(8080)).toStrictEqual(before);
   });
 
-  test.skip("[REQ-CMP-2] ohne CARRERA_IMAGE und CARRERA_TAG nimmt die Compose-Datei ghcr.io/tmogdans/carrera-planer:latest", async () => {
+  test("[REQ-CMP-2] ohne CARRERA_IMAGE und CARRERA_TAG nimmt die Compose-Datei ghcr.io/tmogdans/carrera-planer:latest", async () => {
     await require8080();
     const d = deployment({ CARRERA_ALLOWED_HOSTS: ALLOWED });
     const want = "ghcr.io/tmogdans/carrera-planer:latest";
@@ -443,7 +443,7 @@ describe("Compose-Datei", () => {
   // REQ-CMP-3 restart, Speicherlimit, Log-Begrenzung
   // -------------------------------------------------------------------------------------------
 
-  test.skip("[REQ-CMP-3] memory.max im Container = 384 MiB, RestartPolicy unless-stopped (beendeter Server startet neu), LogConfig json-file mit max-size 1 MB und max-file 3", async () => {
+  test("[REQ-CMP-3] memory.max im Container = 384 MiB, RestartPolicy unless-stopped (beendeter Server startet neu), LogConfig json-file mit max-size 1 MB und max-file 3", async () => {
     const d = deployment(baseEnv());
     const id = await up(d);
     const memoryMax = dockerOk(
@@ -479,7 +479,7 @@ describe("Compose-Datei", () => {
   // REQ-CMP-4 healthy über Compose, Prüfbefehl aus dem Image
   // -------------------------------------------------------------------------------------------
 
-  test.skip("[REQ-CMP-4] der Container aus der Compose-Datei wird binnen 30 s healthy, mit dem Healthcheck aus dem Image", async () => {
+  test("[REQ-CMP-4] der Container aus der Compose-Datei wird binnen 30 s healthy, mit dem Healthcheck aus dem Image", async () => {
     await require8080();
     const d = deployment(baseEnv());
     const r = d.compose("up", "-d");
@@ -513,7 +513,7 @@ describe("Sicherung", () => {
     return Date.UTC(y, mo - 1, d, h, mi, se);
   };
 
-  test.skip("[REQ-DATA-3] ./backup.sh stoppt, kopiert alle carrera-planer.sqlite* nach backup/JJJJMMTT-HHMMSS/ (UTC), startet wieder (healthy), Exit 0; ein frischer Container auf einer Kopie liefert denselben Stand, eine spätere Änderung fehlt dort", async () => {
+  test("[REQ-DATA-3] ./backup.sh stoppt, kopiert alle carrera-planer.sqlite* nach backup/JJJJMMTT-HHMMSS/ (UTC), startet wieder (healthy), Exit 0; ein frischer Container auf einer Kopie liefert denselben Stand, eine spätere Änderung fehlt dort", async () => {
     const d = deployment(baseEnv());
     const id = await up(d);
     await waitHealth(id, "healthy", 40_000);
@@ -586,7 +586,7 @@ describe("Sicherung", () => {
     ).toBe(2);
   });
 
-  test.skip("[REQ-DATA-3] scheitert ein Schritt (backup ist eine Datei, kein Verzeichnis), endet backup.sh mit Exit-Code ≠ 0, und der Dienst läuft danach wieder (healthy)", async () => {
+  test("[REQ-DATA-3] scheitert ein Schritt (backup ist eine Datei, kein Verzeichnis), endet backup.sh mit Exit-Code ≠ 0, und der Dienst läuft danach wieder (healthy)", async () => {
     const d = deployment(baseEnv());
     const id = await up(d);
     await waitHealth(id, "healthy", 40_000);

@@ -286,7 +286,7 @@ const snapshot = async (port: number, host = "localhost:8080"): Promise<unknown>
 // ---------------------------------------------------------------------------------------------
 
 describe("Image-Inhalt", () => {
-  test.skip("[REQ-IMG-1] unter /app genau dist, dist-server, node_modules, package.json; typescript, vite, vitest nicht auflösbar; kein *.sqlite* und kein .git unter /app", async () => {
+  test("[REQ-IMG-1] unter /app genau dist, dist-server, node_modules, package.json; typescript, vite, vitest nicht auflösbar; kein *.sqlite* und kein .git unter /app", async () => {
     const port = await freePort();
     const name = startContainer({ port, data: dataDir() });
     await ready(name, port);
@@ -334,7 +334,7 @@ describe("Image-Inhalt", () => {
   // REQ-IMG-2 arm64, better-sqlite3 lädt
   // -------------------------------------------------------------------------------------------
 
-  test.skip("[REQ-IMG-2] Image ist linux/arm64, und ein Container daraus beantwortet GET /api/status mit 200 {status: ok}", async () => {
+  test("[REQ-IMG-2] Image ist linux/arm64, und ein Container daraus beantwortet GET /api/status mit 200 {status: ok}", async () => {
     expect(dockerOk("image", "inspect", "-f", "{{.Os}}/{{.Architecture}}", IMAGE)).toBe(
       "linux/arm64",
     );
@@ -355,7 +355,7 @@ describe("Image-Inhalt", () => {
   // REQ-IMG-3 PID 1, nicht root
   // -------------------------------------------------------------------------------------------
 
-  test.skip("[REQ-IMG-3] PID 1 ist node mit dist-server/server/main.js (kein pnpm, keine Shell), UID 1000", async () => {
+  test("[REQ-IMG-3] PID 1 ist node mit dist-server/server/main.js (kein pnpm, keine Shell), UID 1000", async () => {
     const port = await freePort();
     const name = startContainer({ port, data: dataDir() });
     await ready(name, port);
@@ -397,7 +397,7 @@ describe("Image-Inhalt", () => {
   // REQ-IMG-4 Start mit leerem Datenverzeichnis, Vorgaben im Image
   // -------------------------------------------------------------------------------------------
 
-  test.skip("[REQ-IMG-4] leeres /data, nur CARRERA_ALLOWED_HOSTS: Datei entsteht auf dem Host, Startzeile nennt den Pfad, GET / über Port 8080 liefert index.html, verlinktes JS mit Content-Type JavaScript", async () => {
+  test("[REQ-IMG-4] leeres /data, nur CARRERA_ALLOWED_HOSTS: Datei entsteht auf dem Host, Startzeile nennt den Pfad, GET / über Port 8080 liefert index.html, verlinktes JS mit Content-Type JavaScript", async () => {
     await require8080();
     const data = dataDir();
     const name = startContainer({
@@ -454,14 +454,14 @@ describe("Image-Inhalt", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Healthcheck", () => {
-  test.skip("[REQ-IMG-5] ein normal gestarteter Container ist binnen 30 s healthy", async () => {
+  test("[REQ-IMG-5] ein normal gestarteter Container ist binnen 30 s healthy", async () => {
     const port = await freePort();
     const name = startContainer({ port, data: dataDir() });
     const ms = await waitHealth(name, "healthy", 40_000);
     expect(ms).toBeLessThanOrEqual(30_000);
   });
 
-  test.skip("[REQ-IMG-5] mit CARRERA_ALLOWED_HOSTS=rezepte.fritz.box wird der Container binnen 30 s healthy (127.0.0.1:P bleibt erlaubt)", async () => {
+  test("[REQ-IMG-5] mit CARRERA_ALLOWED_HOSTS=rezepte.fritz.box wird der Container binnen 30 s healthy (127.0.0.1:P bleibt erlaubt)", async () => {
     const port = await freePort();
     const name = startContainer({
       port,
@@ -472,7 +472,7 @@ describe("Healthcheck", () => {
     expect(ms).toBeLessThanOrEqual(30_000);
   });
 
-  test.skip("[REQ-IMG-5] Gegenprobe: Startbefehl durch einen Node-Prozess ohne Server ersetzt, wird unhealthy (nur Intervall und Retries verkürzt)", async () => {
+  test("[REQ-IMG-5] Gegenprobe: Startbefehl durch einen Node-Prozess ohne Server ersetzt, wird unhealthy (nur Intervall und Retries verkürzt)", async () => {
     const name = startContainer({
       data: dataDir(),
       extra: ["--health-interval", "1s", "--health-retries", "1", "--entrypoint", "node"],
@@ -487,7 +487,7 @@ describe("Healthcheck", () => {
     expect(inspect(name, "{{.State.Running}}")).toBe("true");
   });
 
-  test.skip("[REQ-IMG-5] Werte im Image: start-period 30 s, start-interval 2 s, interval 60 s, timeout 10 s, retries 3", () => {
+  test("[REQ-IMG-5] Werte im Image: start-period 30 s, start-interval 2 s, interval 60 s, timeout 10 s, retries 3", () => {
     const hc = JSON.parse(
       dockerOk("image", "inspect", "-f", "{{json .Config.Healthcheck}}", IMAGE),
     ) as Record<string, unknown> | null;
@@ -508,7 +508,7 @@ describe("Healthcheck", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Beenden", () => {
-  test.skip("[REQ-IMG-6] docker stop endet binnen 5 s mit Exit-Code 0; ein neuer Container auf demselben Datenverzeichnis liefert Layout und Bestand unverändert; ebenso nach docker restart", async () => {
+  test("[REQ-IMG-6] docker stop endet binnen 5 s mit Exit-Code 0; ein neuer Container auf demselben Datenverzeichnis liefert Layout und Bestand unverändert; ebenso nach docker restart", async () => {
     const data = dataDir();
     const port = await freePort();
     const first = startContainer({ port, data });
@@ -552,7 +552,7 @@ describe("Beenden", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Host-Prüfung", () => {
-  test.skip("[REQ-IMG-7] -p 8080:8080 mit CARRERA_ALLOWED_HOSTS=rezepte.fritz.box: :8080 → 200; evil.example:8080, ohne Port, rezepte.local:8080 → 421 FremderHost ohne Layoutnamen; ohne die Variable rezepte.fritz.box:8080 → 421, localhost:8080 → 200", async () => {
+  test("[REQ-IMG-7] -p 8080:8080 mit CARRERA_ALLOWED_HOSTS=rezepte.fritz.box: :8080 → 200; evil.example:8080, ohne Port, rezepte.local:8080 → 421 FremderHost ohne Layoutnamen; ohne die Variable rezepte.fritz.box:8080 → 421, localhost:8080 → 200", async () => {
     await require8080();
     const name = startContainer({
       port: 8080,
@@ -596,7 +596,7 @@ describe("Host-Prüfung", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Datenverzeichnis nicht beschreibbar", () => {
-  test.skip("[REQ-DATA-2] /data gehört root (0755, wie von Docker angelegt): Container endet mit Exit-Code ≠ 0, docker logs nennt /data/carrera-planer.sqlite und „nicht beschreibbar“", async () => {
+  test("[REQ-DATA-2] /data gehört root (0755, wie von Docker angelegt): Container endet mit Exit-Code ≠ 0, docker logs nennt /data/carrera-planer.sqlite und „nicht beschreibbar“", async () => {
     // Ein frisches Volume, als root auf root:root 0755 gestellt. Wirkt auf jedem Host gleich
     // (auf Docker Desktop legt Docker fehlende Bind-Mount-Verzeichnisse nicht als root an).
     const vol = unique("vol");
@@ -828,7 +828,7 @@ describe("Messwerkzeug", () => {
     }
   };
 
-  test.skip("[REQ-MESS-1] measure.mjs <URL> typisch --container <Name>: stdout ist genau ein JSON-Objekt mit genau den Feldern der Spec (Typen, zeitpunkt UTC mit Z, liste/get/put je einmal mit n 20 und maxMs ≥ medianMs > 0, vmHwmMiB > 0); Speicher aus dem Container; danach genau die vorige Layoutliste", async () => {
+  test("[REQ-MESS-1] measure.mjs <URL> typisch --container <Name>: stdout ist genau ein JSON-Objekt mit genau den Feldern der Spec (Typen, zeitpunkt UTC mit Z, liste/get/put je einmal mit n 20 und maxMs ≥ medianMs > 0, vmHwmMiB > 0); Speicher aus dem Container; danach genau die vorige Layoutliste", async () => {
     const s = await setup();
     // Kanarienvogel: in diesem Container gibt es memory.peak, also muss eine Zahl kommen
     expect(memoryIn(s.name).memoryPeakMiB).not.toBeNull();
@@ -836,7 +836,7 @@ describe("Messwerkzeug", () => {
     expectMemoryFrom(s.name, out, before);
   });
 
-  test.skip("[REQ-MESS-1] fehlt /sys/fs/cgroup/memory.peak im Container (leeres tmpfs über /sys/fs/cgroup), ist memoryPeakMiB null; vmHwmMiB bleibt eine Zahl > 0", async () => {
+  test("[REQ-MESS-1] fehlt /sys/fs/cgroup/memory.peak im Container (leeres tmpfs über /sys/fs/cgroup), ist memoryPeakMiB null; vmHwmMiB bleibt eine Zahl > 0", async () => {
     // Wie bei abgeschalteter Speicher-cgroup fehlt die Datei; --cgroupns host taugt dafür nicht
     // (auf Docker Desktop landet der Container in einer Zwischen-cgroup mit memory.peak)
     const s = await setup(["--tmpfs", "/sys/fs/cgroup:ro"]);
@@ -847,7 +847,7 @@ describe("Messwerkzeug", () => {
     expectMemoryFrom(s.name, out, before);
   });
 
-  test.skip("[REQ-MESS-1] --ssh <Host>: der Speicher wird über ssh <Host> docker exec … gelesen (ssh durch ein lokales Durchreich-Skript ersetzt, das den Host protokolliert)", async () => {
+  test("[REQ-MESS-1] --ssh <Host>: der Speicher wird über ssh <Host> docker exec … gelesen (ssh durch ein lokales Durchreich-Skript ersetzt, das den Host protokolliert)", async () => {
     const s = await setup();
     const bin = newTmp();
     const log = join(bin, "ssh.log");
@@ -867,7 +867,7 @@ describe("Messwerkzeug", () => {
     ).toBe(true);
   });
 
-  test.skip("[REQ-MESS-1] gibt es schon ein Layout mit dem Präfix messung-, bricht es mit Exit-Code ≠ 0 ab, ohne etwas zu schreiben", async () => {
+  test("[REQ-MESS-1] gibt es schon ein Layout mit dem Präfix messung-, bricht es mit Exit-Code ≠ 0 ab, ohne etwas zu schreiben", async () => {
     const { port, host, name } = await setup();
     const fremd = await call(port, "PUT", "/api/layouts/messung-alt", {
       host,
