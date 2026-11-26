@@ -207,7 +207,8 @@ Wirkungsprobe daneben.
 - **REQ-DATA-3** [When] **Sicherung.** `deploy/backup.sh`, im Verzeichnis der Compose-Datei
   aufgerufen, stoppt den Dienst (`docker compose stop`, SIGTERM, die WAL wird beim Schließen
   zurückgeschrieben), kopiert das Datenverzeichnis mit allen `carrera-planer.sqlite*` nach
-  `backup/<Zeitstempel UTC>/`, startet den Dienst wieder und endet mit 0; scheitert ein Schritt,
+  `backup/JJJJMMTT-HHMMSS/` (Zeitpunkt der Sicherung in UTC, z. B. `backup/20261126-142233/`),
+  startet den Dienst wieder und endet mit 0; scheitert ein Schritt,
   endet es ≠ 0 und versucht trotzdem, den Dienst wieder zu starten. Nachweis: nach Anlegen von
   Layouts und Bestand das Skript laufen lassen; danach ist der Dienst wieder `healthy`, und ein
   frischer Container auf einer **Kopie** der Sicherung liefert dieselben Layouts, Versionen,
@@ -216,15 +217,34 @@ Wirkungsprobe daneben.
 
 ### Messwerkzeug (`deploy/measure.mjs`)
 
-- **REQ-MESS-1** [Performance] `node deploy/measure.mjs <Basis-URL> <typisch|groß>` (Node 22,
-  ohne neue Abhängigkeit, läuft auf dem Entwicklungsrechner gegen den Raspi) legt die Layouts des
-  Profils unter dem Präfix `messung-` an, misst je 20 Durchläufe von `GET /api/layouts`,
-  `GET /api/layouts/{name}` und `PUT /api/layouts/{name}` und gibt als JSON je Vorgang Maximum,
-  Median und Anzahl in Millisekunden aus, dazu Profil, Zeitpunkt und Anzahl Layouts. Danach löscht
-  es genau seine eigenen Layouts (mit Version). Gibt es vor dem Start schon Layouts mit dem
-  Präfix, bricht es mit Exit-Code ≠ 0 ab, ohne etwas zu schreiben. Nachweis gegen einen Container
-  mit vorher angelegtem fremdem Layout „Oval“: Ausgabe hat die Felder, alle Werte > 0, die
-  Layoutliste ist danach genau die vorige (Oval mit unveränderter Version und `updatedAt`).
+- **REQ-MESS-1** [Performance] `node deploy/measure.mjs <Basis-URL> <typisch|groß> --container
+  <Name> [--ssh <Host>]` (Node 22, ohne neue Abhängigkeit, läuft auf dem Entwicklungsrechner
+  gegen den Raspi) legt die Layouts des Profils unter dem Präfix `messung-` an, misst je 20
+  Durchläufe von `GET /api/layouts`, `GET /api/layouts/{name}` und `PUT /api/layouts/{name}` und
+  liest danach den Speicher des Server-Prozesses im genannten Container über `docker exec`
+  (mit `--ssh` über `ssh <Host> docker exec …`): `VmHWM` aus `/proc/1/status` und
+  `/sys/fs/cgroup/memory.peak`. Ausgabe auf der Standardausgabe ist genau ein JSON-Objekt:
+
+  ```
+  {
+    "profil": "typisch" | "groß",
+    "zeitpunkt": "<ISO 8601 in UTC mit Z, Start der Messung>",
+    "layouts": <Anzahl angelegter Layouts>,
+    "vorgaenge": [ { "name": "liste" | "get" | "put", "n": 20, "maxMs": <Zahl>, "medianMs": <Zahl> } ],
+    "speicher": { "vmHwmMiB": <Zahl>, "memoryPeakMiB": <Zahl oder null> }
+  }
+  ```
+
+  `liste` ist `GET /api/layouts`, `get` ist `GET /api/layouts/{name}`, `put` ist
+  `PUT /api/layouts/{name}`. Jeder der drei Namen kommt in `vorgaenge` genau einmal vor. Alle
+  Zahlen sind JSON-Zahlen, keine Zeichenketten. `memoryPeakMiB` ist `null` nur, wenn
+  `/sys/fs/cgroup/memory.peak` im Container fehlt (Speicher-cgroup aus, siehe „Bekannte Grenzen“);
+  sonst eine Zahl. Danach löscht das Werkzeug genau seine eigenen Layouts (mit Version). Gibt es
+  vor dem Start schon Layouts mit dem Präfix, bricht es mit Exit-Code ≠ 0 ab, ohne etwas zu
+  schreiben. Nachweis gegen einen Container mit vorher angelegtem fremdem Layout „Oval“: Die
+  Ausgabe ist gültiges JSON mit genau diesen Feldern und Typen, `zeitpunkt` ist UTC, jeder
+  Vorgang einmal mit `n` = 20 und `maxMs` ≥ `medianMs` > 0, `vmHwmMiB` > 0; die Layoutliste ist
+  danach genau die vorige (Oval mit unveränderter Version und `updatedAt`).
 
 ### Architektur
 
@@ -253,9 +273,8 @@ Wirkungsprobe daneben.
   und unter Stryker).
 - **Kanarienvögel für den Critic** (je eine Verfälschung, ein Test muss rot werden): Laufzeit-Stufe
   kopiert alle `node_modules` aus der Build-Stufe (Dev-Abhängigkeiten im Image); `CMD` über
-  `pnpm start` oder `sh -c`; `USER` entfernt; Healthcheck gegen `localhost` statt `127.0.0.1`;
-  Healthcheck immer `exit 0`; Compose ohne `:?` an `CARRERA_ALLOWED_HOSTS`; Portabbildung
-  `80:8080`; `restart` entfernt; Speicherlimit entfernt; `backup.sh` ohne Stopp (kopiert bei
+  `pnpm start` oder `sh -c`; `USER` entfernt; Healthcheck immer `exit 0`; Compose ohne `:?` an
+  `CARRERA_ALLOWED_HOSTS`; Portabbildung `80:8080`; `restart` entfernt; Speicherlimit entfernt; `backup.sh` ohne Stopp (kopiert bei
   laufendem Server nur die Hauptdatei); Startprüfung entfernt; Startprüfung nur auf die Datei,
   nicht auf das Verzeichnis.
 
@@ -361,14 +380,16 @@ REQ-MESS-1. Die Entscheidungsregeln stehen **vor** der Messung fest:
   gegen einen **zweiten, temporären** Container aus demselben Image mit eigenem leerem
   Datenverzeichnis auf Port 8081 (danach entfernt), damit keine Messdaten in die echte Datenbank
   kommen. Client ist der Entwicklungsrechner im LAN (realer Pfad).
-- Speicher: `VmHWM` und `VmRSS` aus `/proc/<PID>/status` des Server-Prozesses auf dem Host
-  (`docker inspect -f '{{.State.Pid}}'`), vor und nach jedem Profil; dazu
-  `/sys/fs/cgroup/memory.peak` im Container. Gemeldet wird das **Maximum**, nicht ein Mittel.
-- Zeiten: Ausgabe von REQ-MESS-1, je Vorgang **Maximum** und Median.
-- **Schwellen Profil „typisch“** (entschieden, Entscheidung 1): `GET /api/layouts`
-  Maximum ≤ 1000 ms, `GET /api/layouts/{name}` und `PUT` je Maximum ≤ 500 ms, VmHWM ≤ 50 % des
-  Speicherlimits. Wird eine Schwelle gerissen, wird die Liste (Übersicht ohne Volldekodierung,
-  Befund Kritik Runde 2) **vor Teil B** umgebaut; dafür ein Issue, das Teil B blockiert.
+- Je Profil ein **frischer** temporärer Container: `VmHWM` ist ein Höchststand seit dem Start des
+  Prozesses; liefe „groß“ im selben Container nach „typisch“, oder umgekehrt, wären die Werte
+  vermischt.
+- Speicher und Zeiten: Ausgabe von REQ-MESS-1 (`--container` = der temporäre Container, `--ssh` =
+  der SSH-Alias des Raspi). Gemeldet wird das **Maximum**, nicht ein Mittel.
+- **Schwellen Profil „typisch“** (entschieden, Entscheidung 1), auf genau diese Felder bezogen:
+  `vorgaenge[name="liste"].maxMs` ≤ 1000, `vorgaenge[name="get"].maxMs` ≤ 500,
+  `vorgaenge[name="put"].maxMs` ≤ 500, `speicher.vmHwmMiB` ≤ 50 % des Speicherlimits in MiB
+  (vorläufig 384 MiB, also ≤ 192). Wird eine Schwelle gerissen, wird die Liste (Übersicht ohne
+  Volldekodierung, Befund Kritik Runde 2) **vor Teil B** umgebaut; dafür ein Issue, das Teil B blockiert.
 - **Profil „groß“** wird gemessen und dokumentiert, blockiert aber nichts (konstruierter Grenzfall:
   1 MiB je Layout sind über 10 000 Elemente, weit jenseits jedes realen Bestands). Stirbt der
   Prozess dabei am Speicherlimit, kommt das als bekannte Grenze in den PR.
@@ -426,8 +447,21 @@ fake-hwclock auf Raspberry Pi OS) und springt vorwärts, sobald NTP greift. Bis 
 
 ## Bekannte Grenzen
 
-- Healthcheck-Zustand führt nicht zum Neustart: `restart: unless-stopped` greift nur, wenn der
-  Prozess endet. `unhealthy` ist sichtbar (`docker ps`), heilt aber nicht von selbst.
+- **Healthcheck-Status:** Er ist nur über Docker beobachtbar (`docker inspect`, kurz auch
+  `docker ps`), nicht in der Anwendung. Ein falsch gesetzter Healthcheck zeigt sich erst dort.
+  Er führt auch nicht zum Neustart: `restart: unless-stopped` greift nur, wenn der Prozess endet;
+  `unhealthy` heilt nicht von selbst.
+- **Healthcheck `localhost` statt `127.0.0.1`:** Unter Node 22 im Image gleichwertig (`localhost`
+  löst über `/etc/hosts` auf, Node probiert IPv4 und IPv6, und `localhost:<P>` steht ebenfalls in
+  der Erlaubtliste). Kein Test kann den Unterschied erkennen; deshalb steht er nicht unter den
+  Kanarienvögeln. Die Vorgabe `127.0.0.1` in REQ-IMG-5 bleibt, weil sie nicht von der
+  Namensauflösung abhängt.
+- **REQ-DATA-2 prüft nur das root-eigene Datenverzeichnis.** Andere Wege, auf denen ein
+  Verzeichnis nicht beschreibbar ist (schreibgeschützter Mount, volle Platte), sind nicht
+  abgedeckt. Eine volle Platte zeigt sich erst beim Schreiben (500), nicht beim Start.
+- **Port 8080 ist fest** (Empfehlung 3), weil der Host-Header den äußeren Port trägt. Ein anderer
+  äußerer Port braucht einen Eintrag mit genau diesem Port in `CARRERA_ALLOWED_HOSTS`
+  (z. B. `rezepte.fritz.box:9090`), sonst antwortet der Server mit 421.
 - Ein Speicherlimit greift nur, wenn der Kernel des Raspi die Speicher-cgroup aktiviert hat. Auf
   Raspberry-Pi-Kerneln war sie früher per Vorgabe aus; dann ignoriert Docker das Limit mit einer
   Warnung. Geprüft wird es am Gerät (REQ-CMP-3 dort ausgeführt, „Nach dem Deploy“).
