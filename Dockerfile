@@ -7,11 +7,14 @@
 # gepinnt (Empfehlung 1); gebaut wird nativ auf arm64 (Empfehlung 2), ohne $BUILDPLATFORM.
 ARG NODE_IMAGE=node:22-bookworm-slim@sha256:be979e5523c76fa4d5ca4ebd3099078f220aa47ec39c48ad5b5df9314debd6eb
 
-# pnpm in der Version aus package.json ("packageManager")
+# pnpm in genau der Version aus package.json ("packageManager", z. B. pnpm@12.21.0; ein
+# Hash-Anhang "+sha512…" wird abgetrennt), per npm statt corepack
 FROM ${NODE_IMAGE} AS pnpm
-RUN npm install --global --no-fund --no-audit pnpm@12.21.0
 WORKDIR /src
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN npm install --global --no-fund --no-audit \
+      "$(node -p "require('./package.json').packageManager.split('+')[0]")" \
+    && pnpm --version
 
 FROM pnpm AS build
 RUN pnpm install --frozen-lockfile

@@ -52,21 +52,45 @@ dem Raspi.
 ```sh
 curl -s http://localhost:8080/api/status          # {"status":"ok"}
 ls data                                            # carrera-planer.sqlite
-docker exec <container> cat /sys/fs/cgroup/memory.max
+docker compose exec carrera-planer cat /sys/fs/cgroup/memory.max
 ```
 
 `memory.max` muss das Limit in Byte zeigen (402653184 = 384 MiB). Steht dort `max` oder fehlt die
 Datei, ist die Speicher-cgroup im Kernel aus, und das Limit wirkt nicht.
 
+## Welche Version läuft?
+
+```sh
+cd ~/carrera-planer
+# Image, das Compose-Datei und .env verlangen (ohne CARRERA_TAG: ...:latest)
+docker compose config --images
+# Image-Name, Image-ID und Commit-SHA des laufenden Containers
+docker inspect --format '{{.Config.Image}} {{.Image}} {{index .Config.Labels "org.opencontainers.image.revision"}}' "$(docker compose ps -q carrera-planer)"
+```
+
+Die Commit-SHA steht im Label `org.opencontainers.image.revision`; es setzt der CI-Push nach `main`
+(Job `image`). Ein lokal gebautes Image hat das Label nicht, dann bleibt das dritte Feld leer.
+
+`.env` enthält höchstens **eine** Zeile `CARRERA_TAG=…`, und nur solange ein Rückweg gilt. Ohne
+die Zeile läuft `latest`.
+
 ## Update
 
 ```sh
 cd ~/carrera-planer
+# SHA der bisherigen Version notieren (für einen späteren Rückweg)
+docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$(docker compose ps -q carrera-planer)"
 ./backup.sh                 # immer vorher sichern
+# einen früheren Rückweg aufheben: CARRERA_TAG entfernen, damit wieder latest gilt
+grep -v '^CARRERA_TAG=' .env > .env.neu; mv .env.neu .env
 docker compose pull
 docker compose up -d
-docker compose ps           # healthy
+docker compose config --images   # ghcr.io/tmogdans/carrera-planer:latest
+docker compose ps                # healthy
 ```
+
+Ohne das Entfernen von `CARRERA_TAG` zöge ein Update nach einem Rückweg still weiter die alte
+Version, und `docker compose ps` zeigte trotzdem `healthy`.
 
 ## Sicherung
 
@@ -85,11 +109,20 @@ automatisch; beides ist ein Folge-Issue vor Teil B.
 
 ## Rückweg auf eine frühere Version
 
+Den SHA der vorigen Version hat das Update notiert (Abschnitt „Update“); sonst steht er in der
+Commit-Liste von `main` bzw. unter den Tags des Pakets auf ghcr.io.
+
 ```sh
 cd ~/carrera-planer
+# genau eine Zeile CARRERA_TAG: eine vorhandene ersetzen, nicht anhängen
+grep -v '^CARRERA_TAG=' .env > .env.neu; mv .env.neu .env
 echo 'CARRERA_TAG=<voriger Commit-SHA>' >> .env
 docker compose up -d
+docker compose config --images   # ghcr.io/tmogdans/carrera-planer:<voriger Commit-SHA>
 ```
+
+Zurück auf die aktuelle Version geht es mit dem Abschnitt „Update“; er entfernt `CARRERA_TAG`
+wieder.
 
 Hat die neuere Version die Datenbank migriert, startet die ältere darauf nicht (sie meldet eine
 unbekannte Migration). Dann zuerst die Sicherung von vor dem Update zurückspielen:
@@ -106,13 +139,19 @@ startet der Server nicht und meldet „nicht beschreibbar“ (siehe unten).
 
 ## Fehlerbilder
 
-- **Container endet sofort, Log nennt `/data/carrera-planer.sqlite` und „nicht beschreibbar“:**
-  `data/` oder die Datenbankdateien gehören nicht UID 1000 bzw. sind schreibgeschützt.
-  `sudo chown -R 1000:1000 data` und erneut `docker compose up -d`.
+- **Container startet immer wieder neu, Log nennt `/data/carrera-planer.sqlite` und „nicht
+  beschreibbar“:** `docker compose up -d` endet trotzdem mit 0. Der Server bricht beim Start ab,
+  `restart: unless-stopped` startet ihn erneut; `docker compose ps` zeigt `Restarting (1)`, und
+  `docker compose logs` wiederholt die Meldung. Ursache: `data/` oder die Datenbankdateien gehören
+  nicht UID 1000 bzw. sind schreibgeschützt. `sudo chown -R 1000:1000 data`, danach
+  `docker compose restart`.
+- **Container startet immer wieder neu, Log nennt „CARRERA_ALLOWED_HOSTS: ungültiger Eintrag“:**
+  Ein Eintrag in `.env` ist kein Name und keine Adresse, z. B. ein stehen gebliebener Platzhalter
+  `<LAN-IP>`. Eintrag korrigieren, dann `docker compose up -d`.
 - **421 `FremderHost` im Browser:** Der Name in der Adresszeile (samt Port) steht nicht in
   `CARRERA_ALLOWED_HOSTS`. In `.env` ergänzen, dann `docker compose up -d`.
 - **`unhealthy` in `docker compose ps`:** `docker inspect --format '{{json .State.Health}}'
-  <container>` zeigt die letzten Prüfungen. `unhealthy` startet den Container nicht neu; das tut
+  "$(docker compose ps -q carrera-planer)"` zeigt die letzten Prüfungen. `unhealthy` startet den Container nicht neu; das tut
   `restart: unless-stopped` nur, wenn der Prozess endet.
 - **Uhr nach dem Booten:** Bis NTP greift, geht die Uhr des Raspi nach; in dieser Zeit angelegte
   Layouts tragen eine zu frühe `updatedAt`. Kosmetisch, ohne Wirkung auf Versionen.
