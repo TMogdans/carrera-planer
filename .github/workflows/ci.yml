@@ -10,6 +10,10 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Merges per Auto-Merge laufen über den GITHUB_TOKEN und lösen deshalb kein push-Ereignis aus
+  # (GitHub-Regel gegen Workflow-Ketten). Ohne diesen Auslöser gäbe es nach so einem Merge kein
+  # Image. Von Hand starten: Actions → CI → Run workflow auf main.
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -170,13 +174,13 @@ jobs:
           CARRERA_IMAGE: carrera-planer
           CARRERA_TAG: ci
         run: pnpm exec vitest run --config vitest.container.config.ts
-      - if: steps.scope.outputs.run == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - if: steps.scope.outputs.run == 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
         uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - if: steps.scope.outputs.run == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - if: steps.scope.outputs.run == 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
         name: Image nach ghcr.io pushen
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
