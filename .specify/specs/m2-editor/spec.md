@@ -447,7 +447,8 @@ fassen lässt, steht in der Logik-Schicht.
    Querung; Zielmarken an den Queranschlüssen zeigen, wohin die Strecke muss. Fehlerhafte
    Querungen entstehen nur durch spätere Änderungen davor oder durch geladene Daten und werden dann
    laut gemeldet. Alternative: Querung immer anhängbar (auf die letzte ungequerte Kreuzung), Fehler
-   bis zur Korrektur sichtbar. Frage 4.
+   bis zur Korrektur sichtbar. Frage 4. Seit REQ-EDIT-22 (#62) hängt der Editor die Querung beim
+   Anhängen selbst an; von Hand nur noch, wenn das Ende nach Löschen oder Laden am Anschluss steht.
 5. **Darstellung per Browser-Smoke, Logik per Tests und Ratchet.** Komponenten- oder
    Browser-Tests bräuchten eine neue Abhängigkeit (jsdom/Testing Library/Playwright) und damit eine
    Admin-Änderung an `package.json`/Lockfile. Die Logik-Schicht trägt deshalb alles Zählbare, auch
@@ -478,6 +479,9 @@ fassen lässt, steht in der Logik-Schicht.
   am Anschluss steht (nach Löschen, Laden).
 - Wird eine Querung mitten in der Folge gelöscht, setzen die nachfolgenden Teile am ersten
   Anschluss an und überlappen die Kreuzung; ein Einfügen in der Mitte ist bewusst ausgeschlossen.
+- Führt der Querweg einer Kreuzung direkt an den Queranschluss einer zweiten, ungequerten
+  Kreuzung, quert REQ-EDIT-22 nur die erste; die zweite quert man über „Querung anhängen“
+  (REQ-EDIT-9).
 
 ## Entscheidungen des Menschen zu den offenen Fragen (2026-11-24)
 
@@ -520,10 +524,11 @@ Maus-Fälle am Laptop, Touch-Fälle an Tablet und Handy.
    Gerade 342, Kurve 1/90°, Kurve 1/90°, Gerade 342. Sichtbar: geschlossenes Oval, Status
    „geschlossen“, Verbrauch Kurve 1/90° 4 und Gerade 342 2 (zusammen 6), Gesamtlänge „1,76 m“.
 2. **Acht mit Querung.** Neu, dann Kreuzung; Richtung „rechts“, 3 × Kurve 1/90°, Gerade 114. Der
-   Pfeil am Ende steht auf einer Zielmarke der Kreuzung, „Querung“ wird aktiv; antippen. Dann
+   Pfeil springt auf den gegenüberliegenden Queranschluss, die Querung über die Kreuzung ist
+   hervorgehoben; „Querung“ bleibt vor und nach Gerade 114 ausgegraut. Dann
    Anschlussstück, Richtung „links“, 3 × Kurve 1/90°. Sichtbar: Acht, Querung über die Kreuzung
    hervorgehoben, „geschlossen“, Verbrauch 9 Teile (Gerade 114 1, Kurve 1/90° 6, Kreuzung 1,
-   Anschlussstück 1, in dieser Reihenfolge), „2,30 m“. Vor dem Tippen auf Gerade 114 ist „Querung“ ausgegraut.
+   Anschlussstück 1, in dieser Reihenfolge), „2,30 m“.
 3. **Bearbeiten.** Im Oval die erste Gerade 342 (Nr. 3) auswählen, „Davor einfügen“, dann
    Gerade 114, Anschlussstück, Rundenzähler tippen; die Gerade 342 bleibt ausgewählt, „Löschen“.
    Sichtbar: an ihrer Stelle die drei kurzen Teile, Status wieder „geschlossen“, Verbrauch 8 Teile.
