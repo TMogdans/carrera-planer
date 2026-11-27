@@ -339,7 +339,7 @@ describe("Status", () => {
     const unknownLength: ReadonlyArray<Elements> = [
       [...OVAL, { id: "z", part: "gibt-es-nicht" }],
       [...OVAL, { id: "z", part: "looping" }],
-      [...OVAL, { id: "z", part: "wireless-anschluss" }],
+      [...OVAL, { id: "z", part: "steilkehre-teil" }],
       [...OVAL, { id: "z", crosses: "o3" }], // Querung auf eine Gerade
       [...OVAL, { id: "z", crosses: "nirgends" }],
       // Querung auf eine spätere Kreuzung (Kern: ungültiger Verweis)
@@ -384,5 +384,22 @@ describe("Architektur: Status kommt vom Kern", () => {
     const without = CATALOG.filter((e) => e.id !== "kurve-1-90");
     expect(S.statusOf(without, OVAL)).toEqual({ kind: "fehlerhaft" });
     expect(S.consumptionView(without, OVAL).ok).toBe(false);
+  });
+});
+
+describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45°", () => {
+  test.skip("[REQ-STAT-5] Länge zählt Wireless-Anschluss mit 114 mm und jede Steilkurve mit 171·π/4 mm; Kreis aus acht Steilkurven ist geschlossen", async () => {
+    const S = await loadStatus();
+    const w = S.totalLength(CATALOG, [...OVAL, { id: "z", part: "wireless-anschluss" }]);
+    const oval = S.totalLength(CATALOG, OVAL) as number;
+    expectNear(w as number, oval + 114, 1e-6);
+    const circle = Array.from({ length: 8 }, (_, i) => ({
+      id: `s${i}`,
+      part: "steilkurve-1-45",
+      turn: "links" as const,
+    }));
+    expectNear(S.totalLength(CATALOG, circle) as number, 8 * ((171 * Math.PI) / 4), 1e-6);
+    expect(S.formatLength(S.totalLength(CATALOG, circle))).toBe("1,07 m");
+    expect(S.statusOf(CATALOG, circle)).toEqual({ kind: "geschlossen" });
   });
 });

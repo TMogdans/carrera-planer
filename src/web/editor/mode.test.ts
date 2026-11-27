@@ -27,6 +27,7 @@ import {
   type ModeResult,
   plus,
   type StockPaletteEntry,
+  WIRELESS,
 } from "../test-support/bestand-fixtures.js";
 import {
   ACHT,
@@ -553,23 +554,48 @@ describe("Leiste im Bestandsmodus", () => {
     for (const e of entries) expect(e.name).toBe(nameOf(e.partId));
   });
 
-  test("[REQ-MODUS-5] Bestand Ausbauset 3: beide Baugruppen entfallen; nicht platzierbare Teile sind nie gesperrt", async () => {
+  test("[REQ-MODUS-5] Bestand Ausbauset 3: beide Baugruppen entfallen; nicht platzierbare Teile sind nie gesperrt (gilt vor und nach Vermessung #1)", async () => {
+    const I = await loadInventory();
+    const entries = I.stockPalette(CATALOG, AUSBAU3, []);
+    expect(entries.map((e) => [e.partId, e.stock, e.rest, e.locked])).toEqual([
+      ["gerade-342", 8, 8, false],
+      ["kurve-1-45", 4, 4, false],
+      ["steilkurve-1-45", 4, 4, false],
+    ]);
+    // L-Teil (Maße fehlen, ausgeblendet) per Laden verbraucht: Rest −1, aber nicht platzierbar
+    // → nicht gesperrt
+    const withL: Inventory = { ...AUSBAU3, "looping-teil": 4 };
+    const loadedL: Elements = Array.from({ length: 5 }, (_, i) => ({
+      id: `l${i}`,
+      part: "looping-teil",
+    }));
+    const l = I.stockPalette(CATALOG, withL, loadedL).find((e) => e.partId === "looping-teil");
+    expect(l).toMatchObject({ kind: "ausgeblendet", stock: 4, rest: -1, locked: false });
+    expect(I.stockPalette(CATALOG, {}, [])).toEqual([]);
+  });
+
+  test.skip("[REQ-MODUS-5] Bestand Ausbauset 3 nach Vermessung #1: Steilkurve platzierbar mit Rest; nach vier Steilkurven Rest 0 und gesperrt, fünf geladen Rest −1 gesperrt", async () => {
     const I = await loadInventory();
     expect(rows(I.stockPalette(CATALOG, AUSBAU3, []))).toEqual([
       { partId: "gerade-342", kind: "platzierbar", stock: 8, rest: 8, locked: false },
       { partId: "kurve-1-45", kind: "platzierbar", stock: 4, rest: 4, locked: false },
-      { partId: "steilkurve-1-45", kind: "masseFehlen", stock: 4, rest: 4, locked: false },
+      { partId: "steilkurve-1-45", kind: "platzierbar", stock: 4, rest: 4, locked: false },
     ]);
-    // Steilkurve per Laden verbraucht (Maße fehlen): Rest 0, aber nicht platzierbar → nicht gesperrt
-    const loadedSteil: Elements = Array.from({ length: 5 }, (_, i) => ({
-      id: `s${i}`,
-      part: "steilkurve-1-45",
-    }));
-    const steil = I.stockPalette(CATALOG, AUSBAU3, loadedSteil).find(
-      (e) => e.partId === "steilkurve-1-45",
-    );
-    expect(steil).toMatchObject({ stock: 4, rest: -1, locked: false });
-    expect(I.stockPalette(CATALOG, {}, [])).toEqual([]);
+    const steile = (n: number): Elements =>
+      Array.from({ length: n }, (_, i) => ({
+        id: `s${i}`,
+        part: "steilkurve-1-45",
+        turn: "links" as const,
+      }));
+    const steilOf = (n: number) =>
+      I.stockPalette(CATALOG, AUSBAU3, steile(n)).find((e) => e.partId === "steilkurve-1-45");
+    expect(steilOf(3)).toMatchObject({ kind: "platzierbar", stock: 4, rest: 1, locked: false });
+    expect(steilOf(4)).toMatchObject({ kind: "platzierbar", stock: 4, rest: 0, locked: true });
+    expect(steilOf(5)).toMatchObject({ kind: "platzierbar", stock: 4, rest: -1, locked: true });
+    // Wireless Upgrade Kit: Wireless-Anschluss platzierbar mit Rest 1
+    expect(rows(I.stockPalette(CATALOG, WIRELESS, []))).toEqual([
+      { partId: "wireless-anschluss", kind: "platzierbar", stock: 1, rest: 1, locked: false },
+    ]);
   });
 
   test("[REQ-MODUS-5] Rest ≤ 0 sperrt platzierbare Einträge, auch negativ; Baugruppen nach Bestand ihrer Bestandteile", async () => {
@@ -706,5 +732,40 @@ describe("Invariante des Bestandsmodus", () => {
       { numRuns: 300 },
     );
     expect(sandbox.failed).toBe(true);
+  });
+});
+
+describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45° im Bestandsmodus", () => {
+  test.skip("[REQ-MODUS-3] Bestand Ausbauset 3 + Wireless Upgrade Kit: vier Steilkurven und ein Wireless-Anschluss werden angehängt, die fünfte Steilkurve und der zweite Wireless-Anschluss abgewiesen", async () => {
+    const E = await loadEditor();
+    const I = await loadInventory();
+    const inv = plus(AUSBAU3, WIRELESS);
+    const { state, results } = runIn(I, inv, "bestand", E.initialState(), [
+      ...Array.from({ length: 5 }, () => choose("steilkurve-1-45")),
+      choose("wireless-anschluss"),
+      choose("wireless-anschluss"),
+    ]);
+    expect(partsOf(state.elements)).toEqual([
+      ...Array(4).fill("steilkurve-1-45"),
+      "wireless-anschluss",
+    ]);
+    expect(results.map((r) => r.rejection?.partId)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      "steilkurve-1-45",
+      undefined,
+      "wireless-anschluss",
+    ]);
+    expect(results[4]?.rejection?.name).toBe("Steilkurve 1/45°");
+    expect(results[6]?.rejection?.name).toBe("Wireless-Anschluss");
+    // Sandbox: dieselben Befehle wirken alle
+    const sandbox = runIn(I, inv, "sandbox", E.initialState(), [
+      ...Array.from({ length: 5 }, () => choose("steilkurve-1-45")),
+      choose("wireless-anschluss"),
+      choose("wireless-anschluss"),
+    ]);
+    expect(sandbox.state.elements).toHaveLength(7);
   });
 });

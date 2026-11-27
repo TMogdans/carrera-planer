@@ -137,7 +137,7 @@ describe("Befehle", () => {
     const base = loaded(E, OVAL);
     const rejected = [...UNPLACEABLE_IDS, UNKNOWN_ID];
     expect(rejected).toEqual(
-      expect.arrayContaining(["looping", "steilkehre", "looping-teil", "wireless-anschluss"]),
+      expect.arrayContaining(["looping", "steilkehre", "looping-teil", "steilkehre-teil"]),
     );
     const modes: ReadonlyArray<EditorState> = [
       base,
@@ -531,7 +531,7 @@ describe("Befehle", () => {
 });
 
 describe("Leisten-Einteilung", () => {
-  test("[REQ-EDIT-21] aktueller Katalog: Platzierbare als Block von Gerade 342 bis Rundenzähler, 4 Maße fehlen, L und K ausgeblendet, in Katalogreihenfolge (gilt vor und nach gerade-100)", async () => {
+  test.skip("[REQ-EDIT-21] aktueller Katalog: Platzierbare als Block von Gerade 342 bis Steilkurve 1/45°, 2 Maße fehlen, L und K ausgeblendet, in Katalogreihenfolge (nach Vermessung #1)", async () => {
     const E = await loadEditor();
     const entries = E.paletteEntries(CATALOG);
     expect(entries.map((e) => e.partId)).toEqual(CATALOG.map((e) => e.id));
@@ -540,67 +540,71 @@ describe("Leisten-Einteilung", () => {
     const placeable = ofKind("platzierbar");
     expect(placeable).toEqual(CATALOG.slice(0, placeable.length).map((e) => e.id));
     expect(placeable[0]).toBe("gerade-342");
-    expect(placeable[placeable.length - 1]).toBe("rundenzaehler");
-    expect(ofKind("masseFehlen")).toEqual([
-      "wireless-anschluss",
-      "steilkurve-1-45",
-      "looping",
-      "steilkehre",
-    ]);
+    expect(placeable.slice(-3)).toEqual(["rundenzaehler", "wireless-anschluss", "steilkurve-1-45"]);
+    expect(ofKind("masseFehlen")).toEqual(["looping", "steilkehre"]);
     expect(ofKind("ausgeblendet")).toEqual(["looping-teil", "steilkehre-teil"]);
     expect(entries).toHaveLength(CATALOG.length);
   });
 
-  test("[REQ-EDIT-21] Katalog mit gerade-100: die 14 Einträge von Gerade 342 bis Rundenzähler platzierbar, Gerade 100 an vierter Stelle; Maße fehlen und ausgeblendet unverändert", async () => {
+  test.skip("[REQ-EDIT-21] Katalog mit gerade-100 nach Vermessung #1: die 16 Einträge von Gerade 342 bis Steilkurve 1/45° platzierbar, Gerade 100 an vierter Stelle; Maße fehlen nur Looping und Steilkehre", async () => {
     const E = await loadEditor();
     const entries = E.paletteEntries(CATALOG);
     expect(entries.map((e) => e.partId)).toEqual(CATALOG.map((e) => e.id));
     expect(entries.map((e) => e.name)).toEqual(CATALOG.map((e) => e.name));
     const ofKind = (kind: string) => entries.filter((e) => e.kind === kind).map((e) => e.partId);
-    expect(ofKind("platzierbar")).toEqual(CATALOG.slice(0, 14).map((e) => e.id));
+    expect(ofKind("platzierbar")).toEqual(CATALOG.slice(0, 16).map((e) => e.id));
     expect(ofKind("platzierbar")[0]).toBe("gerade-342");
     expect(ofKind("platzierbar")[2]).toBe("gerade-114");
     expect(ofKind("platzierbar")[3]).toBe("gerade-100");
     expect(entries[3]).toEqual({ partId: "gerade-100", name: "Gerade 100", kind: "platzierbar" });
     expect(ofKind("platzierbar")[13]).toBe("rundenzaehler");
-    expect(ofKind("masseFehlen")).toEqual([
-      "wireless-anschluss",
-      "steilkurve-1-45",
-      "looping",
-      "steilkehre",
-    ]);
+    expect(entries[14]).toEqual({
+      partId: "wireless-anschluss",
+      name: "Wireless-Anschluss",
+      kind: "platzierbar",
+    });
+    expect(entries[15]).toEqual({
+      partId: "steilkurve-1-45",
+      name: "Steilkurve 1/45°",
+      kind: "platzierbar",
+    });
+    expect(ofKind("masseFehlen")).toEqual(["looping", "steilkehre"]);
     expect(ofKind("ausgeblendet")).toEqual(["looping-teil", "steilkehre-teil"]);
     expect(entries).toHaveLength(CATALOG.length);
   });
 
   test("[REQ-EDIT-21] Wirkungsnachweis: veränderter Katalog ändert die Einteilung; platzierbar heißt genau anhängbar", async () => {
     const E = await loadEditor();
-    const changed: ReadonlyArray<CatalogEntry> = [
-      ...CATALOG.map(
-        (e): CatalogEntry =>
-          e.id === "steilkurve-1-45"
-            ? { ...e, geometry: { kind: "kurve", radius: 171, angle: 45 } }
-            : e,
-      ),
+    // Steilkehre bekommt eine Kurvengeometrie: platzierbar; ihr K-Teil steckt in keiner
+    // Baugruppe mehr und steht unter „Maße fehlen“ (gilt vor und nach Vermessung #1)
+    const changed: ReadonlyArray<CatalogEntry> = CATALOG.map(
+      (e): CatalogEntry =>
+        e.id === "steilkehre" ? { ...e, geometry: { kind: "kurve", radius: 171, angle: 90 } } : e,
+    );
+    // eine zusätzliche Baugruppe verwendet das K-Teil: wieder ausgeblendet
+    const withSet: ReadonlyArray<CatalogEntry> = [
+      ...changed,
       {
-        id: "wireless-set",
-        name: "Wireless-Set (Baugruppe)",
+        id: "k-set",
+        name: "K-Set (Baugruppe)",
         articleNumbers: "keineEigene",
         source: "Test",
         certainty: "niedrig",
-        geometry: { kind: "baugruppe", parts: [{ part: "wireless-anschluss", count: 1 }] },
+        geometry: { kind: "baugruppe", parts: [{ part: "steilkehre-teil", count: 1 }] },
       },
     ];
     const kindOf = (catalog: ReadonlyArray<CatalogEntry>, id: string) =>
       E.paletteEntries(catalog).find((e) => e.partId === id)?.kind;
-    expect(kindOf(CATALOG, "steilkurve-1-45")).toBe("masseFehlen");
-    expect(kindOf(changed, "steilkurve-1-45")).toBe("platzierbar");
-    expect(kindOf(CATALOG, "wireless-anschluss")).toBe("masseFehlen");
-    expect(kindOf(changed, "wireless-anschluss")).toBe("ausgeblendet");
-    expect(kindOf(changed, "wireless-set")).toBe("masseFehlen");
+    expect(kindOf(CATALOG, "steilkehre")).toBe("masseFehlen");
+    expect(kindOf(changed, "steilkehre")).toBe("platzierbar");
+    expect(kindOf(CATALOG, "steilkehre-teil")).toBe("ausgeblendet");
+    expect(kindOf(changed, "steilkehre-teil")).toBe("masseFehlen");
+    expect(kindOf(withSet, "steilkehre-teil")).toBe("ausgeblendet");
+    expect(kindOf(withSet, "k-set")).toBe("masseFehlen");
     expect(E.paletteEntries(changed).map((e) => e.partId)).toEqual(changed.map((e) => e.id));
+    expect(E.paletteEntries(withSet).map((e) => e.partId)).toEqual(withSet.map((e) => e.id));
     // „platzierbar“ deckt sich mit dem, was ein Tipp in die Folge bringt (REQ-EDIT-2)
-    for (const catalog of [CATALOG, changed]) {
+    for (const catalog of [CATALOG, changed, withSet]) {
       for (const entry of E.paletteEntries(catalog)) {
         const after = E.apply(catalog, E.initialState(), choose(entry.partId));
         expect(after.elements.length, `${entry.partId}`).toBe(entry.kind === "platzierbar" ? 1 : 0);
@@ -676,7 +680,7 @@ describe("Verlauf und Element-IDs", () => {
 
     // wirkungslos: nicht platzierbar, Querung nicht verfügbar, Löschen ohne Auswahl, Neu auf leer
     const noops: ReadonlyArray<Command> = [
-      choose("steilkurve-1-45"),
+      choose("looping"),
       { type: "appendCrossing" },
       { type: "deleteSelected" },
     ];
@@ -786,5 +790,51 @@ describe("Nachtrag: Laden hebt die Auswahl auf", () => {
       expect(after.selection, `Auswahl ${id}`).toBeUndefined();
       expect(after.action).toBe("keine");
     }
+  });
+});
+
+describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45° vermessen", () => {
+  test.skip("[REQ-EDIT-2] Wireless-Anschluss (ohne Richtung) und Steilkurve 1/45° (mit Leistenrichtung) kommen per Tipp in die Folge, je ein Verlaufseintrag", async () => {
+    const E = await loadEditor();
+    const s0 = E.initialState();
+    const w = E.apply(CATALOG, s0, choose("wireless-anschluss"));
+    expect(w.elements).toHaveLength(1);
+    expect(w.elements[0]).toEqual({
+      id: (w.elements[0] as LayoutElement).id,
+      part: "wireless-anschluss",
+    });
+    const st = E.apply(CATALOG, w, choose("steilkurve-1-45"));
+    expect(st.elements).toHaveLength(2);
+    expect(st.elements[1]).toEqual({
+      id: (st.elements[1] as LayoutElement).id,
+      part: "steilkurve-1-45",
+      turn: s0.paletteTurn,
+    });
+    expect(E.apply(CATALOG, st, { type: "undo" }).elements).toEqual(w.elements);
+    expect(PLACEABLE_IDS).toEqual(
+      expect.arrayContaining(["wireless-anschluss", "steilkurve-1-45"]),
+    );
+    expect(UNPLACEABLE_IDS).not.toContain("wireless-anschluss");
+    expect(UNPLACEABLE_IDS).not.toContain("steilkurve-1-45");
+  });
+
+  test.skip("[REQ-EDIT-2] acht Steilkurven per Tipp ergeben einen geschlossenen Kreis; ein Oval mit Wireless-Anschluss statt Gerade 114 schließt", async () => {
+    const E = await loadEditor();
+    const circle = run(
+      E,
+      E.initialState(),
+      Array.from({ length: 8 }, () => choose("steilkurve-1-45")),
+    );
+    expect(circle.elements).toHaveLength(8);
+    expect(status(circle.elements)).toBe("geschlossen");
+    const seven = E.apply(CATALOG, circle, { type: "undo" });
+    expect(status(seven.elements)).toBe("offen");
+    const oval = run(E, E.initialState(), [
+      ...Array.from({ length: 4 }, () => choose("steilkurve-1-45")),
+      choose("gerade-114"),
+      ...Array.from({ length: 4 }, () => choose("steilkurve-1-45")),
+      choose("wireless-anschluss"),
+    ]);
+    expect(status(oval.elements)).toBe("geschlossen");
   });
 });

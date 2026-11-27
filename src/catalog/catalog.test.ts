@@ -4,6 +4,8 @@
  * (.specify/specs/gerade-100/spec.md, „Geänderte Kriterien“): zusätzlich `gerade-100`,
  * `gerade-114` ohne eigene Artikelnummer, 20 Einträge, 14 platzierbar; Geradenlängen auf dem
  * 57-mm-Raster mit genau einer benannten Ausnahme `gerade-100` (100 mm).
+ * Nachtrag #1 (Messung 2026-11-28, Tabelle „Katalog M1“): `wireless-anschluss` ist Gerade 114,
+ * `steilkurve-1-45` Kurve R 171, 45°, beide Sicherheit hoch und platzierbar; 16 platzierbar.
  *
  * Aufteilung bis zur Umsetzung: Tests mit der neuen Erwartung sind `.skip` (implement entfernt nur
  * das `.skip`); Tests, deren Erwartung vor und nach der Ergänzung gilt, laufen aktiv.
@@ -155,14 +157,14 @@ const EXPECTED: ReadonlyArray<Expected> = [
   {
     id: "wireless-anschluss",
     articleNumbers: ["20061673"],
-    geometry: { kind: "masseFehlen" },
-    certainty: "niedrig",
+    geometry: { kind: "gerade", length: 114 },
+    certainty: "hoch",
   },
   {
     id: "steilkurve-1-45",
     articleNumbers: ["20061612"],
-    geometry: { kind: "masseFehlen" },
-    certainty: "mittel",
+    geometry: { kind: "kurve", radius: 171, angle: 45 },
+    certainty: "hoch",
   },
   {
     id: "looping-teil",
@@ -210,6 +212,8 @@ const PLACEABLE = new Set([
   "kreuzung",
   "anschlussstueck",
   "rundenzaehler",
+  "wireless-anschluss",
+  "steilkurve-1-45",
 ]);
 
 const sortedParts = (g: Geometry): Geometry =>
@@ -224,8 +228,8 @@ const byId = (id: string): CatalogEntry => {
 const isPlaceable = (e: CatalogEntry): boolean =>
   e.geometry.kind === "gerade" || e.geometry.kind === "kurve" || e.geometry.kind === "kreuzung";
 
-/** Einträge, die die Spec gerade-100 ändert oder neu anlegt. */
-const CHANGED_BY_G100 = new Set(["gerade-100", "gerade-114"]);
+/** Einträge, die der Nachtrag #1 (Vermessung 2026-11-28) ändert. */
+const CHANGED_BY_MEASUREMENT = new Set(["wireless-anschluss", "steilkurve-1-45"]);
 
 /**
  * Prüfung aus REQ-CAT-5 (Fassung gerade-100). Liefert die gefundenen Probleme (leer = in Ordnung).
@@ -266,7 +270,7 @@ describe("Katalog", () => {
     expect(cat().map((e) => e.id)).toEqual(EXPECTED.map((e) => e.id));
   });
 
-  test("[REQ-CAT-1] Geometrie, Art.-Nr. und Sicherheit je Eintrag wie in der Tabelle, gerade-114 ohne eigene Nummer", () => {
+  test.skip("[REQ-CAT-1] Geometrie, Art.-Nr. und Sicherheit je Eintrag wie in der Tabelle, gerade-114 ohne eigene Nummer", () => {
     for (const exp of EXPECTED) {
       const e = byId(exp.id);
       expect({ id: e.id, geometry: sortedParts(e.geometry) }).toEqual({
@@ -288,19 +292,61 @@ describe("Katalog", () => {
     }
   });
 
-  test("[REQ-CAT-1] Platzierbarkeit wie in der Tabelle mit gerade-100: 14 platzierbar; Looping, Steilkehre, Steilkurve, Wireless, K und L nicht", () => {
+  test.skip("[REQ-CAT-1] Platzierbarkeit wie in der Tabelle nach Vermessung #1: 16 platzierbar; Looping, Steilkehre, K und L nicht", () => {
     for (const e of cat()) {
       expect({ id: e.id, placeable: isPlaceable(e) }).toEqual({
         id: e.id,
         placeable: PLACEABLE.has(e.id),
       });
     }
-    expect(cat().filter(isPlaceable)).toHaveLength(14);
-    expect(PLACEABLE.size).toBe(14);
+    expect(cat().filter(isPlaceable)).toHaveLength(16);
+    expect(PLACEABLE.size).toBe(16);
+    expect(
+      cat()
+        .filter((e) => !isPlaceable(e))
+        .map((e) => e.id),
+    ).toEqual(["looping-teil", "steilkehre-teil", "looping", "steilkehre"]);
   });
 
-  test("[REQ-CAT-1] Einträge, die gerade-100 nicht ändert, wie in der Tabelle (gilt vor und nach der Ergänzung)", () => {
-    const unchanged = EXPECTED.filter((exp) => !CHANGED_BY_G100.has(exp.id));
+  test.skip("[REQ-CAT-1] Vermessung #1: Wireless-Anschluss Gerade 114 wie das Anschlussstück, Steilkurve 1/45° Kurve R 171, 45° wie die Kurve 1/45°; Sicherheit hoch, Quelle nennt die Messung 2026-11-28", () => {
+    const wireless = byId("wireless-anschluss");
+    const steil = byId("steilkurve-1-45");
+    expect({
+      name: wireless.name,
+      articleNumbers: wireless.articleNumbers,
+      geometry: wireless.geometry,
+      certainty: wireless.certainty,
+    }).toEqual({
+      name: "Wireless-Anschluss",
+      articleNumbers: ["20061673"],
+      geometry: { kind: "gerade", length: 114 },
+      certainty: "hoch",
+    });
+    expect({
+      name: steil.name,
+      articleNumbers: steil.articleNumbers,
+      geometry: steil.geometry,
+      certainty: steil.certainty,
+    }).toEqual({
+      name: "Steilkurve 1/45°",
+      articleNumbers: ["20061612"],
+      geometry: { kind: "kurve", radius: 171, angle: 45 },
+      certainty: "hoch",
+    });
+    // Geometrie gleich den Vorbildern (Orakel unabhängig vom Prüfling: die Zahlen oben)
+    expect(wireless.geometry).toEqual(byId("anschlussstueck").geometry);
+    expect(steil.geometry).toEqual(byId("kurve-1-45").geometry);
+    for (const e of [wireless, steil]) {
+      expect({ id: e.id, source: e.source }).toEqual({
+        id: e.id,
+        source: expect.stringContaining("Messung 2026-11-28"),
+      });
+      expect(e.source).toContain("#1");
+    }
+  });
+
+  test("[REQ-CAT-1] Einträge, die die Vermessung #1 nicht ändert, wie in der Tabelle (gilt vor und nach der Vermessung)", () => {
+    const unchanged = EXPECTED.filter((exp) => !CHANGED_BY_MEASUREMENT.has(exp.id));
     expect(unchanged).toHaveLength(18);
     const numbers = (n: ReadonlyArray<string> | "keineEigene") =>
       n === "keineEigene" ? n : [...n].sort();
@@ -320,14 +366,7 @@ describe("Katalog", () => {
         placeable: PLACEABLE.has(exp.id),
       });
     }
-    // gerade-114: Geometrie, Sicherheit und Platzierbarkeit bleiben (nur die Nummer ändert sich)
-    const g114 = byId("gerade-114");
-    expect({
-      geometry: g114.geometry,
-      certainty: g114.certainty,
-      placeable: isPlaceable(g114),
-    }).toEqual({ geometry: { kind: "gerade", length: 114 }, certainty: "hoch", placeable: true });
-    // außer gerade-100 kennt der Katalog keine weiteren Einträge
+    // der Katalog kennt keine weiteren Einträge
     const known = new Set(EXPECTED.map((e) => e.id));
     expect(cat().filter((e) => !known.has(e.id))).toEqual([]);
   });

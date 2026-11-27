@@ -920,3 +920,43 @@ describe("Symbole", () => {
     }
   });
 });
+
+describe("Nachtrag #1: Wireless-Anschluss im Plan", () => {
+  test.skip("[REQ-SYM-1] [REQ-SYM-4] Wireless-Anschluss zeigt im SVG genau ein Symbol mit derselben Form wie der Stecker des Anschlussstücks und dem title „Wireless-Anschluss“", async () => {
+    const elements: Elements = [
+      { id: "as", part: "anschlussstueck" },
+      { id: "w", part: "wireless-anschluss" },
+      { id: "rz", part: "rundenzaehler" },
+    ];
+    for (const on of [true, false]) {
+      for (const s of [0.4, 1.14, 20]) {
+        const scene = await render(elements, s, on);
+        expect(scene.shapes).toHaveLength(3);
+        const roots = symbolsById(scene.flat, "w");
+        expect({ on, s, count: roots.length }).toEqual({ on, s, count: 1 });
+        const root = roots[0] as Flat;
+        const titles = descendants(scene.flat, root).filter((n) => n.tag === "title");
+        expect(titles.map((t) => t.text)).toEqual(["Wireless-Anschluss"]);
+        /** Geometrie relativ zur Plakette, ohne Farben, Klassen und title. */
+        const signature = (id: string): string => {
+          const r = symbolsById(scene.flat, id)[0] as Flat;
+          const plate = plateOf(scene.flat, r);
+          return JSON.stringify(
+            [r, ...descendants(scene.flat, r)]
+              .filter((n) => n.tag !== "title")
+              .map((n) => [
+                n.tag,
+                screenPoints(n).map((p) => [
+                  Math.round((p.x - plate.minX) * 100) / 100,
+                  Math.round((p.y - plate.minY) * 100) / 100,
+                ]),
+              ])
+              .filter(([, pts]) => (pts as unknown[]).length > 0),
+          );
+        };
+        expect(signature("w"), `Stecker bei s=${s}`).toBe(signature("as"));
+        expect(signature("w"), `nicht die Zielflagge bei s=${s}`).not.toBe(signature("rz"));
+      }
+    }
+  });
+});
