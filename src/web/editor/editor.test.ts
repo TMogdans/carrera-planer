@@ -112,8 +112,14 @@ describe("Befehle", () => {
             }
             s = E.apply(CATALOG, s, c);
           }
+          // Querungen, die REQ-EDIT-22 beim Treffen eines Queranschlusses zusätzlich anhängt,
+          // sind keine angetippten Teile; sie tragen nur ID und Verweis.
+          const parts = s.elements.filter((el) => !("crosses" in el));
+          for (const el of s.elements.filter((e) => "crosses" in e)) {
+            expect(Object.keys(el).sort()).toEqual(["crosses", "id"]);
+          }
           expect(
-            s.elements.map((el) => ({
+            parts.map((el) => ({
               part: "part" in el ? el.part : undefined,
               turn: "turn" in el ? el.turn : undefined,
             })),
