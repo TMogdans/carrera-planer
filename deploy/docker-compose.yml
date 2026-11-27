@@ -15,8 +15,8 @@ services:
       CARRERA_ALLOWED_HOSTS: ${CARRERA_ALLOWED_HOSTS:?CARRERA_ALLOWED_HOSTS fehlt oder ist leer; in .env eintragen, z. B. CARRERA_ALLOWED_HOSTS=rezepte.fritz.box,rezepte.local,<LAN-IP>}
     volumes:
       - ./data:/data
-    # Vorläufig (Empfehlung 10); endgültig nach der Messung am Zielgerät
-    mem_limit: 384m
+    # Endgültig 256 MiB nach Messung am Zielgerät (REQ-CMP-3)
+    mem_limit: 256m
     # Begrenzte Logs, damit die SD-Karte nicht volläuft (REQ-CMP-3)
     logging:
       driver: json-file
