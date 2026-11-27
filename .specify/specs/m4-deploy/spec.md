@@ -180,10 +180,10 @@ Wirkungsprobe daneben.
   Nachweis Rückweg: Mit `CARRERA_TAG` auf ein zweites, lokal getaggtes Image läuft der Container
   danach mit dessen Image-ID (`docker inspect`, Feld `Image`); die Daten bleiben.
 - **REQ-CMP-3** [Where] Die Compose-Datei setzt `restart: unless-stopped`, ein Speicherlimit
-  (vorläufig **384 MiB**, endgültiger Wert nach der Regel aus Empfehlung 10, Entscheidung 1)
+  (**256 MiB**, endgültig nach der Regel aus Empfehlung 10, Messung 2026-11-27)
   und eine Begrenzung der Container-Logs (`json-file`, `max-size` 1 MB, `max-file` 3), damit die
   SD-Karte nicht volläuft. Nachweis: im laufenden Container zeigt `/sys/fs/cgroup/memory.max`
-  das Limit in Byte (Wirkung der cgroup, nicht nur der Datei); `docker inspect` zeigt
+  das Limit in Byte (268435456; Wirkung der cgroup, nicht nur der Datei); `docker inspect` zeigt
   `RestartPolicy.Name` `unless-stopped` und `LogConfig` mit beiden Grenzen.
 - **REQ-CMP-4** [When] Der Container aus der Compose-Datei wird `healthy` (REQ-IMG-5 über
   Compose, kein eigener Prüfbefehl in der Compose-Datei, der den aus dem Image überschreibt).
@@ -364,12 +364,14 @@ Wirkungsprobe daneben.
      kein sicherer Kontext. Will Teil B einen Service Worker (Offline-Cache) oder
      `crypto.randomUUID`, braucht es dann TLS oder einen anderen Weg. Das gehört in die Spec von
      Teil B.
-10. **Speicherlimit vorläufig 384 MiB**, endgültig aus der Messung: höchstens das Doppelte des
+10. **Speicherlimit 256 MiB** (zunächst vorläufig 384 MiB), endgültig aus der Messung: höchstens das Doppelte des
     gemessenen Maximums (VmHWM) im Profil „typisch“, aufgerundet auf 32 MiB, und so, dass neben
     der Rezepte-App mindestens 150 MB für System und Seiten-Cache frei bleiben. Gegenrede: Ein zu
     knappes Limit tötet den Prozess im Profil „groß“; `restart: unless-stopped` startet ihn neu,
     eine einzelne Anfrage scheitert. Das ist im Haushalt erträglich, solange das Profil „typisch“
-    sicher passt.
+    sicher passt. **Festgelegt durch die Messung 2026-11-27:** VmHWM-Maximum „typisch“ 126 MiB →
+    2 × 126 = 252 → aufgerundet auf 32 MiB = **256 MiB**; Nebenbedingung erfüllt: 906 − 256 − 61
+    (Rezepte-App) MiB lassen deutlich mehr als 150 MB frei.
 
 ## Messung am Zielgerät (Ziel von M4, Abnahme mit dem Menschen)
 
@@ -388,11 +390,19 @@ REQ-MESS-1. Die Entscheidungsregeln stehen **vor** der Messung fest:
 - **Schwellen Profil „typisch“** (entschieden, Entscheidung 1), auf genau diese Felder bezogen:
   `vorgaenge[name="liste"].maxMs` ≤ 1000, `vorgaenge[name="get"].maxMs` ≤ 500,
   `vorgaenge[name="put"].maxMs` ≤ 500, `speicher.vmHwmMiB` ≤ 50 % des Speicherlimits in MiB
-  (vorläufig 384 MiB, also ≤ 192). Wird eine Schwelle gerissen, wird die Liste (Übersicht ohne
+  (256 MiB, also ≤ **128 MiB** für künftige Messungen). Wird eine Schwelle gerissen, wird die Liste (Übersicht ohne
   Volldekodierung, Befund Kritik Runde 2) **vor Teil B** umgebaut; dafür ein Issue, das Teil B blockiert.
 - **Profil „groß“** wird gemessen und dokumentiert, blockiert aber nichts (konstruierter Grenzfall:
   1 MiB je Layout sind über 10 000 Elemente, weit jenseits jedes realen Bestands). Stirbt der
   Prozess dabei am Speicherlimit, kommt das als bekannte Grenze in den PR.
+- **Ergebnis der Messung 2026-11-27** (Pi 3B, temporärer Container auf 8081, Speicher-cgroup aktiv,
+  n = 20, Maxima): Profil „typisch“ Liste 689 ms, GET 68 ms, PUT 59 ms, VmHWM 120 MiB (ein früherer,
+  nicht spec-konformer Lauf gegen den Produktiv-Container: 126 MiB), memory.peak 77 MiB. Profil
+  „groß“ Liste 50,5 s, GET 4,4 s, PUT 4,8 s, VmHWM 228 MiB, memory.peak 227 MiB, kein OOM.
+  Rezepte-App ca. 61 MiB, Pi 906 MiB. Daraus nach Empfehlung 10: 2 × 126 = 252 → **256 MiB**.
+  Bekannte Grenzen: VmHWM 126 MiB liegt nur 2 MiB unter der künftigen Schwelle von 128 MiB (50 %
+  von 256); „groß“ (227 MiB memory.peak) liegt 11 % unter dem Limit und darf laut Spec am Limit
+  sterben.
 - Zusätzlich: Leerlauf-RSS nach dem Start, Startdauer bis `healthy`, Dauer eines Healthchecks
   (Node-Start auf dem Pi 3B; wird er teuer, ist `interval` zu vergrößern).
 
@@ -481,7 +491,7 @@ Laut Rückmeldung an die Kette vom 2026-11-25:
 1. **Angenommen:** Empfehlungen 1 (Laufzeit `node:22-bookworm-slim`), 2 (nativ arm64), 3 (Port
    8080:8080, kein eigener Name, kein Proxy), 5 (Paket öffentlich), 6 (REQ-DATA-1 bleibt, Tier T2),
    7 (Sicherung per Skript in M4, Automatik als Folge-Issue vor Teil B), 8 (Deploy von Hand),
-   9 (kein TLS), 10 (Speicherlimit vorläufig 384 MiB mit der Regel daraus); Profil „typisch“ mit
+   9 (kein TLS), 10 (Speicherlimit mit der Regel daraus; nach der Messung 2026-11-27 endgültig 256 MiB); Profil „typisch“ mit
    den vorgeschlagenen Schwellen.
 2. **Heim-VPN = WireGuard der Fritzbox; kanonische Adresse `rezepte.fritz.box:8080`** für
    Heimnetz und VPN. `rezepte.local` und die LAN-IP nur als dokumentierte Notwege. Die VPN-Probe
