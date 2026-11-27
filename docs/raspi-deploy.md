@@ -63,7 +63,8 @@ docker compose exec carrera-planer cat /sys/fs/cgroup/memory.max
 ```
 
 `memory.max` muss das Limit in Byte zeigen (402653184 = 384 MiB). Steht dort `max` oder fehlt die
-Datei, ist die Speicher-cgroup im Kernel aus, und das Limit wirkt nicht.
+Datei, ist die Speicher-cgroup im Kernel aus, und das Limit wirkt nicht. Abhilfe unter „Fehlerbilder“ (Speicherlimit
+wirkt nicht).
 
 ## Welche Version läuft?
 
@@ -239,6 +240,13 @@ startet der Server nicht und meldet „nicht beschreibbar“ (siehe unten).
 - **`docker compose pull` bzw. `up -d` meldet `denied` oder `unauthorized`:** Das Paket auf ghcr.io
   ist noch privat (Erst-Deploy, Schritt „Vorher, einmalig“) oder der Image-Name ist vertippt
   (`CARRERA_IMAGE` in `.env`?). Paket auf Public stellen, dann erneut `docker compose pull`.
+- **`denied`, obwohl das Paket öffentlich ist:** Docker schickt einen gespeicherten, abgelaufenen
+  Login für `ghcr.io` aus `~/.docker/config.json` mit (etwa von einer anderen App auf dem Raspi), und
+  ghcr.io lehnt ihn ab; anonym ginge der Abruf. Prüfen, ohne den Token auszugeben:
+  `grep -o '"ghcr.io"' ~/.docker/config.json`. Den Login nicht löschen, wenn eine andere App ihn
+  braucht; stattdessen den Planer mit einer eigenen, leeren Docker-Konfiguration holen:
+  `mkdir -p .docker && DOCKER_CONFIG=$PWD/.docker docker compose pull`. Das gilt dann für jedes
+  `pull` im Abschnitt „Update“. `up -d` braucht das Präfix nicht.
 - **Container startet immer wieder neu, Log nennt „CARRERA_ALLOWED_HOSTS: ungültiger Eintrag“:**
   Ein Eintrag in `.env` ist kein Name und keine Adresse, z. B. ein stehen gebliebener Platzhalter
   `<LAN-IP>`. Eintrag korrigieren, dann `docker compose up -d`.
@@ -247,6 +255,18 @@ startet der Server nicht und meldet „nicht beschreibbar“ (siehe unten).
 - **`unhealthy` in `docker compose ps`:** `docker inspect --format '{{json .State.Health}}'
   "$(docker compose ps -q carrera-planer)"` zeigt die letzten Prüfungen. `unhealthy` startet den Container nicht neu; das tut
   `restart: unless-stopped` nur, wenn der Prozess endet.
+- **Speicherlimit wirkt nicht** (`memory.max` zeigt `max` oder fehlt, `docker stats` zeigt `0B / 0B`):
+  Raspberry Pi OS startet den Kernel mit `cgroup_disable=memory` (`cat /proc/cmdline`). Abhilfe:
+  an die **eine** Zeile von `/boot/firmware/cmdline.txt` ` cgroup_enable=memory cgroup_memory=1`
+  anhängen (vorher sichern; die Datei muss eine Zeile bleiben), dann `sudo reboot`. Danach
+  **`docker compose up -d --force-recreate`**: Docker verwirft das Limit still, wenn der Container
+  ohne Speicher-cgroup angelegt wurde (`docker inspect --format '{{.HostConfig.Memory}}'` zeigt
+  `0`), und ein Neustart des Raspi legt ihn nicht neu an. Erst dann zeigt `memory.max` 402653184.
+- **`rezepte.fritz.box` lädt sehr lange (über eine Minute) und dann doch:** Die Fritzbox kennt den
+  Namen zweimal, meist mit einer alten Adresse der WLAN-Schnittstelle des Raspi. Prüfen auf dem
+  Mac mit `dscacheutil -q host -a name rezepte.fritz.box`, unter Linux mit
+  `getent ahosts rezepte.fritz.box`: steht dort mehr als eine IPv4-Adresse, in der Fritzbox unter
+  Heimnetz → Netzwerk den inaktiven Eintrag löschen.
 - **Uhr nach dem Booten:** Bis NTP greift, geht die Uhr des Raspi nach; in dieser Zeit angelegte
   Layouts tragen eine zu frühe `updatedAt`. Kosmetisch, ohne Wirkung auf Versionen.
 
