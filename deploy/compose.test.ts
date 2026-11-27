@@ -443,7 +443,7 @@ describe("Compose-Datei", () => {
   // REQ-CMP-3 restart, Speicherlimit, Log-Begrenzung
   // -------------------------------------------------------------------------------------------
 
-  test.skip("[REQ-CMP-3] memory.max im Container = 256 MiB, RestartPolicy unless-stopped (beendeter Server startet neu), LogConfig json-file mit max-size 1 MB und max-file 3", async () => {
+  test("[REQ-CMP-3] memory.max im Container = 256 MiB, RestartPolicy unless-stopped (beendeter Server startet neu), LogConfig json-file mit max-size 1 MB und max-file 3", async () => {
     const d = deployment(baseEnv());
     const id = await up(d);
     const memoryMax = dockerOk(

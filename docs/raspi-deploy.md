@@ -62,7 +62,7 @@ ls data                                            # carrera-planer.sqlite
 docker compose exec carrera-planer cat /sys/fs/cgroup/memory.max
 ```
 
-`memory.max` muss das Limit in Byte zeigen (402653184 = 384 MiB). Steht dort `max` oder fehlt die
+`memory.max` muss das Limit in Byte zeigen (268435456 = 256 MiB). Steht dort `max` oder fehlt die
 Datei, ist die Speicher-cgroup im Kernel aus, und das Limit wirkt nicht. Abhilfe unter „Fehlerbilder“ (Speicherlimit
 wirkt nicht).
 
@@ -261,7 +261,7 @@ startet der Server nicht und meldet „nicht beschreibbar“ (siehe unten).
   anhängen (vorher sichern; die Datei muss eine Zeile bleiben), dann `sudo reboot`. Danach
   **`docker compose up -d --force-recreate`**: Docker verwirft das Limit still, wenn der Container
   ohne Speicher-cgroup angelegt wurde (`docker inspect --format '{{.HostConfig.Memory}}'` zeigt
-  `0`), und ein Neustart des Raspi legt ihn nicht neu an. Erst dann zeigt `memory.max` 402653184.
+  `0`), und ein Neustart des Raspi legt ihn nicht neu an. Erst dann zeigt `memory.max` 268435456.
 - **`rezepte.fritz.box` lädt sehr lange (über eine Minute) und dann doch:** Die Fritzbox kennt den
   Namen zweimal, meist mit einer alten Adresse der WLAN-Schnittstelle des Raspi. Prüfen auf dem
   Mac mit `dscacheutil -q host -a name rezepte.fritz.box`, unter Linux mit
@@ -279,7 +279,7 @@ ein frischer Container (VmHWM ist ein Höchststand seit Prozessstart):
 # auf dem Raspi
 mkdir -p /tmp/carrera-messung && chmod 777 /tmp/carrera-messung
 docker run -d --name carrera-messung -p 8081:8080 -v /tmp/carrera-messung:/data \
-  -e CARRERA_ALLOWED_HOSTS=<LAN-IP>:8081 --memory 384m ghcr.io/tmogdans/carrera-planer:latest
+  -e CARRERA_ALLOWED_HOSTS=<LAN-IP>:8081 --memory 256m ghcr.io/tmogdans/carrera-planer:latest
 
 # auf dem Entwicklungsrechner (Node 22, im Repo)
 node deploy/measure.mjs http://<LAN-IP>:8081 typisch --container carrera-messung --ssh <raspi>
