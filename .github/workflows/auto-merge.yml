@@ -1,6 +1,6 @@
 # devloop auto-merge — thin caller of the PUBLIC reusable workflow (Variant-B vollzug of §9).
 # Placed by `/devloop:init`. Token-free, no vendoring: just calls mayflower/devloop's reusable
-# workflow (pinned by v0.9.0); `bot-login` is injected from .devloop/bot-logins.json.
+# workflow (pinned by v0.16.0); `bot-login` is injected from .devloop/bot-logins.json.
 # A HUMAN must push this (.github/workflows/** needs the workflows permission a bot lacks).
 # Optional (Variant B): omit if you don't want native auto-merge for T0/T1.
 
@@ -15,7 +15,7 @@ on:
 
 jobs:
   auto-merge:
-    uses: mayflower/devloop/.github/workflows/auto-merge.yml@v0.9.0
+    uses: mayflower/devloop/.github/workflows/auto-merge.yml@v0.16.0
     with:
       bot-login: "sir-tobys-usefull-helper-agent[bot]"
     permissions:
