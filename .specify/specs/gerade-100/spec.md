@@ -1,7 +1,8 @@
 # Spec: Gerade 100 und die Packung 20061658 (Issue #34)
 
 Status: Entwurf zur Abnahme per Review des Spec-PR. Die Punkte „zur Abnahme“ stehen gesammelt im
-Abschnitt „Zur Abnahme“.
+Abschnitt „Zur Abnahme“. Nachtrag 2026-11-28 (#1): Wireless-Anschluss und Steilkurve 1/45°
+vermessen; Zahlen in den geänderten REQ-CAT-1 und REQ-EDIT-21 nachgezogen.
 Grundlage: Issue #34 („Gerade 100 fehlt im Katalog“), [docs/recherche.md](../../../docs/recherche.md)
 (Zeilen 19, 37, 76 f.), [docs/carrera-go-katalog.md](../../../docs/carrera-go-katalog.md) (Zeile 20:
 20061658 = „3 x Geraden 100 mm Länge, 3 x Geraden 114 mm Länge“), die umgesetzten Specs
@@ -179,16 +180,17 @@ Geraden allein schließt die Strecke deshalb exakt nie. Das ist kein Fehler, son
 
 - **REQ-CAT-1** (M1, geändert) [Where] Der Katalog enthält genau die Einträge der Tabelle
   „Katalog M1“ mit den Änderungen aus „Katalog- und Vorlagen-Änderungen“ dieser Spec: zusätzlich
-  `gerade-100`, und `gerade-114` mit „keine eigene“ Artikelnummer; 20 Einträge, 14 platzierbar.
+  `gerade-100`, und `gerade-114` mit „keine eigene“ Artikelnummer; 20 Einträge, 16 platzierbar
+  (14 plus Wireless-Anschluss und Steilkurve 1/45°, vermessen #1).
 - **REQ-CAT-5** (M1, geändert) [Contract] Jede Geometrie eines platzierbaren Eintrags hat Winkel
   45° oder 90°; Radien sowie Längs- und Querweg der Kreuzung sind Vielfache von 57 mm, der Querweg
   ist höchstens so lang wie der Längsweg. Geradenlängen sind Vielfache von 57 mm **mit genau einer
   benannten Ausnahme: `gerade-100` (100 mm)**. Wirkungsnachweis mit verändertem Katalog: Eine
   Gerade 171 mit 170 mm, eine Kurve mit Radius 170 oder eine zweite Gerade abseits des Rasters
   (z. B. eine Kopie von `gerade-100` unter anderer ID) lässt die Prüfung scheitern.
-- **REQ-EDIT-21** (M2, geändert, nur das Beispiel) Mit dem aktuellen Katalog sind die 14 Einträge
-  von Gerade 342 bis Rundenzähler platzierbar (Gerade 100 an vierter Stelle); „Maße fehlen“ und
-  „ausgeblendet“ unverändert.
+- **REQ-EDIT-21** (M2, geändert, nur das Beispiel) Mit dem aktuellen Katalog sind die 16 Einträge
+  von Gerade 342 bis Steilkurve 1/45° platzierbar (Gerade 100 an vierter Stelle); „Maße fehlen“
+  und „ausgeblendet“ wie in M2 (nach Nachtrag #1).
 - **REQ-SET-2** (M3a, geändert) [Where] `src/catalog` exportiert die Set-Vorlagen der Tabelle
   „Set-Vorlagen M3a“ und danach die Vorlage „Geraden 3 × 100 + 3 × 114“ (fünf Vorlagen, in dieser
   Reihenfolge). Die Summe Mach 8 + Ausbauset 1 + Ausbauset 3 bleibt 49 Teile mit `gerade-114` 1.

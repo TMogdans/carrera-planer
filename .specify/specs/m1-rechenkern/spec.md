@@ -2,6 +2,8 @@
 
 Status: Entwurf, Überarbeitung 2 (Kreuzung als Acht, Antworten auf die offenen Fragen), wartet auf
 Spec-Review (harter Stopp).
+Nachtrag 2026-11-28 (#1): Wireless-Anschluss und Steilkurve 1/45° vermessen; Katalogtabelle und
+Smoke angepasst, Abnahme per Review des Spec-PR.
 Grundlage: [KONZEPT.md](../../../KONZEPT.md) (abgenommen 2026-11-23, Abschnitte „Kreuzung (Acht)“
 und „Raster“ nachgetragen 2026-11-23),
 [docs/recherche.md](../../../docs/recherche.md), [constitution.md](../../constitution.md).
@@ -80,8 +82,8 @@ Carrera-Außenmaßen geschlossen, nicht nachgemessen.
 | Kreuzung | 20061616 | Kreuzung: längs 342 mm, Querweg 114 mm mittig und senkrecht (Acht) | ja | hoch (nachgemessen) | CT, Messung 2026-11-23 |
 | Anschlussstück | 20061530, 20061666 | Gerade 114 mm | ja | hoch (20061666 nachgemessen) | CT, Messung |
 | Rundenzähler | 20088107 | Gerade 114 mm | ja | hoch (nachgemessen) | CT, Messung |
-| Wireless-Anschluss | 20061673 | Maße fehlen | nein | niedrig | CT Einzelartikel 20061673 „GO!!! Wireless Anschluss-Schiene“; 1 × enthalten im Wireless Upgrade Kit 20061676 (Set-Vorlage erst M3) |
-| Steilkurve 1/45° | 20061612 | Maße fehlen (Radius unbekannt) | nein | mittel (Außenmaß), Radius unbekannt | CT |
+| Wireless-Anschluss | 20061673 | Gerade 114 mm (Maße wie Anschlussstück) | ja | hoch (nachgemessen) | CT Einzelartikel 20061673 „GO!!! Wireless Anschluss-Schiene“; 1 × enthalten im Wireless Upgrade Kit 20061676 (Set-Vorlage erst M3); Messung 2026-11-28 (#1) |
+| Steilkurve 1/45° | 20061612 | Kurve R 171, 45° | ja | hoch (nachgemessen) | CT; Messung 2026-11-28 (#1): vier Steilkurven zu 180° ergeben 342 mm Mittenabstand wie zwei Kurven 1/90°, ohne Versatz nach vorn |
 | Looping-Teil (L) | keine eigene | Maße fehlen, nur in Baugruppe | nein | niedrig | Karton Mach 8 |
 | Steilkehre-Teil (K) | keine eigene | Maße fehlen, nur in Baugruppe | nein | niedrig | Karton Mach 8 |
 | Looping (Baugruppe) | 20061613 | Maße fehlen; Bestandteile 8 × L | nein | niedrig | Karton Mach 8 |
@@ -416,10 +418,11 @@ Abnahme aus Nutzersicht ist deshalb der Mensch am Testlauf und am Katalog:
    Tests nennen die REQ-IDs. Die Acht auf dem Boden: Kreuzung, drei Kurven rechts, Gerade 114,
    quer durch die Kreuzung, Anschlussstück, drei Kurven links — sie muss ohne Spannung schließen.
 2. Der Mensch vergleicht die Katalogtabelle mit dem Katalog im Code: jede Zeile mit Art.-Nr.,
-   Maß, Quelle, Sicherheit vorhanden; Looping, Steilkehre, Steilkurve 1/45°, Wireless-Anschluss,
-   K- und L-Teile sind als nicht platzierbar markiert.
-3. Gegenfälle, die geschlossen bleiben müssen: Ein Layout mit Looping, Steilkehre oder
-   Steilkurve 1/45° lässt sich nicht verfolgen (Fehler „nicht platzierbar“), sein Verbrauch aber
+   Maß, Quelle, Sicherheit vorhanden; Looping, Steilkehre, K- und L-Teile sind als nicht
+   platzierbar markiert; Wireless-Anschluss (Gerade 114) und Steilkurve 1/45° (R 171, 45°) sind
+   platzierbar (Messung 2026-11-28, #1).
+3. Gegenfälle, die geschlossen bleiben müssen: Ein Layout mit Looping oder Steilkehre lässt sich
+   nicht verfolgen (Fehler „nicht platzierbar“), sein Verbrauch aber
    berechnen. Ein Layout mit unbekanntem Feld oder fremder Version wird beim Dekodieren
    abgewiesen. Ein Layout, das um ein Teil verlängert wird, ist nicht mehr geschlossen. In der
    Acht: kürzere oder längere Gerade vor der Querung ergibt „Ankunft nicht am Queranschluss“,
