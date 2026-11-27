@@ -40,7 +40,7 @@ Alle GO!!!-Strecken- und Zubehörartikel von carrera-toys.com (154 Seiten, Stand
 | Kurve 1/45° | 61611 | Länge 161 | hoch |
 | Kurve 2/45° | 61617 | 242 × 179 | hoch |
 | Kurve 3/45° | 61645 | 323 × 211 | hoch |
-| Steilkurve 1/45° | 61612 | 155 × 155, Radius unbekannt | mittel |
+| Steilkurve 1/45° | 61612 | 155 × 155, R 171, 45° wie Kurve 1/45° | hoch (nachgemessen 2026-11-28: vier Steilkurven zu 180° = 342 mm Mittenabstand, #1) |
 | Steilkurve 2/45° | 61646 | 226 × 166, Radius unbekannt | mittel |
 | Spurwechselkurve | 61655 | 228 × 228, deckungsgleich mit Kurve 1/90° | hoch (Nutzer bestätigt) |
 | Spurwechsel gerade | 61609 | 228 × 114 (⅔ Standardgerade), keine Einbaurichtung | hoch (Nutzer bestätigt) |
@@ -50,7 +50,7 @@ Alle GO!!!-Strecken- und Zubehörartikel von carrera-toys.com (154 Seiten, Stand
 | Kreuzung | 61616 | 342 × 114, Querweg 114 mittig (Acht) | hoch (nachgemessen) |
 | Anschlussstück | 61530 / 61666 | 114 × 114 | hoch (61666 nachgemessen) |
 | Zeitnahme / Rundenzähler | 88107 | 114 × 114 | hoch (nachgemessen) |
-| Wireless-Anschluss | aus 61676 | unbekannt, vermutlich 114 × 114 | niedrig |
+| Wireless-Anschluss | aus 61676 | 114 × 114, Gerade 114 wie Anschlussstück | hoch (nachgemessen 2026-11-28, #1) |
 | Looping | 61613 | 8 Teile, Maße unbekannt | niedrig |
 | Brücke, Sprungschanze, Stützen | 61604, 61641, 61642 | ohne Maße | niedrig |
 
@@ -88,7 +88,9 @@ oder von Carrera übernommen hat. Sicherheit deshalb mittel, außer wo eigene Me
   Nicht nachgemessen (#1).
 - Flyover: 190 mm je Teil (nicht im Bestand).
 - Steilkurven: „entsprechen weitgehend denen der entsprechenden Normalkurven“, keine Zahlen.
-  Spricht für R1 bei der Steilkurve 1/45°, ersetzt keine Messung.
+  Spricht für R1 bei der Steilkurve 1/45°, ersetzt keine Messung. Bestätigt durch Messung
+  2026-11-28 (#1): vier Steilkurven 1/45° zu 180° ergeben 342 mm Mittenabstand wie zwei
+  Kurven 1/90°, also R 171.
 - Weiche: Slots innen 342 und 298 mm, außen 342 und 344 mm.
 
 **Nicht auf der Seite:** Steckverbindungs-Toleranz, Steilkehre, achtstellige Artikelnummern
@@ -150,7 +152,8 @@ Kein kostenloser Browser-Editor speziell für GO!!! gefunden.
 
 1. R2/R3 nur abgeleitet (nicht im Bestand, daher unkritisch).
 2. Spurabstand 60 mm laut go143.de, nicht nachgemessen.
-3. Radius der Steilkurven unbekannt (go143.de: „weitgehend“ wie Normalkurven).
-4. Maße von Loop, Steilkehre (Lage des Ausgangs relativ zum Eingang), Brücke, Sprungschanze,
-   Wireless-Anschluss fehlen.
+3. ~~Radius der Steilkurven unbekannt~~ Erledigt für die Steilkurve 1/45°: R 171, nachgemessen
+   2026-11-28 (#1). Steilkurve 2/45° weiter ohne Radius (nicht im Bestand).
+4. Maße von Loop, Steilkehre (Lage des Ausgangs relativ zum Eingang), Brücke, Sprungschanze
+   fehlen.
 5. Streckenlänge Mach 8 (5,3 m laut CT) nicht nachgerechnet.
