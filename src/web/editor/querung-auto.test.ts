@@ -155,7 +155,7 @@ const undoDepth = (E: EditorApi, s: EditorState): number => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Querung automatisch beim Anhängen", () => {
-  test.skip("[REQ-EDIT-22] Acht: an Nr. 1–4 wird Nr. 5 angehängt → Nr. 1–5 plus Querung auf e1, ein Verlaufseintrag; ein Rückgängig stellt Nr. 1–4 exakt her", async () => {
+  test("[REQ-EDIT-22] Acht: an Nr. 1–4 wird Nr. 5 angehängt → Nr. 1–5 plus Querung auf e1, ein Verlaufseintrag; ein Rückgängig stellt Nr. 1–4 exakt her", async () => {
     const E = await loadEditor();
     const four = loaded(E, ACHT_1_4);
     expect(uncrossedPortHits(ACHT_1_4)).toEqual([]);
@@ -195,7 +195,7 @@ describe("Querung automatisch beim Anhängen", () => {
     expect(E.canRedo(again)).toBe(false);
   });
 
-  test.skip("[REQ-EDIT-22] Praxisfall: Kreuzung, 3 × Kurve 1/90° rechts, Gerade 114 angetippt → Querung steht automatisch; Gerade 342 setzt am gegenüberliegenden Anschluss an", async () => {
+  test("[REQ-EDIT-22] Praxisfall: Kreuzung, 3 × Kurve 1/90° rechts, Gerade 114 angetippt → Querung steht automatisch; Gerade 342 setzt am gegenüberliegenden Anschluss an", async () => {
     const E = await loadEditor();
     const built = run(E, E.initialState(), [
       choose("kreuzung"),
@@ -233,7 +233,7 @@ describe("Querung automatisch beim Anhängen", () => {
     }
   });
 
-  test.skip("[REQ-EDIT-22] gespiegelte Acht: Gerade 114 an Nr. 1–4 (Kurven links) trifft den linken Queranschluss → Querung auf e1", async () => {
+  test("[REQ-EDIT-22] gespiegelte Acht: Gerade 114 an Nr. 1–4 (Kurven links) trifft den linken Queranschluss → Querung auf e1", async () => {
     const E = await loadEditor();
     const after = E.apply(CATALOG, loaded(E, MIRROR_1_4), choose("gerade-114"));
     expect(after.elements).toHaveLength(6);
@@ -247,7 +247,7 @@ describe("Querung automatisch beim Anhängen", () => {
     }
   });
 
-  test.skip("[REQ-EDIT-22] jedes Teil, das das Ende an den Anschluss bringt, löst aus (Gerade 114, Anschlussstück, Rundenzähler); maßgeblich ist der übergebene Katalog", async () => {
+  test("[REQ-EDIT-22] jedes Teil, das das Ende an den Anschluss bringt, löst aus (Gerade 114, Anschlussstück, Rundenzähler); maßgeblich ist der übergebene Katalog", async () => {
     const E = await loadEditor();
     for (const partId of ["gerade-114", "anschlussstueck", "rundenzaehler"]) {
       const after = E.apply(CATALOG, loaded(E, ACHT_1_4), choose(partId));
@@ -265,7 +265,7 @@ describe("Querung automatisch beim Anhängen", () => {
     expect(uncrossedPortHits(after.elements, wide)).toEqual([]);
   });
 
-  test.skip("[REQ-EDIT-22] trifft das Ende mehrere ungequerte Kreuzungen, verweist die Querung auf die früheste", async () => {
+  test("[REQ-EDIT-22] trifft das Ende mehrere ungequerte Kreuzungen, verweist die Querung auf die früheste", async () => {
     const E = await loadEditor();
     const before = [...TWO_1_10, { id: "probe", part: "gerade-114" }];
     expect(uncrossedPortHits(before)).toEqual(["kA", "kB"]);
@@ -280,7 +280,7 @@ describe("Querung automatisch beim Anhängen", () => {
 });
 
 describe("Kein Einfügen außer beim Anhängen", () => {
-  test.skip("[REQ-EDIT-22] Ersetzen, das das Ende an den Anschluss bringt, fügt keine Querung ein", async () => {
+  test("[REQ-EDIT-22] Ersetzen, das das Ende an den Anschluss bringt, fügt keine Querung ein", async () => {
     const E = await loadEditor();
     const s = run(E, loaded(E, ACHT_G171.slice(0, 5)), [
       select("e5"),
@@ -294,7 +294,7 @@ describe("Kein Einfügen außer beim Anhängen", () => {
     expect(undoDepth(E, after)).toBe(2);
   });
 
-  test.skip("[REQ-EDIT-22] Davor einfügen, das das Ende an den Anschluss bringt, fügt keine Querung ein", async () => {
+  test("[REQ-EDIT-22] Davor einfügen, das das Ende an den Anschluss bringt, fügt keine Querung ein", async () => {
     const E = await loadEditor();
     // Nr. 1–3 und Gerade 114; davor eine Kurve rechts → Geometrie Nr. 1–5
     const start: Elements = [ACHT[0], ACHT[1], ACHT[2], ACHT[4]] as Elements;
@@ -311,7 +311,7 @@ describe("Kein Einfügen außer beim Anhängen", () => {
     expect(after.action).toBe("davorEinfuegen");
   });
 
-  test.skip("[REQ-EDIT-22] Löschen, das das Ende an den Anschluss bringt, fügt keine Querung ein", async () => {
+  test("[REQ-EDIT-22] Löschen, das das Ende an den Anschluss bringt, fügt keine Querung ein", async () => {
     const E = await loadEditor();
     const start: Elements = [...ACHT_1_5, { id: "x", part: "gerade-342" }];
     const after = run(E, loaded(E, start), [select("x"), del]);
@@ -319,7 +319,7 @@ describe("Kein Einfügen außer beim Anhängen", () => {
     expect(E.crossingTarget(CATALOG, after.elements)).toBe("e1");
   });
 
-  test.skip("[REQ-EDIT-22] Richtung umschalten ist kein Anhängen: bringt es das Ende an den Anschluss, entsteht keine Querung", async () => {
+  test("[REQ-EDIT-22] Richtung umschalten ist kein Anhängen: bringt es das Ende an den Anschluss, entsteht keine Querung", async () => {
     const E = await loadEditor();
     const start: Elements = ACHT_1_5.map((el) =>
       el.id === "e4" ? { id: "e4", part: "kurve-1-90", turn: "links" as Turn } : el,
@@ -329,7 +329,7 @@ describe("Kein Einfügen außer beim Anhängen", () => {
     expect(after.elements).toEqual(ACHT_1_5);
   });
 
-  test.skip("[REQ-EDIT-22] Laden einer Folge, deren Ende am Anschluss steht, fügt keine Querung ein — im Editor, beim Laden eines gespeicherten Layouts, beim Import und beim Start", async () => {
+  test("[REQ-EDIT-22] Laden einer Folge, deren Ende am Anschluss steht, fügt keine Querung ein — im Editor, beim Laden eines gespeicherten Layouts, beim Import und beim Start", async () => {
     const E = await loadEditor();
     const s = loaded(E, ACHT_1_5);
     expect(s.elements).toEqual(ACHT_1_5);
@@ -354,7 +354,7 @@ describe("Kein Einfügen außer beim Anhängen", () => {
     );
   });
 
-  test.skip("[REQ-EDIT-22] Rückgängig und Wiederholen auf einen Stand mit Ende am Anschluss fügen keine Querung ein", async () => {
+  test("[REQ-EDIT-22] Rückgängig und Wiederholen auf einen Stand mit Ende am Anschluss fügen keine Querung ein", async () => {
     const E = await loadEditor();
     const extended = E.apply(CATALOG, loaded(E, ACHT_1_5), choose("gerade-342"));
     expect(crossings(extended.elements)).toEqual([]);
@@ -377,7 +377,7 @@ describe("Kein Einfügen außer beim Anhängen", () => {
 });
 
 describe("Gelöschte Querung und Löschen daneben", () => {
-  test.skip("[REQ-EDIT-22] eine gelöschte Querung kommt nicht zurück, bis erneut ein Anhängen den Anschluss trifft", async () => {
+  test("[REQ-EDIT-22] eine gelöschte Querung kommt nicht zurück, bis erneut ein Anhängen den Anschluss trifft", async () => {
     const E = await loadEditor();
     const auto = E.apply(CATALOG, loaded(E, ACHT_1_4), choose("gerade-114"));
     const g114 = idOf(auto.elements[4]);
@@ -418,7 +418,7 @@ describe("Gelöschte Querung und Löschen daneben", () => {
     expect(E.apply(CATALOG, reAppended, undo).elements).toEqual(ACHT_1_4);
   });
 
-  test.skip("[REQ-EDIT-22] nach gelöschter Querung hängt „Querung anhängen“ sie wieder an, ein Verlaufseintrag", async () => {
+  test("[REQ-EDIT-22] nach gelöschter Querung hängt „Querung anhängen“ sie wieder an, ein Verlaufseintrag", async () => {
     const E = await loadEditor();
     const auto = E.apply(CATALOG, loaded(E, ACHT_1_4), choose("gerade-114"));
     const gone = run(E, auto, [select(idOf(auto.elements[5])), del]);
@@ -427,7 +427,7 @@ describe("Gelöschte Querung und Löschen daneben", () => {
     expect(E.apply(CATALOG, manual, undo).elements).toEqual(gone.elements);
   });
 
-  test.skip("[REQ-EDIT-22] Löschen des ankommenden Teils lässt die Querung stehen; der Kern meldet „Ankunft nicht am Queranschluss“", async () => {
+  test("[REQ-EDIT-22] Löschen des ankommenden Teils lässt die Querung stehen; der Kern meldet „Ankunft nicht am Queranschluss“", async () => {
     const E = await loadEditor();
     const auto = E.apply(CATALOG, loaded(E, ACHT_1_4), choose("gerade-114"));
     const q = auto.elements[5] as LayoutElement;
@@ -450,7 +450,7 @@ describe("Gelöschte Querung und Löschen daneben", () => {
     expect(crossings(appended.elements)).toEqual([q]);
   });
 
-  test.skip("[REQ-EDIT-22] Löschen des abgehenden Teils lässt die Querung stehen", async () => {
+  test("[REQ-EDIT-22] Löschen des abgehenden Teils lässt die Querung stehen", async () => {
     const E = await loadEditor();
     const auto = E.apply(CATALOG, loaded(E, ACHT_1_4), choose("gerade-114"));
     const withNext = E.apply(CATALOG, auto, choose("anschlussstueck"));
@@ -463,7 +463,7 @@ describe("Gelöschte Querung und Löschen daneben", () => {
 });
 
 describe("Kein Einfügen ohne exakten Treffer an einer ungequerten Kreuzung", () => {
-  test.skip("[REQ-EDIT-22] bereits gequerte Kreuzung: Ende exakt am Anschluss von e1, aber e1 ist gequert → keine Querung", async () => {
+  test("[REQ-EDIT-22] bereits gequerte Kreuzung: Ende exakt am Anschluss von e1, aber e1 ist gequert → keine Querung", async () => {
     const E = await loadEditor();
     const probe = [...ACHT_AGAIN, { id: "probe", part: "gerade-114" }];
     // Testdaten: das Ende steht exakt am rechten Queranschluss von e1, und e1 ist gequert
@@ -476,7 +476,7 @@ describe("Kein Einfügen ohne exakten Treffer an einer ungequerten Kreuzung", ()
     expect(crossings(after.elements)).toEqual([{ id: "e6", crosses: "e1" }]);
   });
 
-  test.skip("[REQ-EDIT-22] Ende nicht exakt am Anschluss (Position oder Richtung) oder Folge fehlerhaft → keine Querung", async () => {
+  test("[REQ-EDIT-22] Ende nicht exakt am Anschluss (Position oder Richtung) oder Folge fehlerhaft → keine Querung", async () => {
     const E = await loadEditor();
     // Position knapp daneben: Gerade 100 (171, −71), Gerade 171 (171, 0)
     for (const partId of ["gerade-100", "gerade-171"]) {
@@ -517,7 +517,7 @@ describe("Eigenschaft", () => {
     { weight: 1, arbitrary: fc.constant<Command>({ type: "togglePaletteTurn" }) },
   );
 
-  test.skip("[REQ-EDIT-22] Eigenschaft: Anhängen an eine fehlerfreie Folge hängt genau dann zusätzlich eine Querung auf die früheste getroffene ungequerte Kreuzung an, wenn das Teil das Ende auf einen ihrer Anschlüsse bringt; danach steht das Ende nie an dem getroffenen Anschluss; ein Rückgängig nimmt beides zurück", async () => {
+  test("[REQ-EDIT-22] Eigenschaft: Anhängen an eine fehlerfreie Folge hängt genau dann zusätzlich eine Querung auf die früheste getroffene ungequerte Kreuzung an, wenn das Teil das Ende auf einen ihrer Anschlüsse bringt; danach steht das Ende nie an dem getroffenen Anschluss; ein Rückgängig nimmt beides zurück", async () => {
     const E = await loadEditor();
     let hits = 0;
     let misses = 0;

@@ -1,6 +1,6 @@
 /**
  * Editor-Logik: Zustand, Befehle, Auswahl, Verlauf, Element-IDs, Leisten-Einteilung
- * (Spec M2, REQ-EDIT-1 bis -17 und -21). Rein und unveränderlich: `apply` liefert einen neuen
+ * (Spec M2, REQ-EDIT-1 bis -17, -21 und -22). Rein und unveränderlich: `apply` liefert einen neuen
  * Zustand. Lage, Fehler und Queranschlüsse kommen ausschließlich vom Kern (REQ-WARCH-3).
  * Zur Form (Funktionsdeklarationen) siehe parts.ts.
  */
@@ -70,15 +70,43 @@ function selectedIndex(s: Internal): number {
   return s.elements.findIndex((el) => el.id === s.selection);
 }
 
-/** Fügt ein Element mit neuer ID ein, die weder vergeben noch je geladen wurde (REQ-EDIT-17). */
+/**
+ * Neue ID ab Zählerstand `from`, die weder vergeben noch je geladen wurde, und der Zählerstand
+ * danach (REQ-EDIT-17).
+ */
+function fresh(s: Internal, from: number): readonly [string, number] {
+  let n = from;
+  while (s.taken.has(`e${n}`)) n++;
+  return [`e${n}`, n + 1];
+}
+
+/** Fügt ein Element mit neuer ID ein (REQ-EDIT-17). */
 function insertFresh(
   s: Internal,
   build: (id: string) => Elements,
   patch: Partial<Internal> = {},
 ): Internal {
-  let n = s.counter;
-  while (s.taken.has(`e${n}`)) n++;
-  return commit(s, build(`e${n}`), { ...patch, counter: n + 1 });
+  const [id, counter] = fresh(s, s.counter);
+  return commit(s, build(id), { ...patch, counter });
+}
+
+/**
+ * Anhängen (REQ-EDIT-1). Bringt das Teil das Ende auf einen Queranschluss einer ungequerten
+ * Kreuzung (dieselbe Prüfung wie REQ-EDIT-9, mit dem übergebenen Katalog), kommt im selben Befehl
+ * eine Querung mit eigener neuer ID dahinter: ein Verlaufseintrag für beide (REQ-EDIT-22).
+ */
+function appendPart(
+  catalog: Catalog,
+  s: Internal,
+  partId: string,
+  turn: Turn | undefined,
+): Internal {
+  const [id, counter] = fresh(s, s.counter);
+  const elements = [...s.elements, partElement(id, partId, turn)];
+  const target = crossingTarget(catalog, elements);
+  if (target === undefined) return commit(s, elements, { counter });
+  const [crossingId, after] = fresh(s, counter);
+  return commit(s, [...elements, { id: crossingId, crosses: target }], { counter: after });
 }
 
 function partElement(id: string, part: string, turn: Turn | undefined): LayoutElement {
@@ -101,7 +129,7 @@ function choosePart(catalog: Catalog, s: Internal, partId: string): Internal {
   const turn = curve ? s.paletteTurn : undefined;
   return s.action === "davorEinfuegen"
     ? insertFresh(s, (id) => s.elements.toSpliced(i, 0, partElement(id, partId, turn)))
-    : insertFresh(s, (id) => [...s.elements, partElement(id, partId, turn)]);
+    : appendPart(catalog, s, partId, turn);
 }
 
 function appendCrossing(catalog: Catalog, s: Internal): Internal {
