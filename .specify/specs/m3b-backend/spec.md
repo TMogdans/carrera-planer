@@ -323,11 +323,16 @@ Layout nicht (mehr) gibt (Entscheidung 3).
   Version + 2 statt + 1; 409 durch 200 ersetzt; Schema-Prüfung beim Lesen entfernt;
   Schema-Prüfung beim Schreiben entfernt; `DELETE` ohne Versionsbedingung; Trimmen des
   Pfadnamens eingebaut; Host-Prüfung entfernt; Port beim Host-Vergleich ignoriert.
-- **REQ-SARCH-3** [Performance] Für ein Layout mit 1000 Elementen dauern `PUT` plus `GET` über den
-  HTTP-Handler gegen eine Datei-Datenbank höchstens 100 ms im Maximum über 20 Durchläufe
-  (Vitest, Node 22), `PUT /api/bestand` mit allen Katalogteilen höchstens 50 ms im Maximum; der
-  Test gibt Maximum und Median aus. Gemessen auf dem Entwicklungsrechner bzw. in CI, nicht auf dem
+- **REQ-SARCH-3** [Performance] Für ein Layout mit 1000 Elementen gilt: ein nicht gewerteter
+  Aufwärmdurchlauf, danach 20 Durchläufe `PUT` plus `GET` über den HTTP-Handler gegen eine
+  Datei-Datenbank (Vitest, Node 22); Median höchstens 50 ms, Maximum höchstens 250 ms. Der Test
+  gibt Maximum und Median aus. `PUT /api/bestand` mit allen Katalogteilen dauert höchstens 50 ms
+  im Maximum über 20 Durchläufe. Gemessen auf dem Entwicklungsrechner bzw. in CI, nicht auf dem
   Raspi (Annahme 4).
+  Begründung: Reale große Bahnen haben 50–100 Teile, 1000 Elemente sind der etwa zehnfache
+  Belastungsfall. Das Maximum über 20 Durchläufe schwankte in CI durch Kaltstart und parallele
+  Tests (44,8–103,2 ms bei Median 10,6–28,8 ms, Issue #56); deshalb ist der Median die
+  Hauptgrenze und das Maximum nur eine Grenze gegen krankhafte Spitzen.
 
 Die IDs SARCH-4 (im Entwurf `0b59a44` Teil B) und SARCH-5 (Speicher-Schwelle in
 Überarbeitung 1, gestrichen; siehe „Bekannte Grenzen“) sind vergeben gewesen und bleiben frei.
