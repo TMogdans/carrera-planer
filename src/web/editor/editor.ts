@@ -70,21 +70,24 @@ function selectedIndex(s: Internal): number {
   return s.elements.findIndex((el) => el.id === s.selection);
 }
 
-/** Nächste Zählerstelle ab `from`, deren ID nie geladen wurde (REQ-EDIT-17). */
-function freshFrom(s: Internal, from: number): number {
+/**
+ * Neue ID ab Zählerstand `from`, die weder vergeben noch je geladen wurde, und der Zählerstand
+ * danach (REQ-EDIT-17).
+ */
+function fresh(s: Internal, from: number): readonly [string, number] {
   let n = from;
   while (s.taken.has(`e${n}`)) n++;
-  return n;
+  return [`e${n}`, n + 1];
 }
 
-/** Fügt ein Element mit neuer ID ein, die weder vergeben noch je geladen wurde (REQ-EDIT-17). */
+/** Fügt ein Element mit neuer ID ein (REQ-EDIT-17). */
 function insertFresh(
   s: Internal,
   build: (id: string) => Elements,
   patch: Partial<Internal> = {},
 ): Internal {
-  const n = freshFrom(s, s.counter);
-  return commit(s, build(`e${n}`), { ...patch, counter: n + 1 });
+  const [id, counter] = fresh(s, s.counter);
+  return commit(s, build(id), { ...patch, counter });
 }
 
 /**
@@ -98,12 +101,12 @@ function appendPart(
   partId: string,
   turn: Turn | undefined,
 ): Internal {
-  const n = freshFrom(s, s.counter);
-  const elements = [...s.elements, partElement(`e${n}`, partId, turn)];
+  const [id, counter] = fresh(s, s.counter);
+  const elements = [...s.elements, partElement(id, partId, turn)];
   const target = crossingTarget(catalog, elements);
-  if (target === undefined) return commit(s, elements, { counter: n + 1 });
-  const m = freshFrom(s, n + 1);
-  return commit(s, [...elements, { id: `e${m}`, crosses: target }], { counter: m + 1 });
+  if (target === undefined) return commit(s, elements, { counter });
+  const [crossingId, after] = fresh(s, counter);
+  return commit(s, [...elements, { id: crossingId, crosses: target }], { counter: after });
 }
 
 function partElement(id: string, part: string, turn: Turn | undefined): LayoutElement {
