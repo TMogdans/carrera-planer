@@ -1,6 +1,7 @@
 # Spec: M2 — Editor im Sandbox-Modus, Layout lokal im Browser
 
-Status: Überarbeitung 4 (Klarstellung: Name bei „Neu“); Abnahme per Review des Nachtrag-PRs.
+Status: Überarbeitung 5 (Nachtrag REQ-EDIT-22: Querung automatisch beim Anhängen, #62); Abnahme
+per Review des Nachtrag-PRs.
 Grundlage: [KONZEPT.md](../../../KONZEPT.md) (abgenommen 2026-11-23; Abschnitte „Ziel“, „Modi“,
 „Geometrie“, „Bedienung“, „Architektur“, „Prüfen“, „Meilensteine“),
 [docs/recherche.md](../../../docs/recherche.md), [constitution.md](../../constitution.md), die
@@ -144,6 +145,16 @@ fassen lässt, steht in der Logik-Schicht.
   „ungültiger Verweis“ und der Editor zeigt ihn an. Keine stille Kaskade (Frage 5).
   Beispiel: Nr. 1 der Acht gelöscht → Fehler „ungültiger Verweis“ an Nr. 5, gezeichneter
   Abschnitt Nr. 1–4.
+- **REQ-EDIT-22** [When] Wenn ein Anhängen nach REQ-EDIT-1 das offene Ende exakt (Position und
+  Richtung, ohne Toleranz) auf einen Queranschluss einer ungequerten Kreuzung bringt, hängt der
+  Editor im selben Befehl zusätzlich eine Querung mit neuer Element-ID und Verweis auf diese
+  Kreuzung an (trifft das Ende mehrere, die früheste). Teil und Querung bilden zusammen genau einen
+  Verlaufseintrag (REQ-EDIT-14); Rückgängig entfernt beide. Ob das Ende trifft, entscheidet
+  dieselbe Prüfung wie bei REQ-EDIT-9. Ersetzen, Davor einfügen, Löschen, Laden und Rückgängig
+  fügen keine Querung ein. Das Löschen des ankommenden oder abgehenden Teils entfernt die Querung
+  nicht (wie REQ-EDIT-11). Eine gelöschte Querung fügt der Editor erst beim nächsten Anhängen
+  wieder ein, das den Anschluss trifft. Beispiel an der Acht: an Folge Nr. 1–4 wird Nr. 5
+  angehängt → Folge Nr. 1–5 plus Querung auf e1, ein Verlaufseintrag.
 - **REQ-EDIT-12** [When] Wenn „Neu“ ausgelöst wird, wird die Folge leer und die Auswahl
   aufgehoben; das ist ein Befehl (rückgängig machbar). „Neu“ setzt außerdem den aktuellen Namen
   (REQ-STORE-9) zurück: danach ist kein Name gesetzt. Dieses Zurücksetzen gehört nicht zur
@@ -458,6 +469,15 @@ fassen lässt, steht in der Logik-Schicht.
 - Querung einfügen mitten in der Folge, Teile drehen oder spiegeln als Ganzes, Startpose ändern.
 - Spurlängen je Spur, Tischmaß-Prüfung, „Strecke schließen“-Vorschlag.
 - Änderungen an M1-API, Katalog oder Schema.
+
+## Bekannte Grenzen
+
+- Nach dem automatischen Einfügen gibt es keine eigene Rückmeldung; sichtbar sind das
+  Querungsband (REQ-UI-3) und der Pfeil am gegenüberliegenden Anschluss.
+- REQ-EDIT-9 und der Leisteneintrag „Querung“ bleiben für den Fall, dass das Ende auf anderem Weg
+  am Anschluss steht (nach Löschen, Laden).
+- Wird eine Querung mitten in der Folge gelöscht, setzen die nachfolgenden Teile am ersten
+  Anschluss an und überlappen die Kreuzung; ein Einfügen in der Mitte ist bewusst ausgeschlossen.
 
 ## Entscheidungen des Menschen zu den offenen Fragen (2026-11-24)
 
