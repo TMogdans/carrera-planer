@@ -528,7 +528,7 @@ describe("Datenbank am Prozess", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Startprüfung beschreibbar am Prozess", () => {
-  test.skip("[REQ-DATA-1] Datei 0444, Verzeichnis 0555 ohne Datei, Verzeichnis 0555 mit beschreibbarer Datei: Exit-Code ≠ 0, Zeile mit Pfad und „nicht beschreibbar“ auf stderr, Datei Byte für Byte unverändert; Gegenprobe 0644/0755 startet, PUT 201", async () => {
+  test("[REQ-DATA-1] Datei 0444, Verzeichnis 0555 ohne Datei, Verzeichnis 0555 mit beschreibbarer Datei: Exit-Code ≠ 0, Zeile mit Pfad und „nicht beschreibbar“ auf stderr, Datei Byte für Byte unverändert; Gegenprobe 0644/0755 startet, PUT 201", async () => {
     expect(
       process.getuid?.(),
       "REQ-DATA-1: Der Test läuft als root; Dateirechte greifen dann nicht, die Startprüfung ist so nicht prüfbar",

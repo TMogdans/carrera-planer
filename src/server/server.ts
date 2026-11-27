@@ -11,7 +11,7 @@
  * Einstieg für Tests: `startServer`; für den Prozess: `serve` (siehe `main.ts`).
  */
 import { once } from "node:events";
-import { existsSync, mkdirSync, statSync } from "node:fs";
+import { accessSync, constants, existsSync, mkdirSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import http from "node:http";
 import { dirname, extname, resolve, sep } from "node:path";
@@ -73,13 +73,33 @@ type Table = { readonly name: string; readonly key: string };
 type Key = string | number;
 
 /**
+ * Startprüfung „beschreibbar“ (Spec M4, REQ-DATA-1): Datei (falls vorhanden) und Verzeichnis müssen
+ * für diesen Prozess beschreibbar sein. SQLite braucht das Verzeichnis für `-wal` und `-shm`; ohne
+ * die Prüfung startete der Server und jeder Schreibzugriff endete mit 500. Geprüft wird vor dem
+ * Öffnen, eine vorhandene Datei bleibt also unverändert.
+ */
+function requireWritable(path: string): void {
+  const dir = dirname(path);
+  for (const target of existsSync(path) ? [path, dir] : [dir]) {
+    try {
+      accessSync(target, constants.W_OK);
+    } catch {
+      throw new Error(
+        `Datenbank ${path} nicht beschreibbar: kein Schreibrecht auf ${target} (Besitzer und Rechte prüfen; im Container läuft der Server als UID 1000)`,
+      );
+    }
+  }
+}
+
+/**
  * Öffnet die Datei (legt sie samt Verzeichnis an, wenn sie fehlt) und migriert. Scheitert laut,
- * wenn die Datei keine SQLite-Datenbank, nicht lesbar oder von einem neueren Server migriert ist;
- * die Datei wird dabei nicht verändert (REQ-DB-3).
+ * wenn die Datei keine SQLite-Datenbank, nicht lesbar, nicht beschreibbar oder von einem neueren
+ * Server migriert ist; die Datei wird dabei nicht verändert (REQ-DB-3, REQ-DATA-1).
  */
 function openDatabase(path: string) {
   return Effect.gen(function* () {
     mkdirSync(dirname(path), { recursive: true });
+    requireWritable(path);
     const context = yield* Layer.build(SqliteClient.layer({ filename: path }));
     const sql = Context.get(context, SqlClient.SqlClient);
     yield* Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS) }).pipe(

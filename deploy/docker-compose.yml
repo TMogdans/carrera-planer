@@ -1,0 +1,26 @@
+# Carrera-Planer auf dem Raspi (Spec M4, .specify/specs/m4-deploy/spec.md; Anleitung:
+# docs/raspi-deploy.md). Daneben gehören `data/` (UID 1000, beschreibbar), `backup.sh` und eine
+# `.env` mit mindestens CARRERA_ALLOWED_HOSTS.
+services:
+  carrera-planer:
+    # Rückweg: CARRERA_TAG=<voriger Commit-SHA> in .env, dann `docker compose up -d` (REQ-CMP-2)
+    image: ${CARRERA_IMAGE:-ghcr.io/tmogdans/carrera-planer}:${CARRERA_TAG:-latest}
+    restart: unless-stopped
+    # Fester Port: der Host-Header trägt den äußeren Port (Empfehlung 3); ein anderer äußerer Port
+    # braucht einen Eintrag mit genau diesem Port in CARRERA_ALLOWED_HOSTS
+    ports:
+      - "8080:8080"
+    environment:
+      # Ohne die Variable bekäme jedes Gerät im Heimnetz 421 (REQ-CMP-1)
+      CARRERA_ALLOWED_HOSTS: ${CARRERA_ALLOWED_HOSTS:?CARRERA_ALLOWED_HOSTS fehlt oder ist leer; in .env eintragen, z. B. CARRERA_ALLOWED_HOSTS=rezepte.fritz.box,rezepte.local,<LAN-IP>}
+    volumes:
+      - ./data:/data
+    # Vorläufig (Empfehlung 10); endgültig nach der Messung am Zielgerät
+    mem_limit: 384m
+    # Begrenzte Logs, damit die SD-Karte nicht volläuft (REQ-CMP-3)
+    logging:
+      driver: json-file
+      options:
+        max-size: "1m"
+        max-file: "3"
+    # Kein eigener healthcheck: der aus dem Image gilt (REQ-CMP-4)

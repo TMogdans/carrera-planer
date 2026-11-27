@@ -194,7 +194,7 @@ const dbFiles = (dbPath: string): Record<string, string> =>
 // ---------------------------------------------------------------------------------------------
 
 describe("Startprüfung beschreibbar (Testprozess)", () => {
-  test.skip("[REQ-DATA-1] vorhandene, vom Server angelegte Datei mit 0444: Start scheitert mit Pfad und „nicht beschreibbar“ auf stderr, Datei Byte für Byte unverändert", async () => {
+  test("[REQ-DATA-1] vorhandene, vom Server angelegte Datei mit 0444: Start scheitert mit Pfad und „nicht beschreibbar“ auf stderr, Datei Byte für Byte unverändert", async () => {
     notRoot();
     const s = newSetup();
     await createdByServer(s);
@@ -209,7 +209,7 @@ describe("Startprüfung beschreibbar (Testprozess)", () => {
     expect(dbFiles(s.dbPath)).toStrictEqual(before);
   });
 
-  test.skip("[REQ-DATA-1] Verzeichnis 0555 ohne Datei: Start scheitert mit Pfad und „nicht beschreibbar“ auf stderr, keine Datei entsteht", async () => {
+  test("[REQ-DATA-1] Verzeichnis 0555 ohne Datei: Start scheitert mit Pfad und „nicht beschreibbar“ auf stderr, keine Datei entsteht", async () => {
     notRoot();
     const s = newSetup();
     chmodSync(s.dbDir, 0o555);
@@ -223,7 +223,7 @@ describe("Startprüfung beschreibbar (Testprozess)", () => {
     expect(existsSync(`${s.dbPath}-wal`)).toBe(false);
   });
 
-  test.skip("[REQ-DATA-1] Verzeichnis 0555 mit beschreibbarer Datei (0644): Start scheitert mit Pfad und „nicht beschreibbar“ auf stderr, Datei Byte für Byte unverändert", async () => {
+  test("[REQ-DATA-1] Verzeichnis 0555 mit beschreibbarer Datei (0644): Start scheitert mit Pfad und „nicht beschreibbar“ auf stderr, Datei Byte für Byte unverändert", async () => {
     notRoot();
     const s = newSetup();
     await createdByServer(s);
@@ -240,7 +240,7 @@ describe("Startprüfung beschreibbar (Testprozess)", () => {
     expect(dbFiles(s.dbPath)).toStrictEqual(before);
   });
 
-  test.skip("[REQ-DATA-1] Gegenprobe: dieselbe Datei mit 0644 in einem Verzeichnis 0755 startet, PUT liefert 201, keine Zeile „nicht beschreibbar“", async () => {
+  test("[REQ-DATA-1] Gegenprobe: dieselbe Datei mit 0644 in einem Verzeichnis 0755 startet, PUT liefert 201, keine Zeile „nicht beschreibbar“", async () => {
     notRoot();
     const s = newSetup();
     await createdByServer(s);

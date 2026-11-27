@@ -196,7 +196,7 @@ const BESTAND = { schemaVersion: 1, counts: { "kurve-1-90": 8 } };
 // ---------------------------------------------------------------------------------------------
 
 describe("Keine Migration, keine Tabellenänderung", () => {
-  test.skip("[REQ-DARCH-1] eine vom Server neu angelegte Datei hat genau die Migrationen und Tabellen des Basisstands 05039f7", async () => {
+  test("[REQ-DARCH-1] eine vom Server neu angelegte Datei hat genau die Migrationen und Tabellen des Basisstands 05039f7", async () => {
     const dbPath = newDbPath();
     await start(dbPath);
     await stopAll();
@@ -207,7 +207,7 @@ describe("Keine Migration, keine Tabellenänderung", () => {
     expect(tablesOf(dbPath)).toStrictEqual(TABLES_05039f7);
   });
 
-  test.skip("[REQ-DARCH-1] eine Datei im Zustand des Basisstands öffnet der Server ohne Migration: Inhalte, Versionen, updatedAt und Buchführung bleiben", async () => {
+  test("[REQ-DARCH-1] eine Datei im Zustand des Basisstands öffnet der Server ohne Migration: Inhalte, Versionen, updatedAt und Buchführung bleiben", async () => {
     const dbPath = newDbPath();
     const updatedAt = "2026-11-01T10:00:00.000Z";
     const db = new BetterSqlite(dbPath);

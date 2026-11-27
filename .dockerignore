@@ -1,0 +1,22 @@
+# Nur Quellen in den Build-Kontext; nie Datenbanken, Git oder lokale Builds (REQ-IMG-1)
+.git
+.github
+.claude
+.devloop
+.specify
+.stryker-tmp
+node_modules
+dist
+dist-server
+coverage
+reports
+data
+backup
+deploy
+docs
+**/*.sqlite
+**/*.sqlite-*
+.env
+*.md
+Dockerfile
+.dockerignore
