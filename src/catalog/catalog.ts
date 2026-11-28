@@ -130,17 +130,18 @@ export const CATALOG: ReadonlyArray<CatalogEntry> = [
     name: "Wireless-Anschluss",
     articleNumbers: ["20061673"],
     source:
-      "CT Einzelartikel 20061673 „GO!!! Wireless Anschluss-Schiene“; 1 × im Wireless Upgrade Kit 20061676",
-    certainty: "niedrig",
-    geometry: { kind: "masseFehlen" },
+      "CT Einzelartikel 20061673 „GO!!! Wireless Anschluss-Schiene“; 1 × im Wireless Upgrade Kit 20061676; Messung 2026-11-28 (#1): Maße wie Anschlussstück",
+    certainty: "hoch",
+    geometry: { kind: "gerade", length: 114 },
   },
   {
     id: "steilkurve-1-45",
     name: "Steilkurve 1/45°",
     articleNumbers: ["20061612"],
-    source: "CT (Außenmaß), Radius unbekannt",
-    certainty: "mittel",
-    geometry: { kind: "masseFehlen" },
+    source:
+      "CT; Messung 2026-11-28 (#1): vier Steilkurven zu 180° ergeben 342 mm Mittenabstand wie zwei Kurven 1/90°, ohne Versatz nach vorn",
+    certainty: "hoch",
+    geometry: { kind: "kurve", radius: 171, angle: 45 },
   },
   {
     id: "looping-teil",

@@ -47,6 +47,7 @@ export function symbolOf(partId: string): SymbolKind | undefined {
     case "rundenzaehler":
       return "zielflagge";
     case "anschlussstueck":
+    case "wireless-anschluss":
       return "stecker";
     case "spurwechsel-gerade":
     case "spurwechselkurve":
