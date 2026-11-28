@@ -1,7 +1,9 @@
 # Spec: M3a — Bestand, Bestandsmodus, Einkaufsliste, Prägung (im Browser, ohne Server)
 
 Status: Überarbeitung 3 (Tab-Abgleich nach Critic-Befund: REQ-BEST-10, Smoke-Fall 16, „Bekannte
-Grenzen“ ergänzt); Abnahme per Review des Spec-PR. Stand davor: abgenommen am 2026-11-24,
+Grenzen“ ergänzt); Abnahme per Review des Spec-PR. Nachtrag 2026-11-28 (#1): Wireless-Anschluss
+und Steilkurve 1/45° vermessen; Beispiele unter „Bestandsfähig“ und Nicht-Ziele angepasst.
+Stand davor: abgenommen am 2026-11-24,
 Überarbeitung 2 (Klarstellungen aus spec-to-tests); Überarbeitung 1 trug die Entscheidungen zu den offenen Fragen ein und machte den
 Smoke zur Station für T3. Die Kriterien verweisen mit „(Frage n)“ auf den Abschnitt
 „Entscheidungen (abgenommen 2026-11-24)“.
@@ -49,7 +51,7 @@ platzierbar, Befehl, wirksam, Verlauf, Arbeitsstand, Leisten-Einteilung REQ-EDIT
 
 - **Bestandsfähig:** Katalogeintrag, dessen Geometrie keine `baugruppe` ist. Das sind heute alle
   Einträge außer Looping (Baugruppe) und Steilkehre (Baugruppe), also auch nicht platzierbare
-  wie Steilkurve 1/45°, Wireless-Anschluss, Looping-Teil (L) und Steilkehre-Teil (K). Aus dem
+  wie Looping-Teil (L) und Steilkehre-Teil (K). Aus dem
   Katalog abgeleitet, kein neues Feld. Grund: Baugruppen verbrauchen laut KONZEPT „alle ihre
   Teile“; gezählt wird je physischem Teil.
 - **Bestand:** Abbildung Teil-ID → Anzahl (ganze Zahl ≥ 0). Eine fehlende Teil-ID heißt Anzahl 0.
@@ -395,7 +397,7 @@ sind, ist in #28 offen.
 ## Nicht-Ziele (M3a)
 
 - Backend, SQLite, Versionsnummer je Layout, geräteübergreifender Bestand (M3b). Deploy (M4).
-- Toleranz beim Schließen (#27), Vermessung von Looping, Steilkehre, Steilkurve (#1), Drag & Drop
+- Toleranz beim Schließen (#27), Vermessung von Looping und Steilkehre (#1), Drag & Drop
   (#4), Zufallsstrecke (#3), einspurige Teile (#7).
 - Restzähler für Baugruppen: kommt, wenn sie platzierbar werden (#1).
 - Set-Vorlagen abziehen, eigene Set-Vorlagen anlegen, Einkaufsliste in Packungen, Preise,

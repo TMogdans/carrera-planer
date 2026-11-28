@@ -28,7 +28,7 @@
  */
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
-import { consumption } from "../../core/index.js";
+import { closure, consumption } from "../../core/index.js";
 import {
   anyInventoryArb,
   type CatalogEntryWithPraegung,
@@ -58,6 +58,7 @@ import {
   type LayoutElement,
   loadEditor,
   loaded,
+  ORIGIN,
   OVAL,
   resolve,
   UNKNOWN_ID,
@@ -178,7 +179,7 @@ describe("Einkaufsliste", () => {
     const I = await loadInventory();
     const cases: ReadonlyArray<readonly [Elements, ReadonlyArray<string>]> = [
       [one("steilkehre"), ["kurve-1-90", "steilkehre-teil"]],
-      [one("wireless-anschluss"), ["wireless-anschluss"]],
+      [one("looping-teil"), ["looping-teil"]],
       [one("gerade-342"), ["gerade-342"]],
       [[{ id: "q", crosses: "x" }, ...one("gerade-114")], ["gerade-114"]],
       [[{ id: "k", part: "kurve-1-90" }], ["kurve-1-90"]],
@@ -578,5 +579,44 @@ describe("Kurzform und Modi", () => {
       ),
       { numRuns: 200 },
     );
+  });
+});
+
+describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45° in der Einkaufsliste", () => {
+  test.skip("[REQ-EINK-1] [REQ-EINK-3] geschlossener Kreis aus acht Steilkurven mit Wireless-Anschluss und Gerade 114, leerer Bestand: Steilkurve fehlt 8 „20061612“, Wireless-Anschluss 1 „20061673“, zusammen 10", async () => {
+    const I = await loadInventory();
+    const steile = (prefix: string): Elements =>
+      Array.from({ length: 4 }, (_, i) => ({
+        id: `${prefix}${i}`,
+        part: "steilkurve-1-45",
+        turn: "rechts" as const,
+      }));
+    const elements: Elements = [
+      ...steile("s"),
+      { id: "w", part: "wireless-anschluss" },
+      ...steile("t"),
+      { id: "g", part: "gerade-114" },
+    ];
+    // baubar: der Kern verfolgt die Strecke und sie schließt (Vermessung #1)
+    const c = closure(CATALOG, elements, ORIGIN);
+    expect(c.ok && c.closure.status).toBe("geschlossen");
+    const list = listWith(I)(CATALOG, {}, elements, []);
+    expect(counts(list)).toEqual([
+      { partId: "gerade-114", needed: 1, have: 0, missing: 1 },
+      { partId: "wireless-anschluss", needed: 1, have: 0, missing: 1 },
+      { partId: "steilkurve-1-45", needed: 8, have: 0, missing: 8 },
+    ]);
+    expect(okList(list).total).toBe(10);
+    const terms = Object.fromEntries(okList(list).rows.map((r) => [r.partId, r.searchTerms]));
+    expect(terms["steilkurve-1-45"]).toEqual([art("20061612")]);
+    expect(terms["wireless-anschluss"]).toEqual([art("20061673")]);
+    // Bestand mit 4 Steilkurven, Wireless-Anschluss und Gerade 114: es fehlen nur noch 4 Steilkurven
+    const half = listWith(I)(
+      CATALOG,
+      { "steilkurve-1-45": 4, "wireless-anschluss": 1, "gerade-114": 1 },
+      elements,
+      [],
+    );
+    expect(counts(half)).toEqual([{ partId: "steilkurve-1-45", needed: 8, have: 4, missing: 4 }]);
   });
 });

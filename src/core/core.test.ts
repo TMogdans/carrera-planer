@@ -63,6 +63,11 @@
  *
  * Die Geometrie-Orakel unten (refTrace, Drehung, Spiegelung) rechnen unabhängig vom Katalog aus den
  * Zahlen der Spec, damit eine Verfälschung im Katalog nicht Orakel und Prüfling gleich verschiebt.
+ *
+ * Nachtrag #1 (Messung 2026-11-28, Tabelle „Katalog M1“): `wireless-anschluss` ist Gerade 114,
+ * `steilkurve-1-45` Kurve R 171, 45°; beide sind platzierbar. Die Tests dazu stehen im Block
+ * „Nachtrag #1“ und sind `.skip`, bis der Katalog nachgezogen ist. NON_PLACEABLE_IDS führt nur
+ * noch Einträge, die unter beiden Ständen nicht platzierbar sind.
  */
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
@@ -330,6 +335,9 @@ const REF_GEOMETRY: Readonly<Record<string, RefGeom>> = {
   kreuzung: { kind: "gerade", length: 342 },
   anschlussstueck: { kind: "gerade", length: 114 },
   rundenzaehler: { kind: "gerade", length: 114 },
+  // Nachtrag #1, Messung 2026-11-28
+  "wireless-anschluss": { kind: "gerade", length: 114 },
+  "steilkurve-1-45": { kind: "kurve", radius: 171, steps: 1 },
 };
 const STRAIGHT_IDS = [
   "gerade-342",
@@ -348,14 +356,10 @@ const CURVE_IDS = [
   "kurve-3-45",
   "spurwechselkurve",
 ] as const;
-const NON_PLACEABLE_IDS = [
-  "wireless-anschluss",
-  "steilkurve-1-45",
-  "looping-teil",
-  "steilkehre-teil",
-  "looping",
-  "steilkehre",
-] as const;
+/** Nachtrag #1: vermessen, platzierbar erst nach der Katalogänderung (Tests dazu `.skip`). */
+const MEASURED_STRAIGHT_IDS = ["wireless-anschluss"] as const;
+const MEASURED_CURVE_IDS = ["steilkurve-1-45"] as const;
+const NON_PLACEABLE_IDS = ["looping-teil", "steilkehre-teil", "looping", "steilkehre"] as const;
 
 const refGeom = (part: string): RefGeom => {
   const g = REF_GEOMETRY[part];
@@ -1763,7 +1767,13 @@ describe("Kern: Abnahmefall Acht", () => {
 // Teileverbrauch
 // ---------------------------------------------------------------------------------------------
 
-const KNOWN_IDS = [...STRAIGHT_IDS, ...CURVE_IDS, ...NON_PLACEABLE_IDS] as const;
+const KNOWN_IDS = [
+  ...STRAIGHT_IDS,
+  ...CURVE_IDS,
+  ...MEASURED_STRAIGHT_IDS,
+  ...MEASURED_CURVE_IDS,
+  ...NON_PLACEABLE_IDS,
+] as const;
 const arbAnyElement = (prefix: string): fc.Arbitrary<LayoutElement[]> =>
   fc
     .array(
@@ -1827,18 +1837,17 @@ describe("Teileverbrauch", () => {
   test("[REQ-CORE-21] Verbrauch auch mit nicht platzierbaren Einträgen definiert", () => {
     expect(
       core.consumption(cat(), [
-        part("a", "steilkurve-1-45"),
-        part("b", "wireless-anschluss"),
-        part("c", "looping-teil"),
-        part("d", "steilkehre-teil"),
+        part("a", "looping-teil"),
+        part("b", "steilkehre-teil"),
+        part("c", "looping"),
+        part("d", "steilkehre"),
       ]),
     ).toEqual({
       ok: true,
       counts: {
-        "steilkurve-1-45": 1,
-        "wireless-anschluss": 1,
-        "looping-teil": 1,
-        "steilkehre-teil": 1,
+        "looping-teil": 9,
+        "steilkehre-teil": 5,
+        "kurve-1-90": 2,
       },
     });
   });
@@ -1950,6 +1959,145 @@ describe("Testnachtrag M1: Lücken aus #12 und #13", () => {
     expect(runTrace(layout, ORIGIN)).toEqual({
       ok: false,
       errors: [{ kind: "richtungUeberzaehlig", index: 0, partId: "kreuzung" }],
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45° vermessen (Messung 2026-11-28)
+// ---------------------------------------------------------------------------------------------
+
+describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45°", () => {
+  const arbWithMeasured: fc.Arbitrary<Omit<PartElement, "id">> = fc.oneof(
+    fc.constantFrom(...STRAIGHT_IDS, ...MEASURED_STRAIGHT_IDS).map((p) => ({ part: p })),
+    fc
+      .tuple(fc.constantFrom(...CURVE_IDS, ...MEASURED_CURVE_IDS), arbTurn)
+      .map(([p, turn]) => ({ part: p, turn })),
+  );
+
+  test.skip("[REQ-CORE-2] Wireless-Anschluss verfolgt wie eine Gerade 114: aus (0, 0, 0) nach (114, 0, 0), aus (0, 0, 1) nach (57·√2, 57·√2, 1)", () => {
+    expect(okTrace(runTrace([part("a", "wireless-anschluss")], ORIGIN)).end).toEqual(P(114, 0, 0));
+    expect(okTrace(runTrace([part("a", "wireless-anschluss")], P(0, 0, 1))).end).toEqual(
+      P(C(0, 57), C(0, 57), 1),
+    );
+    fc.assert(
+      fc.property(arbStart(), (start) => {
+        const w = okTrace(runTrace([part("a", "wireless-anschluss")], start));
+        expect(w.end).toEqual(at(refPoses([part("a", "gerade-114")], start), 0));
+        expect(w.end).toEqual(okTrace(runTrace([part("a", "anschlussstueck")], start)).end);
+        expect(at(w.steps, 0).crossPorts).toBeUndefined();
+      }),
+    );
+  });
+
+  test.skip("[REQ-CORE-4] Steilkurve 1/45° verfolgt wie eine Kurve 1/45° (R 171): links (171/2·√2, 171 − 171/2·√2, 1), rechts (171/2·√2, −171 + 171/2·√2, 7)", () => {
+    expect(okTrace(runTrace([part("a", "steilkurve-1-45", "links")], ORIGIN)).end).toEqual(
+      P(C(0, [171, 2]), C(171, [-171, 2]), 1),
+    );
+    expect(okTrace(runTrace([part("a", "steilkurve-1-45", "rechts")], ORIGIN)).end).toEqual(
+      P(C(0, [171, 2]), C(-171, [171, 2]), 7),
+    );
+    fc.assert(
+      fc.property(arbStart(), arbTurn, (start, turn) => {
+        const steil = okTrace(runTrace([part("a", "steilkurve-1-45", turn)], start));
+        const curve = okTrace(runTrace([part("a", "kurve-1-45", turn)], start));
+        expect(steil.end).toEqual(curve.end);
+        expect(steil.end).toEqual(at(refPoses([part("a", "kurve-1-45", turn)], start), 0));
+      }),
+    );
+  });
+
+  test.skip("[REQ-CORE-4] Messung: vier Steilkurven gleicher Richtung ergeben 342 mm Mittenabstand ohne Versatz nach vorn, wie zwei Kurven 1/90°", () => {
+    const left = ids("s", repeat(4, "steilkurve-1-45", "links"));
+    const right = ids("s", repeat(4, "steilkurve-1-45", "rechts"));
+    expect(okTrace(runTrace(left, ORIGIN)).end).toEqual(P(0, 342, 4));
+    expect(okTrace(runTrace(right, ORIGIN)).end).toEqual(P(0, -342, 4));
+    fc.assert(
+      fc.property(arbStart(), arbTurn, (start, turn) => {
+        const four = okTrace(runTrace(ids("s", repeat(4, "steilkurve-1-45", turn)), start));
+        const two = okTrace(runTrace(ids("k", repeat(2, "kurve-1-90", turn)), start));
+        expect(four.end).toEqual(two.end);
+      }),
+    );
+  });
+
+  test.skip("[REQ-CORE-13] acht Steilkurven 1/45° gleicher Richtung schließen einen Kreis aus beliebiger Startpose, links und rechts; sieben oder neun nicht", () => {
+    fc.assert(
+      fc.property(arbStart(), arbTurn, (start, turn) => {
+        expect(runClosure(ids("s", repeat(8, "steilkurve-1-45", turn)), start)).toEqual(
+          closedAt0(),
+        );
+        for (const n of [7, 9]) {
+          const r = runClosure(ids("s", repeat(n, "steilkurve-1-45", turn)), start);
+          if (!r.ok) throw new Error("unerwarteter Fehler");
+          expect(r.closure.status).toBe("offen");
+        }
+      }),
+    );
+  });
+
+  test.skip("[REQ-CORE-13] Oval mit Steilkurven statt Kurven 1/90° und Wireless-Anschluss statt Anschlussstück schließt, links und rechts", () => {
+    fc.assert(
+      fc.property(arbStart(), arbTurn, (start, turn) => {
+        const half = repeat(4, "steilkurve-1-45", turn);
+        const layout = ids("w", [
+          ...half,
+          { part: "gerade-342" },
+          ...half,
+          { part: "gerade-114" },
+          { part: "wireless-anschluss" },
+          { part: "rundenzaehler" },
+        ]);
+        expect(runClosure(layout, start)).toEqual(closedAt0());
+      }),
+    );
+  });
+
+  test.skip("[REQ-CORE-1] Spur mit Wireless-Anschluss und Steilkurven stimmt für beliebige Layouts und Startposen mit dem Orakel überein", () => {
+    fc.assert(
+      fc.property(
+        fc.array(arbWithMeasured, { maxLength: 20 }).map((ps) => ids("m", ps)),
+        arbStart(),
+        (layout, start) => {
+          const r = okTrace(runTrace(layout, start));
+          const expected = refPoses(layout, start);
+          expect(r.steps.map((s) => s.pose)).toEqual(expected);
+          expect(r.end).toEqual(
+            expected.length === 0 ? normPose(start) : at(expected, -1 + expected.length),
+          );
+        },
+      ),
+    );
+  });
+
+  test.skip("[REQ-CORE-17] [REQ-CORE-18] Wireless-Anschluss und Steilkurve sind nicht mehr „nicht platzierbar“; die Steilkurve braucht eine Richtung, der Wireless-Anschluss trägt keine", () => {
+    for (const partId of [...MEASURED_STRAIGHT_IDS, ...MEASURED_CURVE_IDS]) {
+      const turn = partId === "steilkurve-1-45" ? "links" : undefined;
+      expect(runTrace([part("a", "gerade-342"), part("b", partId, turn)], ORIGIN).ok).toBe(true);
+    }
+    expect(runTrace([part("a", "gerade-342"), part("b", "steilkurve-1-45")], ORIGIN)).toEqual({
+      ok: false,
+      errors: [{ kind: "richtungFehlt", index: 1, partId: "steilkurve-1-45" }],
+    });
+    expect(
+      runTrace([part("a", "gerade-342"), part("b", "wireless-anschluss", "links")], ORIGIN),
+    ).toEqual({
+      ok: false,
+      errors: [{ kind: "richtungUeberzaehlig", index: 1, partId: "wireless-anschluss" }],
+    });
+  });
+
+  test.skip("[REQ-CORE-20] Verbrauch eines geschlossenen Kreises aus acht Steilkurven mit Wireless-Anschluss zählt beide", () => {
+    const layout = [
+      ...ids("s", repeat(4, "steilkurve-1-45", "rechts")),
+      part("w", "wireless-anschluss"),
+      ...ids("t", repeat(4, "steilkurve-1-45", "rechts")),
+      part("g", "gerade-114"),
+    ];
+    expect(runClosure(layout, ORIGIN)).toEqual(closedAt0());
+    expect(core.consumption(cat(), layout)).toEqual({
+      ok: true,
+      counts: { "steilkurve-1-45": 8, "wireless-anschluss": 1, "gerade-114": 1 },
     });
   });
 });

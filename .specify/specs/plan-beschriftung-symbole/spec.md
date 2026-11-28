@@ -3,6 +3,8 @@
 Status: Entwurf zur Abnahme per Review des Spec-PR. Die Empfehlungen zu den offenen Fragen der
 beiden Issues stehen im Abschnitt „Empfehlungen zu den offenen Fragen“ (die Kriterien verweisen
 mit „(Frage n)“ darauf), die Punkte mit Abweichung vom Issue unter „Zur Abnahme“.
+Nachtrag 2026-11-28 (#1): Wireless-Anschluss vermessen (Maße wie Anschlussstück); er bekommt den
+Stecker (REQ-SYM-1, Frage 8), die Grenze „Symbol für den Wireless-Anschluss“ entfällt.
 Grundlage: Issue #35 („Plan: Teilenamen am Bauteil anzeigen (ein-/ausblendbar)“), Issue #36
 („Plan: eigene Darstellung für Rundenzähler, Anschlussstück, Spurwechsel“),
 [KONZEPT.md](../../../KONZEPT.md) (abgenommen 2026-11-23; „Bedienung“, „Architektur“),
@@ -50,9 +52,10 @@ mich die Namen stören, blende ich sie aus, und der Plan merkt sich das.
   | `kurve-3-45` | Kurve 3/45° | 3/45° |
 
   Alle übrigen platzierbaren Einträge (Spurwechselkurve, Spurwechsel gerade, Engstelle, Kreuzung,
-  Anschlussstück, Rundenzähler) haben keine Kurzform (Frage 2).
+  Anschlussstück, Rundenzähler, Wireless-Anschluss, Steilkurve 1/45°) haben keine Kurzform
+  (Frage 2).
 - **Symbolteil:** Katalogeintrag mit eigenem Symbol nach REQ-SYM-1 (Rundenzähler, Anschlussstück,
-  Spurwechsel gerade, Spurwechselkurve, Engstelle).
+  Wireless-Anschluss, Spurwechsel gerade, Spurwechselkurve, Engstelle).
 - **Maßstab s:** `view.scale` der Zeichenfläche, Bildschirm-Pixel je mm (`src/web/ui/view.ts:4`),
   begrenzt auf 0,01 bis 20 (`view.ts:13-14`).
 - **Platz P:** Sehnenlänge des Elements auf dem Bildschirm = Abstand zwischen Anfangs- und
@@ -144,13 +147,14 @@ Drehung einbauen — ein Test muss rot werden).
 7. **Baugruppen und Teile mit fehlenden Maßen: keine Beschriftung, kein Symbol** (REQ-LBL-4). Sie
    werden nicht gezeichnet (M2: gezeichneter Abschnitt endet vor dem ersten Fehler), also gibt es
    keinen Ort. Dasselbe gilt für alle Elemente hinter dem ersten Fehler.
-8. **Eigene Symbole für Rundenzähler (Zielflagge), Anschlussstück (Stecker), Spurwechsel gerade und
-   Spurwechselkurve (gemeinsames Spurwechsel-Zeichen) und Engstelle (Taille)** (REQ-SYM-1). Die
+8. **Eigene Symbole für Rundenzähler (Zielflagge), Anschlussstück und Wireless-Anschluss (Stecker),
+   Spurwechsel gerade und Spurwechselkurve (gemeinsames Spurwechsel-Zeichen) und Engstelle
+   (Taille)** (REQ-SYM-1). Die
    Kreuzung ist mit ihrem gezeichneten Querweg schon unterscheidbar (`canvas.tsx:173-178`) und
    bekommt keins. Die **Engstelle sieht heute aus wie eine gewöhnliche Gerade 228** und gehört
-   deshalb dazu, obwohl das Issue sie nur „prüfen“ lässt. Der **Wireless-Anschluss** ist
-   `masseFehlen` (`catalog.ts`), nicht platzierbar und wird nie gezeichnet; er bekommt sein Symbol
-   erst mit den Maßen (#1).
+   deshalb dazu, obwohl das Issue sie nur „prüfen“ lässt. Der **Wireless-Anschluss** ist eine
+   Anschlussschiene mit denselben Maßen wie das Anschlussstück (Messung 2026-11-28, #1) und
+   bekommt dessen Stecker.
 9. **Keine Spurwechsel-Richtung** (Nicht-Ziel). Der Katalog kennt keine: Spurwechsel gerade hat laut
    Recherche „keine Einbaurichtung“ (`docs/recherche.md:46`), die Spurwechselkurve hat nur die
    Kurvenrichtung links/rechts wie jede Kurve, aber keine Angabe, von welcher auf welche Spur sie
@@ -269,9 +273,9 @@ Drehung einbauen — ein Test muss rot werden).
 ### Symbole
 
 - **REQ-SYM-1** [Where] Die Symbolzuordnung hängt allein an der Katalog-ID: `rundenzaehler` →
-  Zielflagge, `anschlussstueck` → Stecker, `spurwechsel-gerade` und `spurwechselkurve` →
-  Spurwechsel, `engstelle` → Engstelle. Jede andere ID hat kein Symbol, auch `kreuzung`,
-  `wireless-anschluss` und alle Geraden und Kurven. Wirkungsnachweis mit verfälschtem Katalog: ein
+  Zielflagge, `anschlussstueck` und `wireless-anschluss` → Stecker, `spurwechsel-gerade` und
+  `spurwechselkurve` → Spurwechsel, `engstelle` → Engstelle. Jede andere ID hat kein Symbol, auch
+  `kreuzung` und alle Geraden und Kurven. Wirkungsnachweis mit verfälschtem Katalog: ein
   Eintrag `rundenzaehler` mit Geometrie Gerade 342 behält die Zielflagge; ein Eintrag
   `gerade-114` mit Name „Rundenzähler“ bekommt keine (Frage 8).
 - **REQ-SYM-2** [Where] Für jedes Element mit Variante „nur Symbol“ oder „Symbol + Name“ enthält
@@ -319,7 +323,6 @@ Drehung einbauen — ein Test muss rot werden).
 
 - Spurwechsel-Richtung (welche Spur auf welche) — der Katalog kennt sie nicht (Frage 9). Kommt,
   wenn ein Katalogfeld dafür abgenommen ist (dann T2/T3).
-- Symbol für den Wireless-Anschluss, solange er `masseFehlen` ist (#1).
 - Eigene Symbole in der Teileleiste (`PartIcon`, `app.tsx:63-75`). Dort unterscheidet heute der
   Name; vorgeschlagenes Folge-Issue „Leiste: Symbole aus dem Plan übernehmen“.
 - Dunkelmodus der Seite.
@@ -416,7 +419,8 @@ Vor dem ersten Fall in den Entwicklerwerkzeugen `carrera-planer:beschriftung` l�
    für jeden Namen; Nachschärfung nach dem Smoke, vom Menschen abgenommen): Rundenzähler mit
    Zielflagge, Anschlussstück mit Stecker, beide Spurwechsel mit dem Spurwechsel-Zeichen, Engstelle
    mit der Taille, jeweils links neben dem Namen, ohne sich zu überdecken; Gerade 342 und Kreuzung ohne Symbol, die Kreuzung mit
-   ihrem Querweg. Hovern über einem Symbol zeigt den Namen.
+   ihrem Querweg. Hovern über einem Symbol zeigt den Namen. Ein angehängter Wireless-Anschluss
+   zeigt denselben Stecker wie das Anschlussstück, Hovern zeigt „Wireless-Anschluss“.
 7. **Herauszoomen mit Symbolen.** Aus Fall 6 so weit herauszoomen, bis die Namen weg sind: die
    Symbole stehen allein und bleiben gleich groß; erst wenn das Teil kürzer als etwa 16 px ist,
    verschwinden sie.

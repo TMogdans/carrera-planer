@@ -1,7 +1,8 @@
 # Spec: M2 — Editor im Sandbox-Modus, Layout lokal im Browser
 
 Status: Überarbeitung 5 (Nachtrag REQ-EDIT-22: Querung automatisch beim Anhängen, #62); Abnahme
-per Review des Nachtrag-PRs.
+per Review des Nachtrag-PRs. Nachtrag 2026-11-28 (#1): Wireless-Anschluss und Steilkurve 1/45°
+vermessen; Beispiel in REQ-EDIT-21 und Smoke-Fall 7 angepasst.
 Grundlage: [KONZEPT.md](../../../KONZEPT.md) (abgenommen 2026-11-23; Abschnitte „Ziel“, „Modi“,
 „Geometrie“, „Bedienung“, „Architektur“, „Prüfen“, „Meilensteine“),
 [docs/recherche.md](../../../docs/recherche.md), [constitution.md](../../constitution.md), die
@@ -170,11 +171,12 @@ fassen lässt, steht in der Logik-Schicht.
   Klasse zu — **platzierbar** (Geometrie `gerade`, `kurve` oder `kreuzung`), **ausgeblendet** (nur
   Bestandteil: Geometrie `masseFehlen` und Bestandteil mindestens einer Baugruppe des Katalogs)
   oder **Maße fehlen** (jeder übrige Eintrag, also `masseFehlen` ohne Baugruppen-Verwendung und
-  jede Baugruppe). Beispiel mit dem M1-Katalog: platzierbar sind die 13 Einträge von Gerade 342
-  bis Rundenzähler; „Maße fehlen“ Wireless-Anschluss, Steilkurve 1/45°, Looping (Baugruppe),
-  Steilkehre (Baugruppe); ausgeblendet Looping-Teil (L) und Steilkehre-Teil (K). Wirkungsnachweis
-  mit verändertem Katalog: Bekommt die Steilkurve 1/45° eine Kurvengeometrie, ist sie platzierbar;
-  verwendet eine zusätzliche Baugruppe den Wireless-Anschluss, ist er ausgeblendet.
+  jede Baugruppe). Beispiel mit dem M1-Katalog: platzierbar sind die 15 Einträge von Gerade 342
+  bis Steilkurve 1/45°; „Maße fehlen“ Looping (Baugruppe) und Steilkehre (Baugruppe);
+  ausgeblendet Looping-Teil (L) und Steilkehre-Teil (K). Wirkungsnachweis mit verändertem Katalog:
+  Bekommt die Steilkehre (Baugruppe) eine Kurvengeometrie, ist sie platzierbar, und das
+  Steilkehre-Teil (K), nun in keiner Baugruppe mehr, steht unter „Maße fehlen“; verwendet eine
+  zusätzliche Baugruppe das Steilkehre-Teil, ist es wieder ausgeblendet.
 
 ### Editor-Logik: Verlauf und Element-IDs
 
@@ -557,8 +559,9 @@ Maus-Fälle am Laptop, Touch-Fälle an Tablet und Handy.
 
 Gegenfälle, die geschlossen bleiben müssen:
 
-7. Looping, Steilkehre, Steilkurve 1/45° und Wireless-Anschluss sind in der Leiste ausgegraut mit
-   „Maße fehlen“; Antippen ändert nichts. L- und K-Teile tauchen nicht auf.
+7. Looping und Steilkehre sind in der Leiste ausgegraut mit „Maße fehlen“; Antippen ändert
+   nichts. L- und K-Teile tauchen nicht auf. Wireless-Anschluss und Steilkurve 1/45° sind
+   antippbar (vermessen, #1).
 8. In der Acht die Gerade 114 (Nr. 5) durch Gerade 171 ersetzen → Status „Fehler (1)“, Eintrag
    „Nr. 6: Strecke kommt nicht am Queranschluss an“, Zeichnung endet nach Nr. 5 mit roter Marke,
    die Queranschlüsse der Kreuzung leuchten, „5 Teile nicht gezeichnet“. Fehler antippen wählt
