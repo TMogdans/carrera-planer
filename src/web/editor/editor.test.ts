@@ -531,7 +531,7 @@ describe("Befehle", () => {
 });
 
 describe("Leisten-Einteilung", () => {
-  test.skip("[REQ-EDIT-21] aktueller Katalog: Platzierbare als Block von Gerade 342 bis Steilkurve 1/45°, 2 Maße fehlen, L und K ausgeblendet, in Katalogreihenfolge (nach Vermessung #1)", async () => {
+  test("[REQ-EDIT-21] aktueller Katalog: Platzierbare als Block von Gerade 342 bis Steilkurve 1/45°, 2 Maße fehlen, L und K ausgeblendet, in Katalogreihenfolge (nach Vermessung #1)", async () => {
     const E = await loadEditor();
     const entries = E.paletteEntries(CATALOG);
     expect(entries.map((e) => e.partId)).toEqual(CATALOG.map((e) => e.id));
@@ -546,7 +546,7 @@ describe("Leisten-Einteilung", () => {
     expect(entries).toHaveLength(CATALOG.length);
   });
 
-  test.skip("[REQ-EDIT-21] Katalog mit gerade-100 nach Vermessung #1: die 16 Einträge von Gerade 342 bis Steilkurve 1/45° platzierbar, Gerade 100 an vierter Stelle; Maße fehlen nur Looping und Steilkehre", async () => {
+  test("[REQ-EDIT-21] Katalog mit gerade-100 nach Vermessung #1: die 16 Einträge von Gerade 342 bis Steilkurve 1/45° platzierbar, Gerade 100 an vierter Stelle; Maße fehlen nur Looping und Steilkehre", async () => {
     const E = await loadEditor();
     const entries = E.paletteEntries(CATALOG);
     expect(entries.map((e) => e.partId)).toEqual(CATALOG.map((e) => e.id));
@@ -794,7 +794,7 @@ describe("Nachtrag: Laden hebt die Auswahl auf", () => {
 });
 
 describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45° vermessen", () => {
-  test.skip("[REQ-EDIT-2] Wireless-Anschluss (ohne Richtung) und Steilkurve 1/45° (mit Leistenrichtung) kommen per Tipp in die Folge, je ein Verlaufseintrag", async () => {
+  test("[REQ-EDIT-2] Wireless-Anschluss (ohne Richtung) und Steilkurve 1/45° (mit Leistenrichtung) kommen per Tipp in die Folge, je ein Verlaufseintrag", async () => {
     const E = await loadEditor();
     const s0 = E.initialState();
     const w = E.apply(CATALOG, s0, choose("wireless-anschluss"));
@@ -818,7 +818,7 @@ describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45° vermessen", () =
     expect(UNPLACEABLE_IDS).not.toContain("steilkurve-1-45");
   });
 
-  test.skip("[REQ-EDIT-2] acht Steilkurven per Tipp ergeben einen geschlossenen Kreis; ein Oval mit Wireless-Anschluss statt Gerade 114 schließt", async () => {
+  test("[REQ-EDIT-2] acht Steilkurven per Tipp ergeben einen geschlossenen Kreis; ein Oval mit Wireless-Anschluss statt Gerade 114 schließt", async () => {
     const E = await loadEditor();
     const circle = run(
       E,

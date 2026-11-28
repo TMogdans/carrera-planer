@@ -922,7 +922,7 @@ describe("Symbole", () => {
 });
 
 describe("Nachtrag #1: Wireless-Anschluss im Plan", () => {
-  test.skip("[REQ-SYM-1] [REQ-SYM-4] Wireless-Anschluss zeigt im SVG genau ein Symbol mit derselben Form wie der Stecker des Anschlussstücks und dem title „Wireless-Anschluss“", async () => {
+  test("[REQ-SYM-1] [REQ-SYM-4] Wireless-Anschluss zeigt im SVG genau ein Symbol mit derselben Form wie der Stecker des Anschlussstücks und dem title „Wireless-Anschluss“", async () => {
     const elements: Elements = [
       { id: "as", part: "anschlussstueck" },
       { id: "w", part: "wireless-anschluss" },

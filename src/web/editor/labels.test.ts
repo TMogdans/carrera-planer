@@ -249,7 +249,7 @@ const withName = (catalog: Catalog, id: string, name: string): Catalog =>
 // ---------------------------------------------------------------------------------------------
 
 describe("Beschriftungstext", () => {
-  test.skip("[REQ-LBL-1] echter Katalog: voller Name und Kurzform genau wie die Tabelle „Begriffe“ (nach Vermessung #1)", async () => {
+  test("[REQ-LBL-1] echter Katalog: voller Name und Kurzform genau wie die Tabelle „Begriffe“ (nach Vermessung #1)", async () => {
     const api = await loadLabels();
     for (const [id, full, short] of WITH_SHORT) {
       expect({ id, texts: api.labelTexts(CATALOG, id) }).toEqual({ id, texts: { full, short } });
@@ -587,7 +587,7 @@ describe("Keine Beschriftung", () => {
     ).toEqual(["a", "b"]);
   });
 
-  test.skip("[REQ-LBL-4] Nachtrag #1: Wireless-Anschluss und Steilkurve werden gezeichnet und beschriftet, auch das Teil dahinter", async () => {
+  test("[REQ-LBL-4] Nachtrag #1: Wireless-Anschluss und Steilkurve werden gezeichnet und beschriftet, auch das Teil dahinter", async () => {
     expect(
       await idsOf([
         { id: "a", part: "gerade-342" },
@@ -621,7 +621,7 @@ describe("Keine Beschriftung", () => {
 // ---------------------------------------------------------------------------------------------
 
 describe("Symbolzuordnung", () => {
-  test.skip("[REQ-SYM-1] Zuordnung je Katalog-ID; jede andere ID ohne Symbol (Wireless-Anschluss mit Stecker, Nachtrag #1)", async () => {
+  test("[REQ-SYM-1] Zuordnung je Katalog-ID; jede andere ID ohne Symbol (Wireless-Anschluss mit Stecker, Nachtrag #1)", async () => {
     const api = await loadLabels();
     expect(api.symbolOf("rundenzaehler")).toBe("zielflagge");
     expect(api.symbolOf("anschlussstueck")).toBe("stecker");
@@ -707,7 +707,7 @@ describe("Katalog unberührt", () => {
 });
 
 describe("Nachtrag #1: Wireless-Anschluss im Plan", () => {
-  test.skip("[REQ-SYM-1] [REQ-LBL-2] Wireless-Anschluss trägt im Plan den Stecker und folgt der Platzregel wie das Anschlussstück (P = 114 · s)", async () => {
+  test("[REQ-SYM-1] [REQ-LBL-2] Wireless-Anschluss trägt im Plan den Stecker und folgt der Platzregel wie das Anschlussstück (P = 114 · s)", async () => {
     const api = await loadLabels();
     const D = await loadDrawing();
     const elements: Elements = [

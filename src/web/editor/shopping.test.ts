@@ -583,7 +583,7 @@ describe("Kurzform und Modi", () => {
 });
 
 describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45° in der Einkaufsliste", () => {
-  test.skip("[REQ-EINK-1] [REQ-EINK-3] geschlossener Kreis aus acht Steilkurven mit Wireless-Anschluss und Gerade 114, leerer Bestand: Steilkurve fehlt 8 „20061612“, Wireless-Anschluss 1 „20061673“, zusammen 10", async () => {
+  test("[REQ-EINK-1] [REQ-EINK-3] geschlossener Kreis aus acht Steilkurven mit Wireless-Anschluss und Gerade 114, leerer Bestand: Steilkurve fehlt 8 „20061612“, Wireless-Anschluss 1 „20061673“, zusammen 10", async () => {
     const I = await loadInventory();
     const steile = (prefix: string): Elements =>
       Array.from({ length: 4 }, (_, i) => ({

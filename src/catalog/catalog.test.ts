@@ -270,7 +270,7 @@ describe("Katalog", () => {
     expect(cat().map((e) => e.id)).toEqual(EXPECTED.map((e) => e.id));
   });
 
-  test.skip("[REQ-CAT-1] Geometrie, Art.-Nr. und Sicherheit je Eintrag wie in der Tabelle, gerade-114 ohne eigene Nummer", () => {
+  test("[REQ-CAT-1] Geometrie, Art.-Nr. und Sicherheit je Eintrag wie in der Tabelle, gerade-114 ohne eigene Nummer", () => {
     for (const exp of EXPECTED) {
       const e = byId(exp.id);
       expect({ id: e.id, geometry: sortedParts(e.geometry) }).toEqual({
@@ -292,7 +292,7 @@ describe("Katalog", () => {
     }
   });
 
-  test.skip("[REQ-CAT-1] Platzierbarkeit wie in der Tabelle nach Vermessung #1: 16 platzierbar; Looping, Steilkehre, K und L nicht", () => {
+  test("[REQ-CAT-1] Platzierbarkeit wie in der Tabelle nach Vermessung #1: 16 platzierbar; Looping, Steilkehre, K und L nicht", () => {
     for (const e of cat()) {
       expect({ id: e.id, placeable: isPlaceable(e) }).toEqual({
         id: e.id,
@@ -308,7 +308,7 @@ describe("Katalog", () => {
     ).toEqual(["looping-teil", "steilkehre-teil", "looping", "steilkehre"]);
   });
 
-  test.skip("[REQ-CAT-1] Vermessung #1: Wireless-Anschluss Gerade 114 wie das Anschlussstück, Steilkurve 1/45° Kurve R 171, 45° wie die Kurve 1/45°; Sicherheit hoch, Quelle nennt die Messung 2026-11-28", () => {
+  test("[REQ-CAT-1] Vermessung #1: Wireless-Anschluss Gerade 114 wie das Anschlussstück, Steilkurve 1/45° Kurve R 171, 45° wie die Kurve 1/45°; Sicherheit hoch, Quelle nennt die Messung 2026-11-28", () => {
     const wireless = byId("wireless-anschluss");
     const steil = byId("steilkurve-1-45");
     expect({
