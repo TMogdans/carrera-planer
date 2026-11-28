@@ -1975,7 +1975,7 @@ describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45°", () => {
       .map(([p, turn]) => ({ part: p, turn })),
   );
 
-  test.skip("[REQ-CORE-2] Wireless-Anschluss verfolgt wie eine Gerade 114: aus (0, 0, 0) nach (114, 0, 0), aus (0, 0, 1) nach (57·√2, 57·√2, 1)", () => {
+  test("[REQ-CORE-2] Wireless-Anschluss verfolgt wie eine Gerade 114: aus (0, 0, 0) nach (114, 0, 0), aus (0, 0, 1) nach (57·√2, 57·√2, 1)", () => {
     expect(okTrace(runTrace([part("a", "wireless-anschluss")], ORIGIN)).end).toEqual(P(114, 0, 0));
     expect(okTrace(runTrace([part("a", "wireless-anschluss")], P(0, 0, 1))).end).toEqual(
       P(C(0, 57), C(0, 57), 1),
@@ -1990,7 +1990,7 @@ describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45°", () => {
     );
   });
 
-  test.skip("[REQ-CORE-4] Steilkurve 1/45° verfolgt wie eine Kurve 1/45° (R 171): links (171/2·√2, 171 − 171/2·√2, 1), rechts (171/2·√2, −171 + 171/2·√2, 7)", () => {
+  test("[REQ-CORE-4] Steilkurve 1/45° verfolgt wie eine Kurve 1/45° (R 171): links (171/2·√2, 171 − 171/2·√2, 1), rechts (171/2·√2, −171 + 171/2·√2, 7)", () => {
     expect(okTrace(runTrace([part("a", "steilkurve-1-45", "links")], ORIGIN)).end).toEqual(
       P(C(0, [171, 2]), C(171, [-171, 2]), 1),
     );
@@ -2007,7 +2007,7 @@ describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45°", () => {
     );
   });
 
-  test.skip("[REQ-CORE-4] Messung: vier Steilkurven gleicher Richtung ergeben 342 mm Mittenabstand ohne Versatz nach vorn, wie zwei Kurven 1/90°", () => {
+  test("[REQ-CORE-4] Messung: vier Steilkurven gleicher Richtung ergeben 342 mm Mittenabstand ohne Versatz nach vorn, wie zwei Kurven 1/90°", () => {
     const left = ids("s", repeat(4, "steilkurve-1-45", "links"));
     const right = ids("s", repeat(4, "steilkurve-1-45", "rechts"));
     expect(okTrace(runTrace(left, ORIGIN)).end).toEqual(P(0, 342, 4));
@@ -2021,7 +2021,7 @@ describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45°", () => {
     );
   });
 
-  test.skip("[REQ-CORE-13] acht Steilkurven 1/45° gleicher Richtung schließen einen Kreis aus beliebiger Startpose, links und rechts; sieben oder neun nicht", () => {
+  test("[REQ-CORE-13] acht Steilkurven 1/45° gleicher Richtung schließen einen Kreis aus beliebiger Startpose, links und rechts; sieben oder neun nicht", () => {
     fc.assert(
       fc.property(arbStart(), arbTurn, (start, turn) => {
         expect(runClosure(ids("s", repeat(8, "steilkurve-1-45", turn)), start)).toEqual(
@@ -2036,7 +2036,7 @@ describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45°", () => {
     );
   });
 
-  test.skip("[REQ-CORE-13] Oval mit Steilkurven statt Kurven 1/90° und Wireless-Anschluss statt Anschlussstück schließt, links und rechts", () => {
+  test("[REQ-CORE-13] Oval mit Steilkurven statt Kurven 1/90° und Wireless-Anschluss statt Anschlussstück schließt, links und rechts", () => {
     fc.assert(
       fc.property(arbStart(), arbTurn, (start, turn) => {
         const half = repeat(4, "steilkurve-1-45", turn);
@@ -2053,7 +2053,7 @@ describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45°", () => {
     );
   });
 
-  test.skip("[REQ-CORE-1] Spur mit Wireless-Anschluss und Steilkurven stimmt für beliebige Layouts und Startposen mit dem Orakel überein", () => {
+  test("[REQ-CORE-1] Spur mit Wireless-Anschluss und Steilkurven stimmt für beliebige Layouts und Startposen mit dem Orakel überein", () => {
     fc.assert(
       fc.property(
         fc.array(arbWithMeasured, { maxLength: 20 }).map((ps) => ids("m", ps)),
@@ -2070,7 +2070,7 @@ describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45°", () => {
     );
   });
 
-  test.skip("[REQ-CORE-17] [REQ-CORE-18] Wireless-Anschluss und Steilkurve sind nicht mehr „nicht platzierbar“; die Steilkurve braucht eine Richtung, der Wireless-Anschluss trägt keine", () => {
+  test("[REQ-CORE-17] [REQ-CORE-18] Wireless-Anschluss und Steilkurve sind nicht mehr „nicht platzierbar“; die Steilkurve braucht eine Richtung, der Wireless-Anschluss trägt keine", () => {
     for (const partId of [...MEASURED_STRAIGHT_IDS, ...MEASURED_CURVE_IDS]) {
       const turn = partId === "steilkurve-1-45" ? "links" : undefined;
       expect(runTrace([part("a", "gerade-342"), part("b", partId, turn)], ORIGIN).ok).toBe(true);
@@ -2087,7 +2087,7 @@ describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45°", () => {
     });
   });
 
-  test.skip("[REQ-CORE-20] Verbrauch eines geschlossenen Kreises aus acht Steilkurven mit Wireless-Anschluss zählt beide", () => {
+  test("[REQ-CORE-20] Verbrauch eines geschlossenen Kreises aus acht Steilkurven mit Wireless-Anschluss zählt beide", () => {
     const layout = [
       ...ids("s", repeat(4, "steilkurve-1-45", "rechts")),
       part("w", "wireless-anschluss"),

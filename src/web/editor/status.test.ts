@@ -388,7 +388,7 @@ describe("Architektur: Status kommt vom Kern", () => {
 });
 
 describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45°", () => {
-  test.skip("[REQ-STAT-5] Länge zählt Wireless-Anschluss mit 114 mm und jede Steilkurve mit 171·π/4 mm; Kreis aus acht Steilkurven ist geschlossen", async () => {
+  test("[REQ-STAT-5] Länge zählt Wireless-Anschluss mit 114 mm und jede Steilkurve mit 171·π/4 mm; Kreis aus acht Steilkurven ist geschlossen", async () => {
     const S = await loadStatus();
     const w = S.totalLength(CATALOG, [...OVAL, { id: "z", part: "wireless-anschluss" }]);
     const oval = S.totalLength(CATALOG, OVAL) as number;

@@ -574,7 +574,7 @@ describe("Leiste im Bestandsmodus", () => {
     expect(I.stockPalette(CATALOG, {}, [])).toEqual([]);
   });
 
-  test.skip("[REQ-MODUS-5] Bestand Ausbauset 3 nach Vermessung #1: Steilkurve platzierbar mit Rest; nach vier Steilkurven Rest 0 und gesperrt, fünf geladen Rest −1 gesperrt", async () => {
+  test("[REQ-MODUS-5] Bestand Ausbauset 3 nach Vermessung #1: Steilkurve platzierbar mit Rest; nach vier Steilkurven Rest 0 und gesperrt, fünf geladen Rest −1 gesperrt", async () => {
     const I = await loadInventory();
     expect(rows(I.stockPalette(CATALOG, AUSBAU3, []))).toEqual([
       { partId: "gerade-342", kind: "platzierbar", stock: 8, rest: 8, locked: false },
@@ -736,7 +736,7 @@ describe("Invariante des Bestandsmodus", () => {
 });
 
 describe("Nachtrag #1: Wireless-Anschluss und Steilkurve 1/45° im Bestandsmodus", () => {
-  test.skip("[REQ-MODUS-3] Bestand Ausbauset 3 + Wireless Upgrade Kit: vier Steilkurven und ein Wireless-Anschluss werden angehängt, die fünfte Steilkurve und der zweite Wireless-Anschluss abgewiesen", async () => {
+  test("[REQ-MODUS-3] Bestand Ausbauset 3 + Wireless Upgrade Kit: vier Steilkurven und ein Wireless-Anschluss werden angehängt, die fünfte Steilkurve und der zweite Wireless-Anschluss abgewiesen", async () => {
     const E = await loadEditor();
     const I = await loadInventory();
     const inv = plus(AUSBAU3, WIRELESS);
